@@ -1,0 +1,14 @@
+{
+  "deploy": {
+    "project": "8470931f-6d90-4630-8673-90f815cfd4d7",
+    "exclude": [
+      "**/node_modules"
+    ],
+    "include": [],
+    "entrypoint": "main.ts"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "https://esm.sh/react@18.3.1"
+  }
+}
