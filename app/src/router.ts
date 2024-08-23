@@ -87,23 +87,6 @@ router.get(env.PATH_AUTHORIZATION_CALLBACK, async (ctx) => {
     isOk = result.ok;
   }
 
-  // 原本打算用跨域 Cookie 来认证当前用户，结果 Safari 默认禁止跨域 Cookie，放弃
-  // 此方案。
-  if (false) {
-    // workaround, 用 `ctx.cookies.set` 会报错 "Cannot send secure cookie over
-    // unencrypted connection."
-    ctx.response.headers.append(
-      "Set-Cookie",
-      [
-        ["token", userToken],
-        ["HttpOnly"],
-        ["Secure"],
-        ["SameSite", "Lax"],
-        ["Max-Age", 3600 * 24 * 366],
-      ].map(([k, v]) => v ? `${k}=${v}` : k).join("; "),
-    );
-  }
-
   const url = new URL(ctx.state.bgmBaseURL);
   url.searchParams.set("bgm_test_app_token_coupon", userTokenCoupon);
 
@@ -136,16 +119,9 @@ router.post(env.PATH_API_REDEEM_TOKEN_COUPON, async (ctx) => {
 });
 
 router.get(env.PATH_API_WHOAMI, async (ctx) => {
-  // 原本打算用跨域 Cookie 来认证当前用户，结果 Safari 默认禁止跨域 Cookie，放弃
-  // 此方案。
-  {
-    // const token = await ctx.cookies.get("token");
-  }
-  const token = ctx.state.token;
-
   const kv = await Deno.openKv();
 
-  const userID = await getUserID(kv, token);
+  const userID = await getUserID(kv, ctx.state.token);
   if (!userID) {
     ctx.response.body = makeOkResponseForAPI(null);
     return;
