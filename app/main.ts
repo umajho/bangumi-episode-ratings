@@ -1,9 +1,9 @@
 import { Application } from "jsr:@oak/oak@14";
 
 import env from "./src/env.ts";
-import { router } from "./src/router.ts";
-import { State } from "./src/state.ts";
+import { State } from "./src/types.ts";
 import { makeErrorResponse } from "./src/responses.tsx";
+import router from "./src/routes/mod.ts";
 
 const app = new Application<State>();
 

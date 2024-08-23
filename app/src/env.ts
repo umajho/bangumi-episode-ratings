@@ -3,12 +3,8 @@ const env = {
     return Deno.env.get("ENTRYPOINT_URL")!;
   },
 
-  PATH_GO_AUTHORIZE: "/go_authorize",
-
-  PATH_AUTHORIZATION_CALLBACK: "/authorization_callback",
-
-  get URL_AUTHORIZATION_CALLBACK(): string {
-    return join(env.ENTRYPOINT, this.PATH_AUTHORIZATION_CALLBACK);
+  buildAuthorizationCallbackURL(callbackPath: string): string {
+    return join(join(env.ENTRYPOINT, "auth/"), callbackPath);
   },
 
   PATH_API_REDEEM_TOKEN_COUPON: "/api/redeem_token_coupon",
@@ -30,11 +26,11 @@ const env = {
     return Deno.env.get("BGM_HOMEPAGE_URL")!;
   },
 
-  build_bgm_oauth_authorize_url(bgmBaseURL: string): string {
+  buildBGMOauthAuthorizeUrl(bgmBaseURL: string): string {
     return join(bgmBaseURL, "/oauth/authorize");
   },
 
-  build_bgm_access_token_url(bgmBaseURL: string): string {
+  buildBgmAccessTokenUrl(bgmBaseURL: string): string {
     return join(bgmBaseURL, "/oauth/access_token");
   },
 };

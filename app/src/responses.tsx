@@ -1,11 +1,7 @@
 import { renderToString } from "https://esm.sh/react-dom@18.3.1/server";
 import React, { FC } from "https://esm.sh/react@18.3.1";
 
-export type ErrorName =
-  | "MISSING_REFERRER"
-  | "UNSUPPORTED_REFERRER"
-  | "BAD_USER_ID"
-  | "UNSUPPORTED_AUTHORIZATION_HEADER_SCHEME";
+import { APIErrorResponse, APIOkResponse, ErrorName } from "./shared/dto.ts";
 
 export function makeErrorResponse(
   name: ErrorName,
@@ -35,7 +31,7 @@ export function makeErrorResponseForAPI(
   name: ErrorName,
   message: string,
 ): string {
-  return JSON.stringify(["error", name, message]);
+  return JSON.stringify(["error", name, message] satisfies APIErrorResponse);
 }
 
 const Layout: FC<{ children: React.ReactNode }> = (props) => {
@@ -46,6 +42,6 @@ const Layout: FC<{ children: React.ReactNode }> = (props) => {
   );
 };
 
-export function makeOkResponseForAPI(data: unknown): string {
-  return JSON.stringify(["ok", data]);
+export function makeOkResponseForAPI<T>(data: T): string {
+  return JSON.stringify(["ok", data] satisfies APIOkResponse<T>);
 }

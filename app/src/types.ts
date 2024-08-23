@@ -1,3 +1,9 @@
+export interface State {
+  bgmBaseURL: string;
+
+  token: string | null;
+}
+
 export interface UserData {
   tokens: string[];
 }
