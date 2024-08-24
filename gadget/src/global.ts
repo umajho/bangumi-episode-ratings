@@ -18,19 +18,7 @@ export const { subjectID, episodeID } = (() => {
   return { subjectID, episodeID };
 })();
 
-export const userID: number | null = (() => {
-  const avatarSpan = $("#headerNeue2 .avatar > .avatarNeue");
-  if (!avatarSpan.length) return null;
-
-  const magicValue = avatarSpan.css("background-image");
-
-  const result = /\/(\d+)\.jpg/.exec(magicValue);
-  if (!result) {
-    throw new Error(`无法提取出数字版本的用户 ID！magicValue: ${magicValue}`);
-  }
-
-  return Number(result[1]);
-})();
+export const userID: number | null = (window as any).CHOBITS_UID || null;
 
 if (!userID === null) {
   localStorage.removeItem(env.LOCAL_STORAGE_KEY_TOKEN);
