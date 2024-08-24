@@ -1,6 +1,6 @@
 import { client, token } from "../global";
 
-export function renderDebug(el: HTMLElement) {
+export function renderDebug(el: JQuery<HTMLElement>) {
   $(el).html(/*html*/ `
     <div style="display: flex; flex-direction: column">
       <a data-sel="auth-link" class="l">

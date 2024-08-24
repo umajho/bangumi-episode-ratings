@@ -16,10 +16,9 @@ async function main() {
     token.setValue(await client.redeemTokenCoupon(tokenCoupon));
   }
 
-  const goAuthorizeEl = document.createElement("div");
-  document.body.prepend(goAuthorizeEl);
-
-  renderDebug(goAuthorizeEl);
+  const debugEl = $("<div />");
+  $("body").prepend(debugEl);
+  renderDebug(debugEl);
 }
 
 main();
