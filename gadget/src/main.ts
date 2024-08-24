@@ -1,6 +1,5 @@
 import env from "./env";
 import * as Global from "./global";
-import { renderDebug } from "./components/Debug";
 import { renderScoreboard } from "./components/Scoreboard";
 import { VotesData } from "./models/VotesData";
 import { renderScoreChart } from "./components/ScoreChart";
@@ -23,10 +22,6 @@ async function main() {
       await Global.client.mustRedeemTokenCoupon(tokenCoupon),
     );
   }
-
-  const debugEl = $("<div />");
-  $("body").prepend(debugEl);
-  renderDebug(debugEl);
 
   if (location.pathname.startsWith("/ep/")) {
     const ratingsData = await Global.client.mustGetEpisodeRatings();

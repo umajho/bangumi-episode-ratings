@@ -135,15 +135,6 @@ export class Client {
     );
     return unwrap(data);
   }
-
-  async mustGetWhoami(): Promise<number | null> {
-    if (!this.token) return null;
-
-    const data = await this.fetch("api/dev", ENDPOINT_PATHS.API.DEV.WHOAMI, {
-      method: "GET",
-    });
-    return unwrap(data);
-  }
 }
 
 function join(base: string, url: string): string {

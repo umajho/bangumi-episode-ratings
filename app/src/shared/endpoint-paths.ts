@@ -5,9 +5,6 @@ export default {
     REDEEM_TOKEN_COUPON: "redeem-token-coupon",
   },
   API: {
-    DEV: {
-      WHOAMI: "whoami",
-    },
     V0: {
       RATE_EPISODE: "rate-episode",
       EPISODE_RATINGS: "episode-ratings",

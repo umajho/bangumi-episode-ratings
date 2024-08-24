@@ -28,7 +28,6 @@ const env = {
   },
 
   PATH_API_REDEEM_TOKEN_COUPON: "/api/redeem_token_coupon",
-  PATH_API_WHOAMI: "/api/whoami",
 
   get PORT(): number {
     return Number(Deno.env.get("PORT")!);
