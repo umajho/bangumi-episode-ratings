@@ -112,7 +112,9 @@ export function renderMyRating(
       }
       case "auth_link": {
         messageEl.html(/*html*/ `
-          请先<a class="l">关联至 Test 应用</a>。
+          若要为单集评分，请<a class="l">授权此应用</a>。
+          <br >
+          单集评分的服务端需要以此来确认你的身份。
         `);
         $(messageEl).find("a").attr(
           "href",
