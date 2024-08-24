@@ -28,6 +28,53 @@ export class Client {
     return this.buildFullEndpoint("auth", ENDPOINT_PATHS.AUTH.BANGUMI_PAGE);
   }
 
+  async rateEpisode(
+    opts: {
+      userID: number;
+      subjectID: number;
+      episodeID: number;
+      score: Score | null;
+    },
+  ): Promise<APIResponse<RateEpisodeResponseData>> {
+    if (!this.token) return ["auth_required"];
+
+    const bodyData: RateEpisodeRequestData = {
+      claimed_user_id: opts.userID,
+      subject_id: opts.subjectID,
+      episode_id: opts.episodeID,
+      score: opts.score,
+    };
+
+    return await this.fetch(
+      "api/v0",
+      ENDPOINT_PATHS.API.V0.RATE_EPISODE,
+      {
+        method: "POST",
+        body: JSON.stringify(bodyData),
+      },
+    );
+  }
+
+  async mustGetEpisodeRatings(): Promise<GetEpisodeRatingsResponseData> {
+    const searchParams = new URLSearchParams();
+    if (Global.userID) {
+      searchParams.set("claimed_user_id", String(Global.userID));
+      searchParams.set("subject_id", String(Global.subjectID!));
+      searchParams.set("episode_id", String(Global.episodeID!));
+    }
+
+    const data = await this.fetch(
+      "api/v0",
+      ENDPOINT_PATHS.API.V0.EPISODE_RATINGS,
+      {
+        method: "GET",
+        searchParams,
+      },
+    );
+
+    return unwrap(data);
+  }
+
   async fetch<T>(
     group: "auth" | "api/v0" | "api/dev",
     endpointPath: string,
@@ -95,53 +142,6 @@ export class Client {
     const data = await this.fetch("api/dev", ENDPOINT_PATHS.API.DEV.WHOAMI, {
       method: "GET",
     });
-    return unwrap(data);
-  }
-
-  async rateEpisode(
-    opts: {
-      userID: number;
-      subjectID: number;
-      episodeID: number;
-      score: Score | null;
-    },
-  ): Promise<APIResponse<RateEpisodeResponseData>> {
-    if (!this.token) return ["auth_required"];
-
-    const bodyData: RateEpisodeRequestData = {
-      claimed_user_id: opts.userID,
-      subject_id: opts.subjectID,
-      episode_id: opts.episodeID,
-      score: opts.score,
-    };
-
-    return await this.fetch(
-      "api/v0",
-      ENDPOINT_PATHS.API.V0.RATE_EPISODE,
-      {
-        method: "POST",
-        body: JSON.stringify(bodyData),
-      },
-    );
-  }
-
-  async mustGetEpisodeRatings(): Promise<GetEpisodeRatingsResponseData> {
-    const searchParams = new URLSearchParams();
-    if (Global.userID) {
-      searchParams.set("claimed_user_id", String(Global.userID));
-      searchParams.set("subject_id", String(Global.subjectID!));
-      searchParams.set("episode_id", String(Global.episodeID!));
-    }
-
-    const data = await this.fetch(
-      "api/v0",
-      ENDPOINT_PATHS.API.V0.EPISODE_RATINGS,
-      {
-        method: "GET",
-        searchParams,
-      },
-    );
-
     return unwrap(data);
   }
 }
