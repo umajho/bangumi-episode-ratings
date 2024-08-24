@@ -44,7 +44,7 @@ export class Client {
     return join(join(this.entrypoint, group + "/"), endpointPath);
   }
 
-  async redeemTokenCoupon(tokenCoupon: string): Promise<string | null> {
+  async mustRedeemTokenCoupon(tokenCoupon: string): Promise<string | null> {
     const data = await this.fetch(
       "auth",
       ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON,
@@ -53,23 +53,29 @@ export class Client {
         body: JSON.stringify({ tokenCoupon }),
       },
     );
-
-    if (data[0] === "error") throw new Error(data[2]);
-    return data[1] as string | null;
+    return unwrap(data);
   }
 
-  async whoami(): Promise<number | null> {
+  async mustGetWhoami(): Promise<number | null> {
     if (!this.token) return null;
 
     const data = await this.fetch("api", ENDPOINT_PATHS.API.WHOAMI, {
       method: "GET",
     });
-
-    if (data[0] === "error") throw new Error(data[2]);
-    return data[1] as number | null;
+    return unwrap(data);
   }
 }
 
 function join(base: string, url: string): string {
   return (new URL(url, base)).href;
+}
+
+function unwrap<T>(resp: APIOkResponse<T> | APIErrorResponse | unknown): T {
+  if (!Array.isArray(resp) || (resp[0] !== "ok" && resp[0] !== "error")) {
+    console.error("Unsupported response", resp);
+    throw new Error(`Unsupported response: ${JSON.stringify(resp)}`);
+  }
+
+  if (resp[0] === "error") throw new Error(resp[2]);
+  return resp[1];
 }

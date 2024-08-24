@@ -18,7 +18,7 @@ export function renderDebug(el: JQuery<HTMLElement>) {
   updateWhoami("…");
 
   token.watch(async () => {
-    const userID = await client.whoami();
+    const userID = await client.mustGetWhoami();
     updateWhoami(userID ? `${userID}` : "未登录");
   });
 }
