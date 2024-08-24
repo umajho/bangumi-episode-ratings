@@ -129,7 +129,7 @@ export function renderMyRating(
   updateMessage(["none"]);
 
   async function rateEpisode(score: Score | null) {
-    if (!Global.userID) {
+    if (!Global.claimedUserID) {
       updateMessage(["auth_link"]);
       return;
     }
@@ -137,7 +137,7 @@ export function renderMyRating(
     updateMessage(["processing"]);
 
     const resp = await Global.client.rateEpisode({
-      userID: Global.userID,
+      userID: Global.claimedUserID,
       subjectID: Global.subjectID!,
       episodeID: Global.episodeID!,
       score,

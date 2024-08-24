@@ -57,8 +57,8 @@ export class Client {
 
   async mustGetEpisodeRatings(): Promise<GetEpisodeRatingsResponseData> {
     const searchParams = new URLSearchParams();
-    if (Global.userID) {
-      searchParams.set("claimed_user_id", String(Global.userID));
+    if (Global.claimedUserID) {
+      searchParams.set("claimed_user_id", String(Global.claimedUserID));
       searchParams.set("subject_id", String(Global.subjectID!));
       searchParams.set("episode_id", String(Global.episodeID!));
     }

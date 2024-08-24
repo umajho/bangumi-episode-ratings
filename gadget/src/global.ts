@@ -18,9 +18,14 @@ export const { subjectID, episodeID } = (() => {
   return { subjectID, episodeID };
 })();
 
-export const userID: number | null = (window as any).CHOBITS_UID || null;
+export const claimedUserID: number | null = (() => {
+  if ("unsafeWindow" in window) {
+    return (window as any).unsafeWindow.CHOBITS_UID || null;
+  }
+  return (window as any).CHOBITS_UID || null;
+})();
 
-if (!userID === null) {
+if (!claimedUserID === null) {
   localStorage.removeItem(env.LOCAL_STORAGE_KEY_TOKEN);
 }
 
