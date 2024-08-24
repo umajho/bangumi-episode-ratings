@@ -1,7 +1,7 @@
 {
   "name": "@bangumi-episode-ratings/gadget",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Bangumi 单集评分的超合金组件",
   "type": "module",
   "scripts": {
     "build": "tsc -b && vite build"
@@ -10,6 +10,7 @@
     "@types/jquery": "^3.5.30",
     "@types/node": "^22.5.0",
     "typescript": "^5.5.3",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vite-userscript-plugin": "^1.10.0"
   }
 }
