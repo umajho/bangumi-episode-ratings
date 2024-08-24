@@ -6,13 +6,10 @@
   "scripts": {
     "build": "tsc -b && vite build"
   },
-  "dependencies": {
-    "solid-js": "^1.8.20"
-  },
   "devDependencies": {
+    "@types/jquery": "^3.5.30",
     "@types/node": "^22.5.0",
     "typescript": "^5.5.3",
-    "vite": "^5.4.1",
-    "vite-plugin-solid": "^2.10.2"
+    "vite": "^5.4.1"
   }
 }

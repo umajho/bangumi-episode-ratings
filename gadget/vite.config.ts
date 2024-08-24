@@ -1,9 +1,8 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
-import solid from "vite-plugin-solid";
 
 export default defineConfig({
-  plugins: [solid()],
+  plugins: [],
   build: {
     lib: {
       entry: resolve(__dirname, "src/main.ts"),
@@ -11,5 +10,6 @@ export default defineConfig({
       fileName: "dist",
       formats: ["iife"],
     },
+    minify: false,
   },
 });

@@ -1,8 +1,6 @@
-import { render } from "solid-js/web";
-
 import env from "./env";
-import { client, setToken } from "./global";
-import Debug from "./components/Debug";
+import { client, token } from "./global";
+import { renderDebug } from "./components/Debug";
 
 async function main() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -15,14 +13,13 @@ async function main() {
     }
     window.history.replaceState(null, "", newURL);
 
-    const token = await client.redeemTokenCoupon(tokenCoupon);
-    setToken(token);
+    token.setValue(await client.redeemTokenCoupon(tokenCoupon));
   }
 
   const goAuthorizeEl = document.createElement("div");
   document.body.prepend(goAuthorizeEl);
 
-  render(Debug, goAuthorizeEl);
+  renderDebug(goAuthorizeEl);
 }
 
 main();
