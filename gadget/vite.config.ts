@@ -6,7 +6,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "src/main.ts"),
-      name: "BangumiEpisodeRantingsGadget",
+      name: "BangumiEpisodeRatingsGadget",
       fileName: "dist",
       formats: ["iife"],
     },
