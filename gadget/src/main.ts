@@ -1,3 +1,5 @@
+import { version } from "../package.json";
+
 import env from "./env";
 import * as Global from "./global";
 import { renderScoreboard } from "./components/Scoreboard";
@@ -8,6 +10,19 @@ import { Watched } from "./utils";
 import { Score } from "./definitions";
 
 async function main() {
+  // @ts-ignore
+  const isInUserScriptRuntime = typeof GM_info !== "undefined";
+
+  if ($('meta[name="__bgm_ep_ratings__initialized"]').length) {
+    console.warn(
+      "检测到本脚本/超合金组件（单集评分 by Umajho A.K.A. um）先前已经初始化过，本实例将不会继续运行。",
+      { version, isInUserScriptRuntime },
+    );
+    return;
+  }
+  $('<meta name="__bgm_ep_ratings__initialized" content="true">')
+    .appendTo("head");
+
   const searchParams = new URLSearchParams(window.location.search);
   const tokenCoupon = searchParams.get(env.SEARCH_PARAMS_KEY_TOKEN_COUPON);
   if (tokenCoupon) {
