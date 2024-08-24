@@ -112,9 +112,9 @@ export function renderMyRating(
       }
       case "auth_link": {
         messageEl.html(/*html*/ `
-          若要为单集评分，请<a class="l">授权此应用</a>。
+          若要为单集评分，请<a class="l" target="_blank">授权此应用</a>。
           <br >
-          单集评分的服务端需要以此来确认你的身份。
+          单集评分应用需要以此来确认登录者。
         `);
         $(messageEl).find("a").attr(
           "href",
