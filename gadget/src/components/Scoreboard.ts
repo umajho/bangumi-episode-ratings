@@ -15,8 +15,13 @@ export function renderScoreboard(
   `).replaceAll(el);
 
   function updateNumber(score: number) {
-    $(el).find(".number").text(score.toFixed(4));
-    $(el).find(".description").text(describeScore(score));
+    if (Number.isNaN(score)) {
+      $(el).find(".number").text((0).toFixed(1));
+      $(el).find(".description").text("--");
+    } else {
+      $(el).find(".number").text(score.toFixed(4));
+      $(el).find(".description").text(describeScore(score));
+    }
   }
   updateNumber(props.score);
 

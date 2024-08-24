@@ -1,5 +1,5 @@
 import env from "./env";
-import { client, token } from "./global";
+import * as Global from "./global";
 import { renderDebug } from "./components/Debug";
 import { renderScoreboard } from "./components/Scoreboard";
 import { VotesData } from "./models/VotesData";
@@ -19,27 +19,21 @@ async function main() {
     }
     window.history.replaceState(null, "", newURL);
 
-    token.setValue(await client.mustRedeemTokenCoupon(tokenCoupon));
+    Global.token.setValue(
+      await Global.client.mustRedeemTokenCoupon(tokenCoupon),
+    );
   }
-
-  const votesData = new VotesData({ // TODO
-    1: Math.floor(Math.random() * 1000) + 1,
-    2: Math.floor(Math.random() * 1000) + 1,
-    3: Math.floor(Math.random() * 1000) + 1,
-    4: Math.floor(Math.random() * 1000) + 1,
-    5: Math.floor(Math.random() * 1000) + 1,
-    6: Math.floor(Math.random() * 1000) + 1,
-    7: Math.floor(Math.random() * 1000) + 1,
-    8: Math.floor(Math.random() * 1000) + 1,
-    9: Math.floor(Math.random() * 1000) + 1,
-    10: Math.floor(Math.random() * 1000) + 1,
-  });
 
   const debugEl = $("<div />");
   $("body").prepend(debugEl);
   renderDebug(debugEl);
 
   if (location.pathname.startsWith("/ep/")) {
+    const ratingsData = await Global.client.mustGetEpisodeRatings();
+    const votesData = new VotesData(
+      ratingsData.votes as { [_ in Score]?: number },
+    );
+
     const scoreboardEl = $("<div />");
     $("#columnEpA").prepend(scoreboardEl);
     renderScoreboard(scoreboardEl, { score: votesData.averageScore });
@@ -50,14 +44,9 @@ async function main() {
 
     const myRatingEl = $("<div />").insertAfter(".singleCommentList > .board");
     const myScore = new Watched<Score | null>(
-      // TODO
-      Math.floor(Math.random() * 10) + 1 as Score,
+      (ratingsData.userScore ?? null) as Score | null,
     );
-    renderMyRating(myRatingEl, {
-      score: myScore,
-      // TODO
-      submitScore: (score) => myScore.setValue(score),
-    });
+    renderMyRating(myRatingEl, { score: myScore });
   }
 }
 

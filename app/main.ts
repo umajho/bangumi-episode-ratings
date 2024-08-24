@@ -7,12 +7,6 @@ import router from "./src/routes/mod.ts";
 
 const app = new Application<State>();
 
-const VALID_BGM_HOSTNAMES = [
-  "bgm.tv",
-  "bangumi.tv",
-  "chii.in",
-];
-
 app.use(async (ctx, next) => {
   const isForAPI = ctx.request.url.pathname.startsWith("/api/");
 
@@ -28,7 +22,10 @@ app.use(async (ctx, next) => {
 
   const referrerURL = new URL(referrer);
   const hostname = referrerURL.hostname;
-  if (!VALID_BGM_HOSTNAMES.includes(referrerURL.hostname)) {
+  if (
+    !(env.VALID_BGM_HOSTNAMES as readonly string[])
+      .includes(referrerURL.hostname)
+  ) {
     ctx.response.body = makeErrorResponse(
       "UNSUPPORTED_REFERRER",
       `“${hostname}” 好像不是 bangumi 的站点。`,
@@ -56,7 +53,7 @@ app.use(async (ctx, next) => {
     if (scheme !== "Basic") {
       ctx.response.body = makeErrorResponse(
         "UNSUPPORTED_AUTHORIZATION_HEADER_SCHEME",
-        `不支持 ${scheme} 作为 Authorization Header 的 Scheme`,
+        `不支持 ${scheme} 作为 Authorization Header 的 Scheme。`,
         { isForAPI },
       );
       return;

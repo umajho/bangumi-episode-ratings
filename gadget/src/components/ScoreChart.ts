@@ -25,7 +25,7 @@ export function renderScoreChart(
   const totalVotes = votesData.totalVotes;
   const votesOfMostVotedScore = votesData.votesOfMostVotedScore;
   for (const score of scores) {
-    const votes = votesData.data[score];
+    const votes = votesData.getScoreVotes(score);
 
     const barEl = $("<div />");
     chartEl.prepend(barEl);
@@ -51,10 +51,12 @@ export function renderScoreChart(
     const barElRelativeOffsetLeft = barEl.offset()!.left - el.offset()!.left;
     tooltipEl.css("left", `${barElRelativeOffsetLeft + barEl.width()! / 2}px`);
 
-    let scoreVotes = votesData.data[props.score];
-    const percentage = (scoreVotes / votesData.totalVotes * 100).toFixed(2);
+    let scoreVotes = votesData.getScoreVotes(props.score);
+    const percentage = votesData.totalVotes
+      ? (scoreVotes / votesData.totalVotes * 100)
+      : 0;
     $(tooltipEl).find(".tooltip-inner").text(
-      `${percentage}% (${scoreVotes}人)`,
+      `${percentage.toFixed(2)}% (${scoreVotes}人)`,
     );
   }
   updateTooltip({ score: null });

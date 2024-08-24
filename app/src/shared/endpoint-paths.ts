@@ -8,5 +8,9 @@ export default {
     DEV: {
       WHOAMI: "whoami",
     },
+    V0: {
+      RATE_EPISODE: "rate-episode",
+      EPISODE_RATINGS: "episode-ratings",
+    },
   },
 } as const;

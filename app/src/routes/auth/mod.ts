@@ -6,17 +6,18 @@ import { generateToken } from "../../utils.ts";
 import { State, TokenCouponData, TokenData, UserData } from "../../types.ts";
 import { makeErrorResponse, makeOkResponseForAPI } from "../../responses.tsx";
 import env from "../../env.ts";
+import { bangumiClient } from "../../global.ts";
 
 export const router = new Router<State>();
 export default router;
 
 router.get("/" + ENDPOINT_PATHS.AUTH.BANGUMI_PAGE, (ctx) => {
-  const url = new URL(env.buildBGMOauthAuthorizeUrl(ctx.state.bgmBaseURL));
+  const url = new URL(env.buildBGMURLOauthAuthorize(ctx.state.bgmBaseURL));
   url.searchParams.set("client_id", env.BGM_APP_ID);
   url.searchParams.set("response_type", "code");
   url.searchParams.set(
     "redirect_uri",
-    env.buildAuthorizationCallbackURL(ENDPOINT_PATHS.AUTH.CALLBACK),
+    env.buildURLAuthorizationCallback(ENDPOINT_PATHS.AUTH.CALLBACK),
   );
 
   ctx.response.redirect(url);
@@ -25,24 +26,14 @@ router.get("/" + ENDPOINT_PATHS.AUTH.BANGUMI_PAGE, (ctx) => {
 router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
   const code = ctx.request.url.searchParams.get("code")!;
 
-  const data = await (async () => {
-    const url = env.buildBgmAccessTokenUrl(ctx.state.bgmBaseURL);
-    const params = new URLSearchParams();
-    params.append("grant_type", "authorization_code");
-    params.append("client_id", env.BGM_APP_ID);
-    params.append("client_secret", env.BGM_APP_SECRET);
-    params.append("code", code);
-    params.append(
-      "redirect_uri",
-      env.buildAuthorizationCallbackURL(ENDPOINT_PATHS.AUTH.CALLBACK),
-    );
-
-    const headers = new Headers();
-    headers.append("User-Agent", env.USER_AGENT);
-
-    const resp = await fetch(url, { method: "POST", body: params, headers });
-    return await resp.json();
-  })();
+  const data = await bangumiClient.postToGetAccessToken({
+    clientID: env.BGM_APP_ID,
+    clientSecret: env.BGM_APP_SECRET,
+    code,
+    redirectURI: env.buildURLAuthorizationCallback(
+      ENDPOINT_PATHS.AUTH.CALLBACK,
+    ),
+  });
 
   const userIDRaw = data["user_id"];
   if (!/^\d+$/.test(userIDRaw)) {
@@ -72,7 +63,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
       // 自己 tokens 的生成顺序），干脆就一股脑全清掉了。
 
       for (const token of userData.tokens) {
-        tx = tx.delete(["tokens", token]);
+        tx = tx.delete(env.buildKVKeyToken(token));
       }
       userData.tokens = [];
     }
@@ -80,10 +71,10 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
     userData.tokens.push(userToken);
 
     const result = await tx.check(userDataResult)
-      .set(["users", userID], userData)
-      .set(["tokens", userToken], { userID } satisfies TokenData)
+      .set(env.buildKVKeyUser(userID), userData)
+      .set(env.buildKVKeyToken(userToken), { userID } satisfies TokenData)
       .set(
-        ["tokenCoupons", userTokenCoupon],
+        env.buildKVKeyTokenCoupon(userTokenCoupon),
         {
           token: userToken,
           expiry: Date.now() + 1000 * 10,
@@ -106,7 +97,7 @@ router.post("/" + ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON, async (ctx) => {
   const kv = await Deno.openKv();
 
   const tokenCouponResult = await kv.get<TokenCouponData>(
-    ["tokenCoupons", tokenCoupon],
+    env.buildKVKeyTokenCoupon(tokenCoupon),
   );
 
   if (!tokenCouponResult.value || Date.now() > tokenCouponResult.value.expiry) {
@@ -116,7 +107,7 @@ router.post("/" + ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON, async (ctx) => {
 
   const result = await kv.atomic()
     .check(tokenCouponResult)
-    .delete(["tokenCoupons", tokenCoupon]).commit();
+    .delete(env.buildKVKeyTokenCoupon(tokenCoupon)).commit();
   if (!result.ok) {
     ctx.response.body = makeOkResponseForAPI(null);
     return;

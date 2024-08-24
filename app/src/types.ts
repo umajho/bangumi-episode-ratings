@@ -16,3 +16,16 @@ export interface TokenCouponData {
   token: string;
   expiry: number;
 }
+
+export interface EpisodeInfoData {
+  subjectID: number;
+}
+
+export interface UserSubjectEpisodeRatingData {
+  score: number | null;
+  submittedAtMs: number;
+  history: {
+    score: number | null;
+    submittedAtMs: number;
+  }[];
+}

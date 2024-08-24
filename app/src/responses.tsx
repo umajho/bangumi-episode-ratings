@@ -45,3 +45,10 @@ const Layout: FC<{ children: React.ReactNode }> = (props) => {
 export function makeOkResponseForAPI<T>(data: T): string {
   return JSON.stringify(["ok", data] satisfies APIOkResponse<T>);
 }
+
+export function makeErrorAuthRequiredResponseForAPI() {
+  return makeErrorResponseForAPI(
+    "AUTH_REQUIRED",
+    "尚未将账号关联至应用。",
+  );
+}

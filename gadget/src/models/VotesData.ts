@@ -2,23 +2,35 @@ import { Score, scores } from "../definitions";
 
 export class VotesData {
   constructor(
-    public readonly data: { [_ in Score]: number },
+    private readonly data: { [_ in Score]?: number },
   ) {}
+
+  getScoreVotes(score: Score): number {
+    return this.data[score] ?? 0;
+  }
 
   private totalVotesCache: number | null = null;
   get totalVotes(): number {
-    this.totalVotesCache ??= Object
-      .values(this.data)
-      .reduce((acc, cur) => acc + cur, 0);
-    return this.totalVotesCache;
+    if (this.totalVotesCache) return this.totalVotesCache;
+
+    let totalVotes = 0;
+    for (const score of scores) {
+      totalVotes += this.getScoreVotes(score);
+    }
+
+    return this.totalVotesCache = totalVotes;
   }
 
+  private averageScoreCache: number | null = null;
   get averageScore(): number {
+    if (this.averageScoreCache) return this.averageScoreCache;
+
     let totalScore = 0;
     for (const score of scores) {
-      totalScore += this.data[score] * score;
+      totalScore += this.getScoreVotes(score) * score;
     }
-    return totalScore / this.totalVotes;
+
+    return this.averageScoreCache = totalScore / this.totalVotes;
   }
 
   private mostVotedScoreCache: Score | null = null;
@@ -27,7 +39,7 @@ export class VotesData {
 
     let mostVotedScore: Score = scores[0];
     for (const score of scores.slice(1)) {
-      if (this.data[score] > this.data[mostVotedScore]) {
+      if (this.getScoreVotes(score) > this.getScoreVotes(mostVotedScore)) {
         mostVotedScore = score;
       }
     }
@@ -35,6 +47,6 @@ export class VotesData {
     return this.mostVotedScoreCache = mostVotedScore;
   }
   get votesOfMostVotedScore(): number {
-    return this.data[this.mostVotedScore];
+    return this.getScoreVotes(this.mostVotedScore);
   }
 }
