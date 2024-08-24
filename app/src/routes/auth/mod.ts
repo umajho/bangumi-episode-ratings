@@ -40,7 +40,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
     const headers = new Headers();
     headers.append("User-Agent", env.USER_AGENT);
 
-    const resp = await fetch(url, { method: "POST", body: params });
+    const resp = await fetch(url, { method: "POST", body: params, headers });
     return await resp.json();
   })();
 
