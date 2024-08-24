@@ -12,13 +12,13 @@ export function renderDebug(el: JQuery<HTMLElement>) {
 
   $(el).find("[data-sel=auth-link]").attr("href", client.URL_AUTH_BANGUMI_PAGE);
 
-  function renderWhoami(me: string) {
+  function updateWhoami(me: string) {
     $(el).find("[data-sel=whoami]").text(`whoami: ${me}`);
   }
-  renderWhoami("…");
+  updateWhoami("…");
 
   token.watch(async () => {
     const userID = await client.whoami();
-    renderWhoami(userID ? `${userID}` : "未登录");
+    updateWhoami(userID ? `${userID}` : "未登录");
   });
 }
