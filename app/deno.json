@@ -1,6 +1,6 @@
 {
   "deploy": {
-    "project": "8470931f-6d90-4630-8673-90f815cfd4d7",
+    "project": "bgm-ep-ratings",
     "exclude": [
       "**/node_modules"
     ],
