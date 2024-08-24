@@ -22,6 +22,10 @@ const env = {
     return Deno.env.get("BGM_APP_SECRET")!;
   },
 
+  get USER_AGENT(): string {
+    return Deno.env.get("USER_AGENT")!;
+  },
+
   get BGM_HOMEPAGE(): string {
     return Deno.env.get("BGM_HOMEPAGE_URL")!;
   },

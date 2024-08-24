@@ -37,6 +37,9 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
       env.buildAuthorizationCallbackURL(ENDPOINT_PATHS.AUTH.CALLBACK),
     );
 
+    const headers = new Headers();
+    headers.append("User-Agent", env.USER_AGENT);
+
     const resp = await fetch(url, { method: "POST", body: params });
     return await resp.json();
   })();
