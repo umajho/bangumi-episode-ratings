@@ -5,6 +5,8 @@ export default {
     REDEEM_TOKEN_COUPON: "redeem-token-coupon",
   },
   API: {
-    WHOAMI: "whoami",
+    DEV: {
+      WHOAMI: "whoami",
+    },
   },
 } as const;

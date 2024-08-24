@@ -20,7 +20,7 @@ export class Client {
   }
 
   async fetch(
-    group: "auth" | "api",
+    group: "auth" | "api" | "api/dev",
     endpointPath: string,
     opts: { method: "GET" | "POST"; body?: string },
   ): Promise<APIOkResponse<unknown> | APIErrorResponse> {
@@ -40,7 +40,10 @@ export class Client {
     return await resp.json();
   }
 
-  buildFullEndpoint(group: "auth" | "api", endpointPath: string): string {
+  buildFullEndpoint(
+    group: "auth" | "api" | "api/dev",
+    endpointPath: string,
+  ): string {
     return join(join(this.entrypoint, group + "/"), endpointPath);
   }
 
@@ -59,7 +62,7 @@ export class Client {
   async mustGetWhoami(): Promise<number | null> {
     if (!this.token) return null;
 
-    const data = await this.fetch("api", ENDPOINT_PATHS.API.WHOAMI, {
+    const data = await this.fetch("api/dev", ENDPOINT_PATHS.API.DEV.WHOAMI, {
       method: "GET",
     });
     return unwrap(data);
