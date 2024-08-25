@@ -3,8 +3,8 @@ const env = {
     return import.meta.env.VITE_APP_ENTRYPOINT_URL;
   },
 
-  LOCAL_STORAGE_KEY_TOKEN: "bgm_test_app_token",
-  SEARCH_PARAMS_KEY_TOKEN_COUPON: "bgm_test_app_token_coupon",
+  LOCAL_STORAGE_KEY_TOKEN: "bgm_ep_ratings_token",
+  SEARCH_PARAMS_KEY_TOKEN_COUPON: "bgm_ep_ratings_token_coupon",
 };
 
 export default env;

@@ -1,13 +1,34 @@
 import { version } from "../package.json";
 
 import env from "./env";
-import * as Global from "./global";
+import Global, { initializeGlobal } from "./global";
 import { renderScoreboard } from "./components/Scoreboard";
 import { VotesData } from "./models/VotesData";
 import { renderScoreChart } from "./components/ScoreChart";
 import { renderMyRating } from "./components/MyRating";
 import { Watched } from "./utils";
 import { Score } from "./definitions";
+
+function migrate() {
+  const tokenInWrongPlace = localStorage.getItem("bgm_test_app_token");
+  if (tokenInWrongPlace) {
+    localStorage.setItem(env.LOCAL_STORAGE_KEY_TOKEN, tokenInWrongPlace);
+    localStorage.removeItem("bgm_test_app_token");
+  }
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const tokenCouponInWrongPlace = searchParams.get("bgm_test_app_token_coupon");
+  if (tokenCouponInWrongPlace) {
+    searchParams.set(
+      env.SEARCH_PARAMS_KEY_TOKEN_COUPON,
+      tokenCouponInWrongPlace,
+    );
+    searchParams.delete("bgm_test_app_token_coupon");
+
+    let newURL = `${window.location.pathname}?${searchParams.toString()}`;
+    window.history.replaceState(null, "", newURL);
+  }
+}
 
 async function main() {
   // @ts-ignore
@@ -60,4 +81,6 @@ async function main() {
   }
 }
 
+migrate();
+initializeGlobal();
 main();

@@ -1,5 +1,5 @@
 import { Score } from "./definitions";
-import * as Global from "./global";
+import Global from "./global";
 import {
   APIErrorResponse,
   APIOkResponse,

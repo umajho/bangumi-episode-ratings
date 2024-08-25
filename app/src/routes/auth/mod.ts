@@ -86,7 +86,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
   }
 
   const url = new URL(ctx.state.bgmBaseURL);
-  url.searchParams.set("bgm_test_app_token_coupon", userTokenCoupon);
+  url.searchParams.set("bgm_ep_ratings_token_coupon", userTokenCoupon);
 
   ctx.response.redirect(url);
 });

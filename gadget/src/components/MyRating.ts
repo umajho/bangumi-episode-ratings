@@ -1,6 +1,6 @@
 import { describeScore, Score, scores } from "../definitions";
 import { Watched } from "../utils";
-import * as Global from "../global";
+import Global from "../global";
 
 export function renderMyRating(
   el: JQuery<HTMLElement>,
