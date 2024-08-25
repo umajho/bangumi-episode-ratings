@@ -1,6 +1,7 @@
 export interface State {
   bgmBaseURL: string;
 
+  gadgetVersion: string | null;
   token: string | null;
 }
 

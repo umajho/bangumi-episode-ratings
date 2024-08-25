@@ -1,5 +1,3 @@
-import { version } from "../package.json";
-
 import env from "./env";
 import Global, { initializeGlobal } from "./global";
 import { renderScoreboard } from "./components/Scoreboard";
@@ -37,7 +35,7 @@ async function main() {
   if ($('meta[name="__bgm_ep_ratings__initialized"]').length) {
     console.warn(
       "检测到本脚本/超合金组件（单集评分 by Umajho A.K.A. um）先前已经初始化过，本实例将不会继续运行。",
-      { version, isInUserScriptRuntime },
+      { version: Global.version, isInUserScriptRuntime },
     );
     return;
   }

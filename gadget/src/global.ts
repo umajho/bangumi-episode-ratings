@@ -1,3 +1,5 @@
+import { version } from "../package.json";
+
 import { Client } from "./client";
 import env from "./env";
 import { Watched } from "./utils";
@@ -64,6 +66,7 @@ function makeGlobal() {
   });
 
   return {
+    version,
     subjectID,
     episodeID,
     claimedUserID,

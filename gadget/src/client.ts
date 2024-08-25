@@ -25,7 +25,10 @@ export class Client {
   }
 
   get URL_AUTH_BANGUMI_PAGE(): string {
-    return this.buildFullEndpoint("auth", ENDPOINT_PATHS.AUTH.BANGUMI_PAGE);
+    const url = //
+      new URL(this.buildFullEndpoint("auth", ENDPOINT_PATHS.AUTH.BANGUMI_PAGE));
+    url.searchParams.set("gadget_version", Global.version);
+    return url.toString();
   }
 
   async rateEpisode(
@@ -93,6 +96,7 @@ export class Client {
     if (this.token) {
       headers.set("Authorization", `Basic ${this.token}`);
     }
+    headers.set("X-Gadget-Version", Global.version);
 
     try {
       const resp = await fetch(url, {

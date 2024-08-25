@@ -12,6 +12,9 @@ export const router = new Router<State>();
 export default router;
 
 router.get("/" + ENDPOINT_PATHS.AUTH.BANGUMI_PAGE, (ctx) => {
+  const gadgetVersion = ctx.request.url.searchParams.get("gadget_version");
+  ctx.state.gadgetVersion = gadgetVersion;
+
   const url = new URL(env.buildBGMURLOauthAuthorize(ctx.state.bgmBaseURL));
   url.searchParams.set("client_id", env.BGM_APP_ID);
   url.searchParams.set("response_type", "code");
@@ -19,11 +22,18 @@ router.get("/" + ENDPOINT_PATHS.AUTH.BANGUMI_PAGE, (ctx) => {
     "redirect_uri",
     env.buildURLAuthorizationCallback(ENDPOINT_PATHS.AUTH.CALLBACK),
   );
+  url.searchParams.set(
+    "state",
+    JSON.stringify({ gadgetVersion: ctx.state.gadgetVersion }),
+  );
 
   ctx.response.redirect(url);
 });
 
 router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
+  const state = JSON.parse(ctx.request.url.searchParams.get("state")!);
+  ctx.state.gadgetVersion = state.gadgetVersion;
+
   const code = ctx.request.url.searchParams.get("code")!;
 
   const data = await bangumiClient.postToGetAccessToken({
@@ -87,6 +97,9 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
 
   const url = new URL(env.BGM_PATH_GADGET_CONFIRM, ctx.state.bgmBaseURL);
   url.searchParams.set("bgm_ep_ratings_token_coupon", userTokenCoupon);
+  if (!ctx.state.gadgetVersion) { // 兼容可能在旧版本组件中存在的错误。
+    url.searchParams.set("bgm_test_app_token_coupon", userTokenCoupon);
+  }
 
   ctx.response.redirect(url);
 });

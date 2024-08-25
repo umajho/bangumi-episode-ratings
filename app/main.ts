@@ -45,7 +45,10 @@ app.use(async (ctx, next) => {
   ctx.response.headers.set("Access-Control-Allow-Origin", ctx.state.bgmBaseURL);
   ctx.response.headers.set("Access-Control-Allow-Credentials", "true");
   ctx.response.headers.set("Access-Control-Allow-Methods", "GET, POST");
-  ctx.response.headers.set("Access-Control-Allow-Headers", "Authorization");
+  ctx.response.headers.set(
+    "Access-Control-Allow-Headers",
+    "Authorization, X-Gadget-Version",
+  );
 
   if (ctx.request.method === "OPTIONS") {
     ctx.response.status = 204;
@@ -67,6 +70,9 @@ app.use(async (ctx, next) => {
   } else {
     ctx.state.token = null;
   }
+
+  const gadgetVersion = ctx.request.headers.get("X-Gadget-Version");
+  ctx.state.gadgetVersion = gadgetVersion;
 
   await next();
 });
