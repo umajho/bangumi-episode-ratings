@@ -57,6 +57,8 @@ async function main() {
     Global.token.setValue(
       await Global.client.mustRedeemTokenCoupon(tokenCoupon),
     );
+
+    window.close();
   }
 
   if (location.pathname.startsWith("/ep/")) {

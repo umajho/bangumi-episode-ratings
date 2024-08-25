@@ -65,9 +65,9 @@ export function renderMyRating(
         alarmScore = ratedScore;
       }
       if (alarmScore !== null) {
-        $(".alarm").text(describeScoreEx(alarmScore));
+        $(starsContainerEl).find(".alarm").text(describeScoreEx(alarmScore));
       } else {
-        $(".alarm").text("");
+        $(starsContainerEl).find(".alarm").text("");
       }
     }
 
@@ -86,6 +86,14 @@ export function renderMyRating(
     $(".rating-cancel").removeClass("star-rating-hover");
     if (hoveredScore === "cancel") {
       $(".rating-cancel").addClass("star-rating-hover");
+    }
+  }
+
+  function updateStarsContainerVisibility(isVisible: boolean) {
+    if (isVisible) {
+      starsContainerEl.css("display", "");
+    } else {
+      starsContainerEl.css("display", "none");
     }
   }
 
@@ -112,7 +120,9 @@ export function renderMyRating(
       }
       case "auth_link": {
         messageEl.html(/*html*/ `
-          若要为单集评分，请<a class="l" target="_blank">授权此应用</a>。
+          若要为单集评分，或查看自己先前的单集评分，
+          <br >
+          请先<a class="l" target="_blank">授权此应用</a>。
           <br >
           单集评分应用需要以此来确认登录者。
         `);
@@ -128,16 +138,23 @@ export function renderMyRating(
   }
   updateMessage(["none"]);
 
-  async function rateEpisode(score: Score | null) {
-    if (!Global.claimedUserID) {
+  Global.token.watch((newToken) => {
+    if (newToken) {
+      updateMessage(["none"]);
+      updateStarsContainerVisibility(true);
+    } else {
       updateMessage(["auth_link"]);
-      return;
+      updateStarsContainerVisibility(false);
     }
+  });
+
+  async function rateEpisode(score: Score | null) {
+    if (!Global.token.getValueOnce()) return;
 
     updateMessage(["processing"]);
 
     const resp = await Global.client.rateEpisode({
-      userID: Global.claimedUserID,
+      userID: Global.claimedUserID!,
       subjectID: Global.subjectID!,
       episodeID: Global.episodeID!,
       score,

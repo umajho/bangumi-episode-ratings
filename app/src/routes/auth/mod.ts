@@ -85,7 +85,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
     isOk = result.ok;
   }
 
-  const url = new URL(ctx.state.bgmBaseURL);
+  const url = new URL(env.BGM_PATH_GADGET_CONFIRM, ctx.state.bgmBaseURL);
   url.searchParams.set("bgm_ep_ratings_token_coupon", userTokenCoupon);
 
   ctx.response.redirect(url);

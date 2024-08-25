@@ -53,6 +53,8 @@ const env = {
     return join(bgmBaseURL, "/oauth/authorize");
   },
 
+  BGM_PATH_GADGET_CONFIRM: "/group/topic/404326",
+
   BGM_PATH_OAUTH_ACCESS_TOKEN: "/oauth/access_token",
 
   BGM_API_PATH_V0_EPISODES: "/v0/episodes",
