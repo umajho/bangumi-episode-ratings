@@ -47,6 +47,11 @@ app.use(async (ctx, next) => {
   ctx.response.headers.set("Access-Control-Allow-Methods", "GET, POST");
   ctx.response.headers.set("Access-Control-Allow-Headers", "Authorization");
 
+  if (ctx.request.method === "OPTIONS") {
+    ctx.response.status = 204;
+    return;
+  }
+
   const authorizationHeader = ctx.request.headers.get("Authorization");
   if (authorizationHeader) {
     const [scheme, rest] = authorizationHeader.split(" ", 2);
