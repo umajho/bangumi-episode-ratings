@@ -15,7 +15,7 @@ export default defineConfig({
         version: PackageJSON.version,
         description: PackageJSON.description,
         license: "MIT",
-        homepage: "https://github.com/umajho/bangumi-episode-ratings",
+        website: "https://github.com/umajho/bangumi-episode-ratings",
         match: [
           "https://bangumi.tv/*",
           "https://bgm.tv/*",
