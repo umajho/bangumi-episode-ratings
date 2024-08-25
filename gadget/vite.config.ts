@@ -10,9 +10,11 @@ export default defineConfig({
     Userscript({
       entry: resolve(__dirname, "src/main.ts"),
       header: {
+        namespace: "https://github.com/umajho",
         name: "bangumi-episode-ratings-gadget",
         version: PackageJSON.version,
         description: PackageJSON.description,
+        license: "MIT",
         match: [
           "https://bangumi.tv/*",
           "https://bgm.tv/*",
