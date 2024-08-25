@@ -172,9 +172,7 @@ router.get("/" + ENDPOINT_PATHS.API.V0.EPISODE_RATINGS, async (ctx) => {
     votes[score] = Number(result.value as Deno.KvU64);
   }
 
-  const data: GetEpisodeRatingsResponseData = {
-    votes,
-  };
+  const data: GetEpisodeRatingsResponseData = { votes };
 
   if (ctx.state.token) {
     const userID = await KVUtils.getUserID(kv, ctx.state.token);
