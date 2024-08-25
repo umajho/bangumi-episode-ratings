@@ -25,7 +25,7 @@ export const claimedUserID: number | null = (() => {
   return (window as any).CHOBITS_UID || null;
 })();
 
-if (!claimedUserID === null) {
+if (claimedUserID === null) {
   localStorage.removeItem(env.LOCAL_STORAGE_KEY_TOKEN);
 }
 
