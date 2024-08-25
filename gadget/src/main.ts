@@ -62,13 +62,18 @@ async function main() {
   }
 
   if (location.pathname.startsWith("/ep/")) {
+    const scoreboardEl = $(/*html*/ `
+      <div class="grey" style="float: right;">
+        单集评分组件加载中…
+      </div>
+    `);
+    $("#columnEpA").prepend(scoreboardEl);
+
     const ratingsData = await Global.client.mustGetEpisodeRatings();
     const votesData = new VotesData(
       ratingsData.votes as { [_ in Score]?: number },
     );
 
-    const scoreboardEl = $("<div />");
-    $("#columnEpA").prepend(scoreboardEl);
     renderScoreboard(scoreboardEl, { score: votesData.averageScore });
 
     const scoreChartEl = $("<div />").insertBefore("#columnEpA > .epDesc");
