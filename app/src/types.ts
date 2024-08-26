@@ -1,9 +1,18 @@
+import env from "./env.ts";
+
 export interface State {
-  bgmBaseURL: string;
+  referrerHostname:
+    | `https://${(typeof env.VALID_BGM_HOSTNAMES)[number]}`
+    | null;
 
   gadgetVersion: string | null;
   token: string | null;
 }
+
+export type StateForAuth = State & {
+  referrerHostname: NonNullable<State["referrerHostname"]>;
+};
+export type StateForAPI = Omit<State, "">;
 
 export interface UserData {
   tokens: string[];

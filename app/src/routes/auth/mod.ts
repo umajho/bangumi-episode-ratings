@@ -3,19 +3,26 @@ import { Router } from "jsr:@oak/oak@14/router";
 import ENDPOINT_PATHS from "../../shared/endpoint-paths.ts";
 
 import { generateToken } from "../../utils.ts";
-import { State, TokenCouponData, TokenData, UserData } from "../../types.ts";
+import {
+  StateForAuth,
+  TokenCouponData,
+  TokenData,
+  UserData,
+} from "../../types.ts";
 import { makeErrorResponse, makeOkResponseForAPI } from "../../responses.tsx";
 import env from "../../env.ts";
 import { bangumiClient } from "../../global.ts";
 
-export const router = new Router<State>();
+export const router = new Router<StateForAuth>();
 export default router;
 
 router.get("/" + ENDPOINT_PATHS.AUTH.BANGUMI_PAGE, (ctx) => {
   const gadgetVersion = ctx.request.url.searchParams.get("gadget_version");
   ctx.state.gadgetVersion = gadgetVersion;
 
-  const url = new URL(env.buildBGMURLOauthAuthorize(ctx.state.bgmBaseURL));
+  const url = new URL(
+    env.buildBGMURLOauthAuthorize(ctx.state.referrerHostname),
+  );
   url.searchParams.set("client_id", env.BGM_APP_ID);
   url.searchParams.set("response_type", "code");
   url.searchParams.set(
@@ -95,7 +102,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
     isOk = result.ok;
   }
 
-  const url = new URL(env.BGM_PATH_GADGET_CONFIRM, ctx.state.bgmBaseURL);
+  const url = new URL(env.BGM_PATH_GADGET_CONFIRM, ctx.state.referrerHostname);
   url.searchParams.set("bgm_ep_ratings_token_coupon", userTokenCoupon);
   if (!ctx.state.gadgetVersion) { // 兼容可能在旧版本组件中存在的错误。
     url.searchParams.set("bgm_test_app_token_coupon", userTokenCoupon);

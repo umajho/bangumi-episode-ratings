@@ -2,7 +2,7 @@ import { Router, RouterContext } from "jsr:@oak/oak@14";
 
 import {
   EpisodeInfoData,
-  State,
+  StateForAPI,
   UserSubjectEpisodeRatingData,
 } from "../../../types.ts";
 import ENDPOINT_PATHS from "../../../shared/endpoint-paths.ts";
@@ -20,7 +20,7 @@ import {
 import env from "../../../env.ts";
 import { bangumiClient } from "../../../global.ts";
 
-export const router = new Router<State>();
+export const router = new Router<StateForAPI>();
 export default router;
 
 router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
@@ -198,7 +198,7 @@ router.get("/" + ENDPOINT_PATHS.API.V0.EPISODE_RATINGS, async (ctx) => {
 
 function tryExtractNumberFromCTXSearchParams(
   // deno-lint-ignore no-explicit-any
-  ctx: RouterContext<string, any, State>,
+  ctx: RouterContext<string, any, any>,
   key: string,
 ): number | null {
   const raw = ctx.request.url.searchParams.get(key);
