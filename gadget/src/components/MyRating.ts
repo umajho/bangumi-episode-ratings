@@ -141,7 +141,7 @@ export function renderMyRating(
       }
       case "auth_link": {
         messageEl.html(/*html*/ `
-          若要为单集评分，或查看自己先前的单集评分，
+          若要查看或提交自己的单集评分，
           <br >
           请先<a class="l" target="_blank">授权此应用</a>。
           <br >
