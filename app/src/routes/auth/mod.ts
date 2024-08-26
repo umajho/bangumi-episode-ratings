@@ -21,7 +21,7 @@ export default router;
 
 router.get("/" + ENDPOINT_PATHS.AUTH.BANGUMI_PAGE, (ctx) => {
   const gadgetVersion = ctx.request.url.searchParams.get("gadget_version");
-  ctx.state.gadgetVersion = gadgetVersion;
+  gadgetVersion;
 
   const url = new URL(
     env.buildBGMURLOauthAuthorize(ctx.state.referrerHostname),
@@ -34,7 +34,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.BANGUMI_PAGE, (ctx) => {
   );
   url.searchParams.set(
     "state",
-    JSON.stringify({ gadgetVersion: ctx.state.gadgetVersion }),
+    JSON.stringify({ gadgetVersion }),
   );
 
   ctx.response.redirect(url);
