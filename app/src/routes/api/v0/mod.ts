@@ -61,7 +61,7 @@ router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
       if (!episodeData) {
         ctx.response.body = stringifyErrorResponseForAPI(
           "UNABLE_TO_VERIFY_THAT_EPISODE_IS_IN_SUBJECT",
-          "服务器无法验证当前剧集是否属于当前条目…",
+          "服务器无法验证当前剧集是否属于当前条目…（可能是因为当前条目属于受限内容）",
         );
         return;
       }
