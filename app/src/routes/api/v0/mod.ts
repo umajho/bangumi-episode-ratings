@@ -11,6 +11,7 @@ import {
   GetEpisodeRatingsResponseData,
   GetEpisodeRatingsResponseData__Until_0_1_13,
   GetMyEpisodeRatingResponseData,
+  GetSubjectEpisodesResponseData,
   RateEpisodeRequestData,
   RateEpisodeResponseData,
 } from "../../../shared/dto.ts";
@@ -152,6 +153,88 @@ router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
   });
 });
 
+router.get(
+  "/" + ENDPOINT_PATHS.API.V0.SUBJECT_EPISODES_RATINGS,
+  async (ctx) => {
+    const claimedUserID = //
+      tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id");
+    const subjectID = tryExtractNumberFromCTXSearchParams(ctx, "subject_id");
+
+    if (!subjectID) {
+      ctx.response.body = //
+        stringifyErrorResponseForAPI("BAD_REQUEST", "参数有误。");
+      return;
+    }
+
+    const kv = await Deno.openKv();
+
+    const LIMIT = 1000;
+    const episodesVotes: {
+      [episodeID: number]: { [score: number]: number } | null;
+    } = {};
+    let lastEpisodeID: number | null = null;
+    let count = 0;
+    for await (
+      const result of kv.list({
+        prefix: env.buildKVPrefixSubjectEpisodeScoreVotes([subjectID]),
+      }, { limit: LIMIT })
+    ) {
+      count++;
+
+      const episodeID = result.key.at(-2) as number;
+      lastEpisodeID = episodeID;
+
+      const score = result.key.at(-1) as number;
+
+      const scoreVotes = result.value as Deno.KvU64;
+      if (scoreVotes.value) {
+        const votes = episodesVotes[episodeID] ??
+          (episodesVotes[episodeID] = {});
+        votes[score] = Number(scoreVotes.value);
+      } else if (!episodesVotes[episodeID]) {
+        episodesVotes[episodeID] = null;
+      }
+    }
+
+    const isCertainThatEpisodesVotesAreIntegral = count < LIMIT;
+    if (
+      !isCertainThatEpisodesVotesAreIntegral &&
+      episodesVotes[lastEpisodeID!] &&
+      !(10 in episodesVotes[lastEpisodeID!]!)
+    ) {
+      // `list` 返回的结果可能被截取了，靠最后的那一集的评分投票数据可能因此而不完整，故而删去。
+      delete episodesVotes[lastEpisodeID!];
+    }
+
+    const data: GetSubjectEpisodesResponseData = {
+      episodes_votes: episodesVotes,
+      is_certain_that_episodes_votes_are_integral:
+        isCertainThatEpisodesVotesAreIntegral,
+    };
+
+    if (ctx.state.token) {
+      const userID = await KVUtils.getUserID(kv, ctx.state.token);
+      if (userID && claimedUserID === userID) {
+        data.my_ratings = {};
+
+        const prefix = env
+          .buildKVPrefixUserSubjectEpisodeRating([userID, subjectID]);
+
+        for await (
+          const result of kv.list<UserSubjectEpisodeRatingData>({ prefix })
+        ) {
+          const episodeID = result.key.at(-1) as number;
+          if (result.value.score !== null) {
+            data.my_ratings[episodeID] = result.value.score;
+          }
+        }
+      }
+    }
+
+    ctx.response.body = stringifyOkResponseForAPI(data);
+  },
+);
+
 router.get("/" + ENDPOINT_PATHS.API.V0.EPISODE_RATINGS, async (ctx) => {
   const claimedUserID = //
     tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id");
@@ -171,11 +254,15 @@ router.get("/" + ENDPOINT_PATHS.API.V0.EPISODE_RATINGS, async (ctx) => {
   const votes: { [score: number]: number } = {};
   for await (
     const result of kv.list({
-      prefix: env.buildKVPrefixSubjectEpisodeScoreVotes(subjectID, episodeID),
+      prefix: env.buildKVPrefixSubjectEpisodeScoreVotes([subjectID, episodeID]),
     })
   ) {
     const score = result.key.at(-1) as number;
-    votes[score] = Number(result.value as Deno.KvU64);
+
+    const scoreVotes = result.value as Deno.KvU64;
+    if (scoreVotes.value) {
+      votes[score] = Number(scoreVotes.value);
+    }
   }
 
   const data: GetEpisodeRatingsResponseData = { votes };

@@ -83,6 +83,11 @@ const env = {
       episodeID,
     ] as const;
   },
+  buildKVPrefixUserSubjectEpisodeRating(
+    subKey: [userID: number, subjectID: number],
+  ) {
+    return [kvPrefixes["user-subject-episode-rating-map"], ...subKey] as const;
+  },
   buildKVKeySubjectEpisodeScoreVotes(
     subjectID: number,
     episodeID: number,
@@ -95,12 +100,10 @@ const env = {
       score,
     ] as const;
   },
-  buildKVPrefixSubjectEpisodeScoreVotes(subjectID: number, episodeID: number) {
-    return [
-      kvPrefixes["subject-episode-score-votes"],
-      subjectID,
-      episodeID,
-    ] as const;
+  buildKVPrefixSubjectEpisodeScoreVotes(
+    subKey: [subjectID: number] | [subjectID: number, episodeID: number],
+  ) {
+    return [kvPrefixes["subject-episode-score-votes"], ...subKey] as const;
   },
 } as const;
 

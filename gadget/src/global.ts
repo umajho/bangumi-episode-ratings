@@ -16,10 +16,11 @@ function makeGlobal() {
     let subjectID: number | null = null;
     let episodeID: number | null = null;
 
-    if (location.pathname.startsWith("/subject/")) {
-      subjectID = Number(location.pathname.split("/")[2]);
-    } else if (location.pathname.startsWith("/ep/")) {
-      episodeID = Number(location.pathname.split("/")[2]);
+    const pathParts = window.location.pathname.split("/").filter(Boolean);
+    if (pathParts[0] === "subject") {
+      subjectID = Number(pathParts[1]);
+    } else if (pathParts.length === 2 && pathParts[0] === "ep") {
+      episodeID = Number(pathParts[1]);
 
       const subjectHref = $("#headerSubject > .nameSingle > a").attr("href")!;
       subjectID = Number(subjectHref.split("/")[2]);

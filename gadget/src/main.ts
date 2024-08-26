@@ -1,10 +1,7 @@
 import env from "./env";
 import Global, { initializeGlobal } from "./global";
-import { renderScoreboard } from "./components/Scoreboard";
-import { VotesData } from "./models/VotesData";
-import { renderScoreChart } from "./components/ScoreChart";
-import { renderMyRating } from "./components/MyRating";
-import { Score } from "./definitions";
+import { processEpPage } from "./page-processors/ep";
+import { processSubjectEpListPage } from "./page-processors/subject-ep-list";
 
 function migrate() {
   const tokenInWrongPlace = localStorage.getItem("bgm_test_app_token");
@@ -58,32 +55,14 @@ async function main() {
     window.close();
   }
 
-  if (location.pathname.startsWith("/ep/")) {
-    const scoreboardEl = $(/*html*/ `
-      <div class="grey" style="float: right;">
-        单集评分组件加载中…
-      </div>
-    `);
-    $("#columnEpA").prepend(scoreboardEl);
-
-    const ratingsData = await Global.client.mustGetEpisodeRatings();
-    const votesData = new VotesData(
-      ratingsData.votes as { [_ in Score]?: number },
-    );
-
-    renderScoreboard(scoreboardEl, { score: votesData.averageScore });
-
-    const scoreChartEl = $("<div />").insertBefore("#columnEpA > .epDesc");
-    renderScoreChart(scoreChartEl, { votesData });
-    $(/*html*/ `<div class="clear" />`).insertAfter("#columnEpA > .epDesc");
-
-    const myRatingEl = $("<div />").insertAfter(".singleCommentList > .board");
-    if (!ratingsData.my_rating) {
-      Global.token.setValue(null);
-    }
-    renderMyRating(myRatingEl, {
-      ratedScore: (ratingsData.my_rating?.score ?? null) as Score | null,
-    });
+  const pathParts = window.location.pathname.split("/").filter(Boolean);
+  if (
+    pathParts.length === 3 &&
+    pathParts[0] === "subject" && pathParts[2] === "ep"
+  ) {
+    await processSubjectEpListPage();
+  } else if (pathParts.length === 2 && pathParts[0] === "ep") {
+    await processEpPage();
   }
 }
 

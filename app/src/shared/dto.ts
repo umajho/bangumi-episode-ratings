@@ -43,3 +43,10 @@ export interface GetEpisodeRatingsResponseData {
 export interface GetMyEpisodeRatingResponseData {
   score: number | null;
 }
+
+export interface GetSubjectEpisodesResponseData {
+  episodes_votes: { [episode_id: number]: { [score: number]: number } | null };
+  /** 是否确定所有剧集的评分得票数据都在 `episodes_votes` 中。 */
+  is_certain_that_episodes_votes_are_integral: boolean;
+  my_ratings?: { [episode_id: number]: number };
+}
