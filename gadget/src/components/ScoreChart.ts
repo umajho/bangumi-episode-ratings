@@ -93,6 +93,4 @@ function renderBar(
   $(el)
     .on("mouseover", () => props.updateTooltip({ score: props.score }))
     .on("mouseout", () => props.updateTooltip({ score: null }));
-
-  return el;
 }

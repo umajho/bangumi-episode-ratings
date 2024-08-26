@@ -24,6 +24,4 @@ export function renderScoreboard(
     }
   }
   updateNumber(props.score);
-
-  return el;
 }
