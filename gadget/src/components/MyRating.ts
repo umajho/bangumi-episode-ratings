@@ -83,9 +83,9 @@ export function renderMyRating(
         alarmScore = ratedScore;
       }
       if (alarmScore !== null) {
-        $(starsContainerEl).find(".alarm").text(describeScoreEx(alarmScore));
+        $(el).find(".alarm").text(describeScoreEx(alarmScore));
       } else {
-        $(starsContainerEl).find(".alarm").text("");
+        $(el).find(".alarm").text("");
       }
     }
 
