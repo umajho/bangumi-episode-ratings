@@ -7,7 +7,7 @@ export async function processSubjectEpListPage() {
   const epsRatings = await Global.client.mustGetSubjectEpisodesRatings();
 
   $('[name="edit_ep_batch"] li').each((_, li) => {
-    if (!$(li).find(".listEpPrgManager").length) return;
+    if (!$(li).find('[name="ep_mod[]"]').length) return;
 
     const episodeID = (() => {
       const href = $(li).find("> h6 > a").attr("href")!;
