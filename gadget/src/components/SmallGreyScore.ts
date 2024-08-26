@@ -12,8 +12,8 @@ export function renderSmallGreyScore(
     <button type="button" style="display: none;">显示评分</button>
   `).replaceAll(el);
 
-  const small = el.filter((_, el) => el.tagName === "SMALL");
-  const button = el.filter((_, el) => el.tagName === "BUTTON");
+  const smallEl = el.filter((_, el) => el.tagName === "SMALL");
+  const buttonEl = el.filter((_, el) => el.tagName === "BUTTON");
 
   const text = (() => {
     const score = props.votesData.averageScore;
@@ -21,15 +21,15 @@ export function renderSmallGreyScore(
     const votes = props.votesData.totalVotes;
     return `/ 评分:${scoreText} (人数:+${votes})`;
   })();
-  small.text(text);
+  smallEl.text(text);
 
   if (props.requiresClickToReveal) {
-    button.css("display", "");
-    button.on("click", () => {
-      small.css("display", "");
-      button.css("display", "none");
+    buttonEl.css("display", "");
+    buttonEl.on("click", () => {
+      smallEl.css("display", "");
+      buttonEl.css("display", "none");
     });
   } else {
-    small.css("display", "");
+    smallEl.css("display", "");
   }
 }

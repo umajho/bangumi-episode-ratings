@@ -29,6 +29,9 @@ export async function processEpPage() {
     Global.token.setValue(null);
   }
   renderMyRating(myRatingEl, {
+    episodeID: Global.episodeID!,
     ratedScore: (ratingsData.my_rating?.score ?? null) as Score | null,
+    isPrimary: true,
+    canRefetchAfterAuth: true,
   });
 }

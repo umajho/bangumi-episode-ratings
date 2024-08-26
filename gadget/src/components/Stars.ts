@@ -72,9 +72,9 @@ export function renderStars(
       }
     }
 
-    $(".rating-cancel").removeClass("star-rating-hover");
+    $(el).find(".rating-cancel").removeClass("star-rating-hover");
     if (hoveredScore === "cancel") {
-      $(".rating-cancel").addClass("star-rating-hover");
+      $(el).find(".rating-cancel").addClass("star-rating-hover");
     }
   }
 

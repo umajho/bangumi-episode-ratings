@@ -5,14 +5,19 @@ import { renderStars } from "./Stars";
 
 export function renderMyRating(
   el: JQuery<HTMLElement>,
-  props: { ratedScore: Score | null },
+  props: {
+    episodeID: number;
+    ratedScore: Score | null;
+    isPrimary: boolean;
+    canRefetchAfterAuth: boolean;
+  },
 ) {
   const ratedScore = new Watched<Score | null>(props.ratedScore);
   const hoveredScore = new Watched<Score | null | "cancel">(null);
 
   el = $(/*html*/ `
     <div style="float: right; display: flex; flex-direction: column;">
-      <p>我的评价:
+      <p style="font-size: 12px;">我的评价:
         <span class="alarm"></span>
       </p>
       <div class="stars-container"></div>
@@ -33,7 +38,7 @@ export function renderMyRating(
     },
   });
 
-  $(".rating-cancel")
+  $(el).find(".rating-cancel")
     .on("mouseover", () => hoveredScore.setValue("cancel"))
     .on("mouseout", () => hoveredScore.setValue(null))
     .on("click", () => rateEpisode(null));
@@ -98,25 +103,29 @@ export function renderMyRating(
         break;
       }
       case "requiring_fetch": {
-        messageEl.html(/*html*/ `
-          点击<button class="l">此处</button>或刷新本页以获取。 
-        `);
-        $(messageEl).find("button").on("click", async () => {
-          updateMessage(["loading"]);
-          const resp = await Global.client.getMyEpisodeRating();
-          if (resp[0] === "auth_required") {
-            Global.token.setValue(null);
-          } else if (resp[0] === "error") {
-            const [_, _name, message] = resp;
-            updateMessage(["error", message]);
-          } else if (resp[0] === "ok") {
-            const [_, data] = resp;
-            updateMessage(["none"]);
-            ratedScore.setValue(data.score as Score | null);
-          } else {
-            resp satisfies never;
-          }
-        });
+        if (props.canRefetchAfterAuth) {
+          messageEl.html(/*html*/ `
+            点击<button class="l">此处</button>或刷新本页以获取。 
+          `);
+          $(messageEl).find("button").on("click", async () => {
+            updateMessage(["loading"]);
+            const resp = await Global.client.getMyEpisodeRating();
+            if (resp[0] === "auth_required") {
+              Global.token.setValue(null);
+            } else if (resp[0] === "error") {
+              const [_, _name, message] = resp;
+              updateMessage(["error", message]);
+            } else if (resp[0] === "ok") {
+              const [_, data] = resp;
+              updateMessage(["none"]);
+              ratedScore.setValue(data.score as Score | null);
+            } else {
+              resp satisfies never;
+            }
+          });
+        } else {
+          messageEl.text("请刷新本页以获取。 ");
+        }
         break;
       }
       default:
@@ -128,13 +137,19 @@ export function renderMyRating(
   Global.token.watch((newToken, oldToken) => {
     if (newToken) {
       if (oldToken !== undefined) {
-        updateMessage(["requiring_fetch"]);
+        if (props.isPrimary) {
+          updateMessage(["requiring_fetch"]);
+        }
         updateStarsContainer(["invisible"]);
       } else {
         updateMessage(["none"]);
       }
     } else {
-      updateMessage(["auth_link"]);
+      if (props.isPrimary) {
+        updateMessage(["auth_link"]);
+      } else {
+        el.css("display", "none");
+      }
       updateStarsContainer(["invisible"]);
     }
   });
@@ -147,7 +162,7 @@ export function renderMyRating(
     const resp = await Global.client.rateEpisode({
       userID: Global.claimedUserID!,
       subjectID: Global.subjectID!,
-      episodeID: Global.episodeID!,
+      episodeID: props.episodeID,
       score: scoreToRate,
     });
 

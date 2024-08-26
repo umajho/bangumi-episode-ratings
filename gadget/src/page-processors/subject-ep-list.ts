@@ -1,4 +1,5 @@
-import { renderSmallGreyScore } from "../components/SmallGreyScore";
+import { renderMyRating } from "../components/MyRating";
+import { renderRateInfo } from "../components/RateInfo";
 import { Score } from "../definitions";
 import Global from "../global";
 import { VotesData } from "../models/VotesData";
@@ -6,8 +7,18 @@ import { VotesData } from "../models/VotesData";
 export async function processSubjectEpListPage() {
   const epsRatings = await Global.client.mustGetSubjectEpisodesRatings();
 
+  if (!epsRatings.my_ratings) {
+    Global.token.setValue(null);
+  }
+
+  let isFirst_ = true;
   $('[name="edit_ep_batch"] li').each((_, li) => {
     if (!$(li).find('[name="ep_mod[]"]').length) return;
+
+    const isFirst = isFirst_;
+    isFirst_ = false;
+
+    $(/*html*/ `<div class="clear"></div>`).insertAfter($(li).find("h6"));
 
     const episodeID = (() => {
       const href = $(li).find("> h6 > a").attr("href")!;
@@ -25,12 +36,28 @@ export async function processSubjectEpListPage() {
     }
     const votesData = new VotesData(ratings ?? {} as { [_ in Score]?: number });
 
-    const smallEl = $("<div />");
-    smallEl.insertBefore($(li).find("small.grey").eq(-1));
-    renderSmallGreyScore(smallEl, {
-      votesData,
-      requiresClickToReveal: !$(li).find(".statusWatched").length &&
-        !!votesData.totalVotes,
+    const myRating = epsRatings.my_ratings?.[episodeID];
+    const hasUserWatched = $(li).find(".statusWatched").length ||
+      // 在 “看过” 之类不能修改章节观看状态的情况下，没法确认用户是否看过，但至
+      // 少可以假设用户在给了某集评分的时候是看过那一集的。
+      myRating !== undefined;
+
+    const myRatingEl = $("<div />");
+    $(li).append(myRatingEl);
+    renderMyRating(myRatingEl, {
+      episodeID,
+      ratedScore: (myRating ?? null) as Score | null,
+      isPrimary: isFirst,
+      canRefetchAfterAuth: false,
     });
+
+    const rateInfoEl = $("<div />");
+    $(li).append(rateInfoEl);
+    renderRateInfo(rateInfoEl, {
+      votesData,
+      requiresClickToReveal: !hasUserWatched && !!votesData.totalVotes,
+    });
+
+    $(li).append($(/*html*/ `<div class="clear"></div>`));
   });
 }
