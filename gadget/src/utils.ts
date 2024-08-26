@@ -1,5 +1,7 @@
+type Callback<T> = (newValue: T, oldValue: T | undefined) => void;
+
 export class Watched<T> {
-  private _watchers: ((updatedValue: T) => void)[] = [];
+  private _watchers: (Callback<T>)[] = [];
 
   constructor(private _value: T) {}
 
@@ -8,11 +10,12 @@ export class Watched<T> {
   }
 
   setValue(newValue: T) {
+    const oldValue = this._value;
     this._value = newValue;
-    this._watchers.forEach((w) => w(newValue));
+    this._watchers.forEach((w) => w(newValue, oldValue));
   }
 
-  watchDeferred(cb: (updatedValue: T) => void): () => void {
+  watchDeferred(cb: Callback<T>): () => void {
     this._watchers.push(cb);
 
     return () => {
@@ -20,8 +23,8 @@ export class Watched<T> {
     };
   }
 
-  watch(cb: (updatedValue: T) => void): () => void {
-    cb(this._value);
+  watch(cb: Callback<T>): () => void {
+    cb(this._value, undefined);
     return this.watchDeferred(cb);
   }
 }

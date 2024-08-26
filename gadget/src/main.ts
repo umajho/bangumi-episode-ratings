@@ -4,7 +4,6 @@ import { renderScoreboard } from "./components/Scoreboard";
 import { VotesData } from "./models/VotesData";
 import { renderScoreChart } from "./components/ScoreChart";
 import { renderMyRating } from "./components/MyRating";
-import { Watched } from "./utils";
 import { Score } from "./definitions";
 
 function migrate() {
@@ -79,10 +78,12 @@ async function main() {
     $(/*html*/ `<div class="clear" />`).insertAfter("#columnEpA > .epDesc");
 
     const myRatingEl = $("<div />").insertAfter(".singleCommentList > .board");
-    const myScore = new Watched<Score | null>(
-      (ratingsData.userScore ?? null) as Score | null,
-    );
-    renderMyRating(myRatingEl, { score: myScore });
+    if (!ratingsData.my_rating) {
+      Global.token.setValue(null);
+    }
+    renderMyRating(myRatingEl, {
+      ratedScore: (ratingsData.my_rating?.score ?? null) as Score | null,
+    });
   }
 }
 

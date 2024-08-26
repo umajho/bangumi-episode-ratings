@@ -1,21 +1,26 @@
 import { renderToString } from "https://esm.sh/react-dom@18.3.1/server";
 import React, { FC } from "https://esm.sh/react@18.3.1";
 
-import { APIErrorResponse, APIOkResponse, ErrorName } from "./shared/dto.ts";
+import {
+  APIErrorResponse,
+  APIOkResponse,
+  APIResponse,
+  ErrorName,
+} from "./shared/dto.ts";
 
-export function makeErrorResponse(
+export function stringifyErrorResponse(
   name: ErrorName,
   message: string,
   opts: { isForAPI: boolean },
 ): string {
   if (opts.isForAPI) {
-    return makeErrorResponseForAPI(name, message);
+    return stringifyErrorResponseForAPI(name, message);
   } else {
-    return makeErrorResponseForPage(name, message);
+    return stringifyErrorResponseForPage(name, message);
   }
 }
 
-export function makeErrorResponseForPage(
+export function stringifyErrorResponseForPage(
   name: ErrorName,
   message: string,
 ): string {
@@ -27,7 +32,7 @@ export function makeErrorResponseForPage(
   );
 }
 
-export function makeErrorResponseForAPI(
+export function stringifyErrorResponseForAPI(
   name: ErrorName,
   message: string,
 ): string {
@@ -42,13 +47,20 @@ const Layout: FC<{ children: React.ReactNode }> = (props) => {
   );
 };
 
-export function makeOkResponseForAPI<T>(data: T): string {
+export function stringifyOkResponseForAPI<T>(data: T): string {
   return JSON.stringify(["ok", data] satisfies APIOkResponse<T>);
 }
 
-export function makeErrorAuthRequiredResponseForAPI() {
-  return makeErrorResponseForAPI(
-    "AUTH_REQUIRED",
-    "尚未将账号关联至应用。",
-  );
+export function stringifyResponseForAPI<T>(resp: APIResponse<T>) {
+  if (resp[0] === "ok") {
+    return stringifyOkResponseForAPI(resp[1]);
+  } else if (resp[0] === "error") {
+    return stringifyErrorResponseForAPI(resp[1], resp[2]);
+  } else if (resp[0] === "auth_required") {
+    return stringifyErrorResponseForAPI(
+      "AUTH_REQUIRED",
+      "尚未将账号关联至应用。",
+    );
+  }
+  resp satisfies never;
 }

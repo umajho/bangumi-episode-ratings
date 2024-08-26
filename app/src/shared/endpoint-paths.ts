@@ -8,6 +8,7 @@ export default {
     V0: {
       RATE_EPISODE: "rate-episode",
       EPISODE_RATINGS: "episode-ratings",
+      MY_EPISODE_RATING: "my-episode-rating",
     },
   },
 } as const;

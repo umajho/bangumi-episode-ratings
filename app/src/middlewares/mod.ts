@@ -1,13 +1,27 @@
 import { Context, Next } from "jsr:@oak/oak@14";
 
 import { State } from "../types.ts";
-import { makeErrorResponse } from "../responses.tsx";
+import { stringifyErrorResponse } from "../responses.tsx";
 import env from "../env.ts";
 
 export const gadgetVersion =
   () => async (ctx: Context<State, State>, next: Next) => {
     const gadgetVersion = ctx.request.headers.get("X-Gadget-Version");
-    ctx.state.gadgetVersion = gadgetVersion;
+    if (gadgetVersion) {
+      const parts = gadgetVersion?.split(".");
+      if (parts.length !== 3 || parts.some((part) => !/^\d+$/.test(part))) {
+        throw new Error("unreachable!");
+      }
+      const numberParts = parts
+        .map((part) => parseInt(part)) as [number, number, number];
+      if (numberParts[1] >= 1_000 || numberParts[2] >= 1_000) {
+        throw new Error("unreachable!");
+      }
+      ctx.state.gadgetVersion = numberParts[0] * 1_000_000 +
+        numberParts[1] * 1_000 + numberParts[2];
+    } else {
+      ctx.state.gadgetVersion = null;
+    }
     await next();
   };
 
@@ -21,7 +35,7 @@ export const referrer =
       const hostname_ = (new URL(referrer)).hostname;
       // TODO: 处理存在端口之类的情况？
       if (!(env.VALID_BGM_HOSTNAMES as readonly string[]).includes(hostname_)) {
-        ctx.response.body = makeErrorResponse(
+        ctx.response.body = stringifyErrorResponse(
           "UNSUPPORTED_REFERRER",
           `“${hostname_}” 好像不是 bangumi 的站点。`,
           { isForAPI },
@@ -42,7 +56,7 @@ export const auth = () => async (ctx: Context<State, State>, next: Next) => {
   if (authorizationHeader) {
     const [scheme, rest] = authorizationHeader.split(" ", 2);
     if (scheme !== "Basic") {
-      ctx.response.body = makeErrorResponse(
+      ctx.response.body = stringifyErrorResponse(
         "UNSUPPORTED_AUTHORIZATION_HEADER_SCHEME",
         `不支持 ${scheme} 作为 Authorization Header 的 Scheme。`,
         { isForAPI },
@@ -72,7 +86,7 @@ export const cors = () => async (ctx: Context<State, State>, next: Next) => {
   const isForAPI = ctx.request.url.pathname.startsWith("/api/");
 
   if (!ctx.state.referrerHostname) {
-    ctx.response.body = makeErrorResponse(
+    ctx.response.body = stringifyErrorResponse(
       "MISSING_REFERRER",
       "我是谁？我从哪里来？我要到哪里去？",
       { isForAPI },

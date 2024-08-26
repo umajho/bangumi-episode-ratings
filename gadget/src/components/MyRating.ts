@@ -4,8 +4,9 @@ import Global from "../global";
 
 export function renderMyRating(
   el: JQuery<HTMLElement>,
-  props: { score: Watched<Score | null> },
+  props: { ratedScore: Score | null },
 ) {
+  const ratedScore = new Watched<Score | null>(props.ratedScore);
   const hoveredScore = new Watched<Score | null | "cancel">(null);
 
   el = $(/*html*/ `
@@ -44,17 +45,34 @@ export function renderMyRating(
     .on("mouseout", () => hoveredScore.setValue(null))
     .on("click", () => rateEpisode(null));
 
-  props.score.watchDeferred((score) =>
-    updateStarsContainer(score, hoveredScore.getValueOnce())
+  ratedScore.watchDeferred((ratedScore) =>
+    updateStarsContainer(["normal", {
+      ratedScore,
+      hoveredScore: hoveredScore.getValueOnce(),
+    }])
   );
   hoveredScore.watch((hoveredScore) =>
-    updateStarsContainer(props.score.getValueOnce(), hoveredScore)
+    updateStarsContainer(["normal", {
+      ratedScore: ratedScore.getValueOnce(),
+      hoveredScore,
+    }])
   );
 
   function updateStarsContainer(
-    ratedScore: Score | null,
-    hoveredScore: Score | null | "cancel",
+    params:
+      | ["normal", {
+        ratedScore: Score | null;
+        hoveredScore: Score | null | "cancel";
+      }]
+      | ["invisible"],
   ) {
+    if (params[0] === "invisible") {
+      starsContainerEl.css("display", "none");
+      return;
+    }
+    starsContainerEl.css("display", "");
+    const [_, { ratedScore, hoveredScore }] = params;
+
     const isHovering = hoveredScore !== null;
     const maxScoreToHighlight = hoveredScore ?? ratedScore ?? null;
 
@@ -89,17 +107,15 @@ export function renderMyRating(
     }
   }
 
-  function updateStarsContainerVisibility(isVisible: boolean) {
-    if (isVisible) {
-      starsContainerEl.css("display", "");
-    } else {
-      starsContainerEl.css("display", "none");
-    }
-  }
-
   const messageEl = el.find(".message");
   function updateMessage(
-    value: ["none"] | ["processing"] | ["error", string] | ["auth_link"],
+    value:
+      | ["none"]
+      | ["processing"]
+      | ["loading"]
+      | ["error", string]
+      | ["auth_link"]
+      | ["requiring_fetch"],
   ) {
     messageEl.attr("style", "");
     switch (value[0]) {
@@ -110,6 +126,11 @@ export function renderMyRating(
       }
       case "processing": {
         messageEl.text("处理中…");
+        messageEl.css("color", "gray");
+        break;
+      }
+      case "loading": {
+        messageEl.text("加载中…");
         messageEl.css("color", "gray");
         break;
       }
@@ -132,23 +153,49 @@ export function renderMyRating(
         );
         break;
       }
+      case "requiring_fetch": {
+        messageEl.html(/*html*/ `
+          点击<button class="l">此处</button>或刷新本页以获取。 
+        `);
+        $(messageEl).find("button").on("click", async () => {
+          updateMessage(["loading"]);
+          const resp = await Global.client.getMyEpisodeRating();
+          if (resp[0] === "auth_required") {
+            Global.token.setValue(null);
+          } else if (resp[0] === "error") {
+            const [_, _name, message] = resp;
+            updateMessage(["error", message]);
+          } else if (resp[0] === "ok") {
+            const [_, data] = resp;
+            updateMessage(["none"]);
+            ratedScore.setValue(data.score as Score | null);
+          } else {
+            resp satisfies never;
+          }
+        });
+        break;
+      }
       default:
         value satisfies never;
     }
   }
   updateMessage(["none"]);
 
-  Global.token.watch((newToken) => {
+  Global.token.watch((newToken, oldToken) => {
     if (newToken) {
-      updateMessage(["none"]);
-      updateStarsContainerVisibility(true);
+      if (oldToken !== undefined) {
+        updateMessage(["requiring_fetch"]);
+        updateStarsContainer(["invisible"]);
+      } else {
+        updateMessage(["none"]);
+      }
     } else {
       updateMessage(["auth_link"]);
-      updateStarsContainerVisibility(false);
+      updateStarsContainer(["invisible"]);
     }
   });
 
-  async function rateEpisode(score: Score | null) {
+  async function rateEpisode(scoreToRate: Score | null) {
     if (!Global.token.getValueOnce()) return;
 
     updateMessage(["processing"]);
@@ -157,7 +204,7 @@ export function renderMyRating(
       userID: Global.claimedUserID!,
       subjectID: Global.subjectID!,
       episodeID: Global.episodeID!,
-      score,
+      score: scoreToRate,
     });
 
     if (resp[0] === "auth_required") {
@@ -168,7 +215,7 @@ export function renderMyRating(
     } else if (resp[0] === "ok") {
       const [_, data] = resp;
       updateMessage(["none"]);
-      props.score.setValue(data.score as Score | null);
+      ratedScore.setValue(data.score as Score | null);
     } else {
       resp satisfies never;
     }

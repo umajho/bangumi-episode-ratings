@@ -5,6 +5,7 @@ import {
   APIOkResponse,
   APIResponse,
   GetEpisodeRatingsResponseData,
+  GetMyEpisodeRatingResponseData,
   RateEpisodeRequestData,
   RateEpisodeResponseData,
 } from "./shared/dto";
@@ -76,6 +77,26 @@ export class Client {
     );
 
     return unwrap(data);
+  }
+
+  async getMyEpisodeRating(): Promise<
+    APIResponse<GetMyEpisodeRatingResponseData>
+  > {
+    const searchParams = new URLSearchParams();
+    if (Global.claimedUserID) {
+      searchParams.set("claimed_user_id", String(Global.claimedUserID));
+      searchParams.set("subject_id", String(Global.subjectID!));
+      searchParams.set("episode_id", String(Global.episodeID!));
+    }
+
+    return await this.fetch(
+      "api/v0",
+      ENDPOINT_PATHS.API.V0.MY_EPISODE_RATING,
+      {
+        method: "GET",
+        searchParams,
+      },
+    );
   }
 
   async fetch<T>(

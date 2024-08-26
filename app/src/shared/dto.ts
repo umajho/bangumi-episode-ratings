@@ -30,7 +30,16 @@ export interface RateEpisodeResponseData {
   score: number | null;
 }
 
+export interface GetEpisodeRatingsResponseData__Until_0_1_13 {
+  votes: { [score: number]: number };
+  userScore?: number | null;
+}
+
 export interface GetEpisodeRatingsResponseData {
   votes: { [score: number]: number };
-  userScore?: number;
+  my_rating?: GetMyEpisodeRatingResponseData;
+}
+
+export interface GetMyEpisodeRatingResponseData {
+  score: number | null;
 }

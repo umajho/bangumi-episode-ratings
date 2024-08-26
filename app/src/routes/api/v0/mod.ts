@@ -7,15 +7,18 @@ import {
 } from "../../../types.ts";
 import ENDPOINT_PATHS from "../../../shared/endpoint-paths.ts";
 import {
+  APIResponse,
   GetEpisodeRatingsResponseData,
+  GetEpisodeRatingsResponseData__Until_0_1_13,
+  GetMyEpisodeRatingResponseData,
   RateEpisodeRequestData,
   RateEpisodeResponseData,
 } from "../../../shared/dto.ts";
 import * as KVUtils from "../../../kv-utils.ts";
 import {
-  makeErrorAuthRequiredResponseForAPI,
-  makeErrorResponseForAPI,
-  makeOkResponseForAPI,
+  stringifyErrorResponseForAPI,
+  stringifyOkResponseForAPI,
+  stringifyResponseForAPI,
 } from "../../../responses.tsx";
 import env from "../../../env.ts";
 import { bangumiClient } from "../../../global.ts";
@@ -28,7 +31,7 @@ router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
 
   if (data.score !== null) {
     if (!Number.isInteger(data.score) || data.score < 1 || data.score > 10) {
-      ctx.response.body = makeErrorResponseForAPI(
+      ctx.response.body = stringifyErrorResponseForAPI(
         "BAD_SCORE",
         "评分在可接受范围（null 或 0.9 至 10.1 之间的整数）之外。How？",
       );
@@ -42,7 +45,7 @@ router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
     if (data.claimed_user_id !== userID) {
       // TODO: 无效化 token。
     }
-    ctx.response.body = makeErrorAuthRequiredResponseForAPI();
+    ctx.response.body = stringifyResponseForAPI(["auth_required"]);
     return;
   }
 
@@ -55,7 +58,7 @@ router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
     } else {
       const episodeData = await bangumiClient.getEpisode(data.episode_id);
       if (!episodeData) {
-        ctx.response.body = makeErrorResponseForAPI(
+        ctx.response.body = stringifyErrorResponseForAPI(
           "UNABLE_TO_VERIFY_THAT_EPISODE_IS_IN_SUBJECT",
           "服务器无法验证当前剧集是否属于当前条目…",
         );
@@ -71,7 +74,7 @@ router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
   }
 
   if (episodeSubjectID !== data.subject_id) {
-    ctx.response.body = makeErrorResponseForAPI(
+    ctx.response.body = stringifyErrorResponseForAPI(
       "EPISODE_NOT_IN_SUBJECT",
       `剧集 ${data.episode_id} 并不属于 ${data.subject_id}。为啥会出现这种情况…？`,
     );
@@ -89,7 +92,7 @@ router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
     await kv.get<UserSubjectEpisodeRatingData>(userSubjectEpisodeRatingKey);
 
   if (oldRatingResult.value && oldRatingResult.value.score === data.score) {
-    ctx.response.body = makeOkResponseForAPI<RateEpisodeResponseData>({
+    ctx.response.body = stringifyOkResponseForAPI<RateEpisodeResponseData>({
       score: data.score,
     });
     return;
@@ -144,7 +147,7 @@ router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
     }
   }
 
-  ctx.response.body = makeOkResponseForAPI<RateEpisodeResponseData>({
+  ctx.response.body = stringifyOkResponseForAPI<RateEpisodeResponseData>({
     score: data.score,
   });
 });
@@ -156,7 +159,10 @@ router.get("/" + ENDPOINT_PATHS.API.V0.EPISODE_RATINGS, async (ctx) => {
   const episodeID = tryExtractNumberFromCTXSearchParams(ctx, "episode_id");
 
   if (!subjectID || !episodeID) {
-    ctx.response.body = makeErrorResponseForAPI("BAD_REQUEST", "参数有误。");
+    ctx.response.body = stringifyErrorResponseForAPI(
+      "BAD_REQUEST",
+      "参数有误。",
+    );
     return;
   }
 
@@ -176,25 +182,89 @@ router.get("/" + ENDPOINT_PATHS.API.V0.EPISODE_RATINGS, async (ctx) => {
 
   if (ctx.state.token) {
     const userID = await KVUtils.getUserID(kv, ctx.state.token);
-    if (userID && claimedUserID === userID) {
-      const userSubjectEpisodeRatingKey = env
-        .buildKVKeyUserSubjectEpisodeRating(
-          userID,
-          subjectID,
-          episodeID,
-        );
-
-      const ratingResult = await kv.get<UserSubjectEpisodeRatingData>(
-        userSubjectEpisodeRatingKey,
-      );
-      if (ratingResult.value?.score) {
-        data.userScore = ratingResult.value.score;
-      }
+    const result = await getMyRating({
+      kv,
+      claimedUserID,
+      userID,
+      subjectID,
+      episodeID,
+    });
+    if (result[0] === "ok") {
+      data.my_rating = result[1];
+    } else if (result[0] === "auth_required") {
+      // 用不设置 `data.myRating` 来表示需要认证。
+    } else {
+      ctx.response.body = stringifyResponseForAPI(result);
+      return;
     }
   }
 
-  ctx.response.body = makeOkResponseForAPI(data);
+  if (!ctx.state.gadgetVersion || ctx.state.gadgetVersion < 1_004) { // < 0.1.4
+    const dataOld: GetEpisodeRatingsResponseData__Until_0_1_13 = {
+      votes: data.votes,
+      ...(data.my_rating ? { userScore: data.my_rating.score } : {}),
+    };
+    ctx.response.body = stringifyOkResponseForAPI(dataOld);
+  } else {
+    ctx.response.body = stringifyOkResponseForAPI(data);
+  }
 });
+
+router.get("/" + ENDPOINT_PATHS.API.V0.MY_EPISODE_RATING, async (ctx) => {
+  const claimedUserID = //
+    tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id");
+  const subjectID = tryExtractNumberFromCTXSearchParams(ctx, "subject_id");
+  const episodeID = tryExtractNumberFromCTXSearchParams(ctx, "episode_id");
+
+  if (!subjectID || !episodeID) {
+    ctx.response.body = stringifyErrorResponseForAPI(
+      "BAD_REQUEST",
+      "参数有误。",
+    );
+    return;
+  }
+
+  const kv = await Deno.openKv();
+  const userID = await KVUtils.getUserID(kv, ctx.state.token);
+
+  ctx.response.body = stringifyResponseForAPI(
+    await getMyRating({
+      kv,
+      claimedUserID,
+      userID,
+      subjectID,
+      episodeID,
+    }),
+  );
+});
+
+async function getMyRating(
+  opts: {
+    kv: Deno.Kv;
+    claimedUserID: number | null;
+    userID: number | null;
+    subjectID: number;
+    episodeID: number;
+  },
+): Promise<APIResponse<GetMyEpisodeRatingResponseData>> {
+  if (!opts.userID || opts.claimedUserID !== opts.userID) {
+    return ["auth_required"];
+  }
+
+  const userSubjectEpisodeRatingKey = env.buildKVKeyUserSubjectEpisodeRating(
+    opts.userID,
+    opts.subjectID,
+    opts.episodeID,
+  );
+
+  const ratingResult = await opts.kv.get<UserSubjectEpisodeRatingData>(
+    userSubjectEpisodeRatingKey,
+  );
+
+  return ["ok", {
+    score: ratingResult.value?.score ?? null,
+  }];
+}
 
 function tryExtractNumberFromCTXSearchParams(
   // deno-lint-ignore no-explicit-any

@@ -5,7 +5,7 @@ export interface State {
     | `https://${(typeof env.VALID_BGM_HOSTNAMES)[number]}`
     | null;
 
-  gadgetVersion: string | null;
+  gadgetVersion: number | null;
   token: string | null;
 }
 

@@ -9,7 +9,10 @@ import {
   TokenData,
   UserData,
 } from "../../types.ts";
-import { makeErrorResponse, makeOkResponseForAPI } from "../../responses.tsx";
+import {
+  stringifyErrorResponse,
+  stringifyOkResponseForAPI,
+} from "../../responses.tsx";
 import env from "../../env.ts";
 import { bangumiClient } from "../../global.ts";
 
@@ -54,7 +57,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
 
   const userIDRaw = data["user_id"];
   if (!/^\d+$/.test(userIDRaw)) {
-    ctx.response.body = makeErrorResponse(
+    ctx.response.body = stringifyErrorResponse(
       "BAD_USER_ID",
       `用户 ID 应该是整数，但从 bangumi 那边得到的却是 “${userIDRaw}”`,
       { isForAPI: false },
@@ -121,7 +124,7 @@ router.post("/" + ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON, async (ctx) => {
   );
 
   if (!tokenCouponResult.value || Date.now() > tokenCouponResult.value.expiry) {
-    ctx.response.body = makeOkResponseForAPI(null);
+    ctx.response.body = stringifyOkResponseForAPI(null);
     return;
   }
 
@@ -129,9 +132,9 @@ router.post("/" + ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON, async (ctx) => {
     .check(tokenCouponResult)
     .delete(env.buildKVKeyTokenCoupon(tokenCoupon)).commit();
   if (!result.ok) {
-    ctx.response.body = makeOkResponseForAPI(null);
+    ctx.response.body = stringifyOkResponseForAPI(null);
     return;
   }
 
-  ctx.response.body = makeOkResponseForAPI(tokenCouponResult.value.token);
+  ctx.response.body = stringifyOkResponseForAPI(tokenCouponResult.value.token);
 });
