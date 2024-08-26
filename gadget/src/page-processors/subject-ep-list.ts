@@ -29,7 +29,8 @@ export async function processSubjectEpListPage() {
     smallEl.insertBefore($(li).find("small.grey").eq(-1));
     renderSmallGreyScore(smallEl, {
       votesData,
-      requiresClickToReveal: !$(li).find(".statusWatched").length,
+      requiresClickToReveal: !$(li).find(".statusWatched").length &&
+        !!votesData.totalVotes,
     });
   });
 }
