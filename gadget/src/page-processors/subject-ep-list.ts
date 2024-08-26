@@ -5,20 +5,43 @@ import Global from "../global";
 import { VotesData } from "../models/VotesData";
 
 export async function processSubjectEpListPage() {
+  const editEpBatchEl = $('[name="edit_ep_batch"]');
+
+  let loadingEl: JQuery<HTMLElement> | undefined;
+  $(editEpBatchEl).find("li").each((_, li) => {
+    if (!$(li).find('[name="ep_mod[]"]').length) return;
+
+    $(/*html*/ `<div class="clear"></div>`).insertAfter($(li).find("h6"));
+
+    loadingEl = $(/*html*/ `
+      <div class="__bgm-ep-ratings-loading grey" style="float: right;">
+        单集评分组件加载中…
+      </div>
+    `);
+    $(li).append(loadingEl);
+
+    return false;
+  });
+
   const epsRatings = await Global.client.mustGetSubjectEpisodesRatings();
+  if (loadingEl) {
+    loadingEl.remove();
+  }
 
   if (!epsRatings.my_ratings) {
     Global.token.setValue(null);
   }
 
   let isFirst_ = true;
-  $('[name="edit_ep_batch"] li').each((_, li) => {
+  $(editEpBatchEl).find("li").each((_, li) => {
     if (!$(li).find('[name="ep_mod[]"]').length) return;
 
     const isFirst = isFirst_;
     isFirst_ = false;
 
-    $(/*html*/ `<div class="clear"></div>`).insertAfter($(li).find("h6"));
+    if (!isFirst) {
+      $(/*html*/ `<div class="clear"></div>`).insertAfter($(li).find("h6"));
+    }
 
     const episodeID = (() => {
       const href = $(li).find("> h6 > a").attr("href")!;
