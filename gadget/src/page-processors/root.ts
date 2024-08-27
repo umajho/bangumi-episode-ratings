@@ -5,6 +5,8 @@ export async function processRootPage() {
 
   let isMouseOver = false;
   $("ul.prg_list > li").each((_, liEl) => {
+    if (!$(liEl).find(".load-epinfo").length) return;
+
     $(liEl).on("mouseover", () => {
       if (isMouseOver) return;
       isMouseOver = true;
