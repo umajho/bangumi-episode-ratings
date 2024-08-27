@@ -4,6 +4,11 @@ import { VotesData } from "../models/VotesData";
 import { Watched } from "../utils";
 import { Score } from "../definitions";
 
+let isNavigatingAway = false;
+$(window).on("beforeunload", () => {
+  isNavigatingAway = true;
+});
+
 export function processCluetip() {
   const el = $("#cluetip");
 
@@ -20,6 +25,17 @@ export function processCluetip() {
 
     counter++;
     const currentCounter = counter;
+
+    if (!Global.client.hasCachedSubjectEpisodesRatings(opts.subjectID)) {
+      // 确保用户不是只是无意划过。
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      if (
+        isNavigatingAway || currentCounter !== counter ||
+        !popupEl.is(":visible")
+      ) {
+        return;
+      }
+    }
 
     const loadingEl = $(/*html*/ `
       <div class="grey">

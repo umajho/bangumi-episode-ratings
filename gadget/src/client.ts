@@ -60,11 +60,15 @@ export class Client {
     );
   }
 
-  subjectEpisodesRatingsCache: {
+  private subjectEpisodesRatingsCache: {
     [subjectID: number]:
       | GetSubjectEpisodesResponseData
       | Promise<GetSubjectEpisodesResponseData>;
   } = {};
+
+  hasCachedSubjectEpisodesRatings(subjectID: number): boolean {
+    return (!!this.subjectEpisodesRatingsCache[subjectID]);
+  }
 
   async mustGetSubjectEpisodesRatings(opts: { subjectID: number }): Promise<
     GetSubjectEpisodesResponseData
