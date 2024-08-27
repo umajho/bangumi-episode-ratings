@@ -72,7 +72,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
 
   let isOk = false;
   while (!isOk) {
-    const userDataResult = await kv.get<UserData>(["users", userID]);
+    const userDataResult = await kv.get<UserData>(env.buildKVKeyUser(userID));
     const userData = userDataResult.value ?? { tokens: [] };
 
     let tx = kv.atomic();
