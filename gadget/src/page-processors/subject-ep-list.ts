@@ -3,6 +3,7 @@ import { renderRateInfo } from "../components/RateInfo";
 import { Score } from "../definitions";
 import Global from "../global";
 import { VotesData } from "../models/VotesData";
+import { Watched } from "../utils";
 
 export async function processSubjectEpListPage() {
   const editEpBatchEl = $('[name="edit_ep_batch"]');
@@ -15,7 +16,7 @@ export async function processSubjectEpListPage() {
 
     loadingEl = $(/*html*/ `
       <div class="__bgm-ep-ratings-loading grey" style="float: right;">
-        单集评分组件加载中…
+        单集评分加载中…
       </div>
     `);
     $(li).append(loadingEl);
@@ -23,7 +24,9 @@ export async function processSubjectEpListPage() {
     return false;
   });
 
-  const epsRatings = await Global.client.mustGetSubjectEpisodesRatings();
+  const epsRatings = await Global.client.mustGetSubjectEpisodesRatings({
+    subjectID: Global.subjectID!,
+  });
   if (loadingEl) {
     loadingEl.remove();
   }
@@ -77,8 +80,9 @@ export async function processSubjectEpListPage() {
     const rateInfoEl = $("<div />");
     $(li).append(rateInfoEl);
     renderRateInfo(rateInfoEl, {
-      votesData,
-      requiresClickToReveal: !hasUserWatched && !!votesData.totalVotes,
+      votesData: new Watched<VotesData | null>(votesData),
+      requiresClickToReveal: //
+        new Watched(!hasUserWatched && !!votesData.totalVotes),
     });
 
     $(li).append($(/*html*/ `<div class="clear"></div>`));

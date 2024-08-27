@@ -60,25 +60,32 @@ export class Client {
     );
   }
 
-  async mustGetSubjectEpisodesRatings(): Promise<
+  subjectEpisodesRatingsCache: {
+    [subjectID: number]:
+      | GetSubjectEpisodesResponseData
+      | Promise<GetSubjectEpisodesResponseData>;
+  } = {};
+
+  async mustGetSubjectEpisodesRatings(opts: { subjectID: number }): Promise<
     GetSubjectEpisodesResponseData
   > {
+    if (this.subjectEpisodesRatingsCache[opts.subjectID]) {
+      return this.subjectEpisodesRatingsCache[opts.subjectID];
+    }
+
     const searchParams = new URLSearchParams();
     if (Global.claimedUserID) {
       searchParams.set("claimed_user_id", String(Global.claimedUserID));
-      searchParams.set("subject_id", String(Global.subjectID!));
+      searchParams.set("subject_id", String(opts.subjectID!));
     }
 
-    const data = await this.fetch(
+    return this.subjectEpisodesRatingsCache[opts.subjectID] = this.fetch(
       "api/v0",
       ENDPOINT_PATHS.API.V0.SUBJECT_EPISODES_RATINGS,
-      {
-        method: "GET",
-        searchParams,
-      },
+      { method: "GET", searchParams },
+    ).then((resp) =>
+      this.subjectEpisodesRatingsCache[opts.subjectID] = unwrap(resp)
     );
-
-    return unwrap(data);
   }
 
   async mustGetEpisodeRatings(): Promise<GetEpisodeRatingsResponseData> {
@@ -89,7 +96,7 @@ export class Client {
       searchParams.set("episode_id", String(Global.episodeID!));
     }
 
-    const data = await this.fetch(
+    const resp = await this.fetch(
       "api/v0",
       ENDPOINT_PATHS.API.V0.EPISODE_RATINGS,
       {
@@ -98,7 +105,7 @@ export class Client {
       },
     );
 
-    return unwrap(data);
+    return unwrap(resp);
   }
 
   async getMyEpisodeRating(): Promise<
@@ -181,6 +188,10 @@ export class Client {
       },
     );
     return unwrap(data);
+  }
+
+  clearCache(): void {
+    this.subjectEpisodesRatingsCache = {};
   }
 }
 

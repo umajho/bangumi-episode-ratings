@@ -1,6 +1,8 @@
 import env from "./env";
 import Global, { initializeGlobal } from "./global";
 import { processEpPage } from "./page-processors/ep";
+import { processRootPage } from "./page-processors/root";
+import { processSubjectPage } from "./page-processors/subject";
 import { processSubjectEpListPage } from "./page-processors/subject-ep-list";
 
 function migrate() {
@@ -56,7 +58,11 @@ async function main() {
   }
 
   const pathParts = window.location.pathname.split("/").filter(Boolean);
-  if (
+  if (!pathParts.length) {
+    await processRootPage();
+  } else if (pathParts.length === 2 && pathParts[0] === "subject") {
+    await processSubjectPage();
+  } else if (
     pathParts.length === 3 &&
     pathParts[0] === "subject" && pathParts[2] === "ep"
   ) {

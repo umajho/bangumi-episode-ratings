@@ -64,6 +64,7 @@ function makeGlobal() {
     }
 
     client.token = newToken;
+    client.clearCache();
   });
 
   return {

@@ -8,7 +8,7 @@ import { Score } from "../definitions";
 export async function processEpPage() {
   const scoreboardEl = $(/*html*/ `
     <div class="grey" style="float: right;">
-      单集评分组件加载中…
+      单集评分加载中…
     </div>
   `);
   $("#columnEpA").prepend(scoreboardEl);
