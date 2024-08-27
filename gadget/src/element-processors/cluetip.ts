@@ -37,7 +37,8 @@ export function processCluetip() {
 
     const votesData = new Watched<VotesData | null>(
       new VotesData(
-        epsRatings.episodes_votes[opts.episodeID] as { [_ in Score]?: number },
+        epsRatings.episodes_votes[opts.episodeID] ??
+          {} as { [_ in Score]?: number },
       ),
     );
     const requiresClickToReveal = new Watched(false);
