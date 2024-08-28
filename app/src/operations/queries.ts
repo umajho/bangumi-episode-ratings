@@ -121,11 +121,7 @@ export async function queryEpisodeRatings(
 export async function queryEpisodeMyRating(
   kv: Deno.Kv,
   tokenOrUserID: ["token", string | null] | ["userID", number],
-  opts: {
-    claimedUserID: number | null;
-    subjectID: number;
-    episodeID: number;
-  },
+  opts: { claimedUserID: number | null; subjectID: number; episodeID: number },
 ): Promise<APIResponse<GetMyEpisodeRatingResponseData>> {
   const userID = await matchTokenOrUserID(kv, tokenOrUserID, opts);
 
