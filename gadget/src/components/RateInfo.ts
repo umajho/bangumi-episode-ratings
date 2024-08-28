@@ -47,7 +47,6 @@ export function renderRateInfo(
   });
 
   buttonEl.on("click", () => {
-    console.log("111");
     rateInfoEl.css("display", "");
     buttonEl.css("display", "none");
 
