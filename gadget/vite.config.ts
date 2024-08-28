@@ -24,6 +24,7 @@ export default defineConfig({
       },
       esbuildTransformOptions: {
         minify: false,
+        charset: "utf8",
       },
     }),
   ],
