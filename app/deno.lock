@@ -21,7 +21,8 @@
       "npm:react": "npm:react@18.3.1",
       "npm:react-dom": "npm:react-dom@18.3.1_react@18.3.1",
       "npm:react@18": "npm:react@18.3.1",
-      "npm:solid-js": "npm:solid-js@1.8.21_seroval@1.1.1"
+      "npm:solid-js": "npm:solid-js@1.8.21_seroval@1.1.1",
+      "npm:ts-pattern": "npm:ts-pattern@5.3.1"
     },
     "jsr": {
       "@oak/commons@0.7.0": {
@@ -149,6 +150,10 @@
           "seroval": "seroval@1.1.1",
           "seroval-plugins": "seroval-plugins@1.1.1_seroval@1.1.1"
         }
+      },
+      "ts-pattern@5.3.1": {
+        "integrity": "sha512-1RUMKa8jYQdNfmnK4jyzBK3/PS/tnjcZ1CW0v1vWDeYe5RBklc/nquw03MEoB66hVBm4BnlCfmOqDVxHyT1DpA==",
+        "dependencies": {}
       }
     }
   },

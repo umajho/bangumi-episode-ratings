@@ -32,13 +32,6 @@ export function stringifyErrorResponseForPage(
   );
 }
 
-export function stringifyErrorResponseForAPI(
-  name: ErrorName,
-  message: string,
-): string {
-  return JSON.stringify(["error", name, message] satisfies APIErrorResponse);
-}
-
 const Layout: FC<{ children: React.ReactNode }> = (props) => {
   return (
     <html>
@@ -47,7 +40,14 @@ const Layout: FC<{ children: React.ReactNode }> = (props) => {
   );
 };
 
-export function stringifyOkResponseForAPI<T>(data: T): string {
+function stringifyErrorResponseForAPI(
+  name: ErrorName,
+  message: string,
+): string {
+  return JSON.stringify(["error", name, message] satisfies APIErrorResponse);
+}
+
+function stringifyOkResponseForAPI<T>(data: T): string {
   return JSON.stringify(["ok", data] satisfies APIOkResponse<T>);
 }
 

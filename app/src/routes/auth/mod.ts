@@ -11,7 +11,7 @@ import {
 } from "../../types.ts";
 import {
   stringifyErrorResponse,
-  stringifyOkResponseForAPI,
+  stringifyResponseForAPI,
 } from "../../responses.tsx";
 import env from "../../env.ts";
 import { bangumiClient } from "../../global.ts";
@@ -124,7 +124,7 @@ router.post("/" + ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON, async (ctx) => {
   );
 
   if (!tokenCouponResult.value || Date.now() > tokenCouponResult.value.expiry) {
-    ctx.response.body = stringifyOkResponseForAPI(null);
+    ctx.response.body = stringifyResponseForAPI(["ok", null]);
     return;
   }
 
@@ -132,9 +132,11 @@ router.post("/" + ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON, async (ctx) => {
     .check(tokenCouponResult)
     .delete(env.buildKVKeyTokenCoupon(tokenCoupon)).commit();
   if (!result.ok) {
-    ctx.response.body = stringifyOkResponseForAPI(null);
+    ctx.response.body = stringifyResponseForAPI(["ok", null]);
     return;
   }
 
-  ctx.response.body = stringifyOkResponseForAPI(tokenCouponResult.value.token);
+  ctx.response.body = stringifyResponseForAPI(
+    ["ok", tokenCouponResult.value.token],
+  );
 });
