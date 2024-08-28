@@ -33,6 +33,18 @@ export class Client {
     return url.toString();
   }
 
+  async mustRedeemTokenCoupon(tokenCoupon: string): Promise<string | null> {
+    const data = await this.fetch(
+      "auth",
+      ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON,
+      {
+        method: "POST",
+        body: JSON.stringify({ tokenCoupon }),
+      },
+    );
+    return unwrap(data);
+  }
+
   async rateEpisode(
     opts: { subjectID: number; episodeID: number; score: Score | null },
   ): Promise<APIResponse<RateEpisodeResponseData>> {
@@ -101,7 +113,7 @@ export class Client {
     );
   }
 
-  async fetch<T>(
+  private async fetch<T>(
     group: "auth" | "api/v1",
     endpointPath: string,
     opts: {
@@ -147,23 +159,11 @@ export class Client {
     }
   }
 
-  buildFullEndpoint(
+  private buildFullEndpoint(
     group: "auth" | "api/v1",
     endpointPath: string,
   ): string {
     return join(join(this.entrypoint, group + "/"), endpointPath);
-  }
-
-  async mustRedeemTokenCoupon(tokenCoupon: string): Promise<string | null> {
-    const data = await this.fetch(
-      "auth",
-      ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON,
-      {
-        method: "POST",
-        body: JSON.stringify({ tokenCoupon }),
-      },
-    );
-    return unwrap(data);
   }
 
   clearCache(): void {
