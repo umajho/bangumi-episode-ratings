@@ -31,7 +31,7 @@ export interface RateEpisodeRequestData__V1 {
 }
 
 export interface RateEpisodeResponseData {
-  score: number;
+  score: number | null;
 }
 
 export interface GetEpisodeRatingsResponseData__Until_0_1_13 {

@@ -35,7 +35,7 @@ export class Client {
 
   async rateEpisode(
     opts: { subjectID: number; episodeID: number; score: Score | null },
-  ): Promise<APIResponse<RateEpisodeResponseData | { score: null }>> {
+  ): Promise<APIResponse<RateEpisodeResponseData>> {
     if (!this.token) return ["auth_required"];
 
     if (opts.score !== null) {
@@ -47,13 +47,11 @@ export class Client {
         { method: "PUT", body: JSON.stringify(bodyData) },
       );
     } else {
-      const result = await this.fetch(
+      return await this.fetch(
         "api/v1",
         `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings/mine`,
         { method: "DELETE" },
       );
-      if (result[0] !== "ok") return result;
-      return ["ok", { score: null }];
     }
   }
 
