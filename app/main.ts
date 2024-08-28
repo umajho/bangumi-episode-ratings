@@ -7,7 +7,7 @@ import * as Middlewares from "./src/middlewares/mod.ts";
 
 const app = new Application<State>();
 
-app.use(Middlewares.gadgetVersion());
+app.use(Middlewares.headers());
 app.use(Middlewares.referrer());
 app.use(Middlewares.auth());
 app.use(Middlewares.cors());

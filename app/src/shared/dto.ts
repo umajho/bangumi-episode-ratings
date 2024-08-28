@@ -17,13 +17,17 @@ export type APIResponse<T> =
   | APIErrorResponse
   | [tag: "auth_required"];
 
-export interface RateEpisodeRequestData {
+export interface RateEpisodeRequestData__V0 {
   claimed_user_id: number;
 
   subject_id: number;
   episode_id: number;
 
   score: number | null;
+}
+
+export interface RateEpisodeRequestData__V1 {
+  score: number;
 }
 
 export interface RateEpisodeResponseData {

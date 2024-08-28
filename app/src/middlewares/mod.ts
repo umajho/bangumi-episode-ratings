@@ -4,8 +4,8 @@ import { State } from "../types.ts";
 import { stringifyErrorResponse } from "../responses.tsx";
 import env from "../env.ts";
 
-export const gadgetVersion =
-  () => async (ctx: Context<State, State>, next: Next) => {
+export const headers = () => async (ctx: Context<State, State>, next: Next) => {
+  {
     const gadgetVersion = ctx.request.headers.get("X-Gadget-Version");
     if (gadgetVersion) {
       const parts = gadgetVersion?.split(".");
@@ -22,8 +22,19 @@ export const gadgetVersion =
     } else {
       ctx.state.gadgetVersion = null;
     }
-    await next();
-  };
+  }
+
+  {
+    const claimedUserID = ctx.request.headers.get("X-Claimed-User-ID");
+    if (claimedUserID && /^\d+$/.test(claimedUserID)) {
+      ctx.state.claimedUserID = Number(claimedUserID);
+    } else {
+      ctx.state.claimedUserID = null;
+    }
+  }
+
+  await next();
+};
 
 export const referrer =
   () => async (ctx: Context<State, State>, next: Next) => {
@@ -99,10 +110,13 @@ export const cors = () => async (ctx: Context<State, State>, next: Next) => {
     ctx.state.referrerHostname,
   );
   ctx.response.headers.set("Access-Control-Allow-Credentials", "true");
-  ctx.response.headers.set("Access-Control-Allow-Methods", "GET, POST");
+  ctx.response.headers.set(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE",
+  );
   ctx.response.headers.set(
     "Access-Control-Allow-Headers",
-    "Authorization, X-Gadget-Version",
+    "Authorization, X-Gadget-Version, X-Claimed-User-ID",
   );
 
   if (ctx.request.method === "OPTIONS") {

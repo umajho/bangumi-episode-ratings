@@ -7,6 +7,7 @@ export interface State {
 
   gadgetVersion: number | null;
   token: string | null;
+  claimedUserID: number | null;
 }
 
 export type StateForAuth = State & {

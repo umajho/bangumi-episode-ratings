@@ -1,23 +1,23 @@
-import { Router, RouterContext } from "jsr:@oak/oak@14";
+import { Router } from "jsr:@oak/oak@14";
+import { match, P } from "npm:ts-pattern";
 
 import { StateForAPI } from "../../../types.ts";
-import ENDPOINT_PATHS from "../../../shared/endpoint-paths.ts";
 import {
   APIResponse,
   GetEpisodeRatingsResponseData,
   GetEpisodeRatingsResponseData__Until_0_1_13,
-  RateEpisodeRequestData,
+  RateEpisodeRequestData__V0,
 } from "../../../shared/dto.ts";
 import { stringifyResponseForAPI } from "../../../responses.tsx";
 import * as Commands from "../../../operations/commands.ts";
 import * as Queries from "../../../operations/queries.ts";
-import { match, P } from "npm:ts-pattern";
+import { tryExtractNumberFromCTXSearchParams } from "../utils.ts";
 
 export const router = new Router<StateForAPI>();
 export default router;
 
-router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
-  const data = await ctx.request.body.json() as RateEpisodeRequestData;
+router.post("/rate-episode", async (ctx) => {
+  const data = await ctx.request.body.json() as RateEpisodeRequestData__V0;
 
   const result = await Commands.rateEpisode(null, ["token", ctx.state.token], {
     claimedUserID: data.claimed_user_id,
@@ -29,32 +29,29 @@ router.post("/" + ENDPOINT_PATHS.API.V0.RATE_EPISODE, async (ctx) => {
   ctx.response.body = stringifyResponseForAPI(result);
 });
 
-router.get(
-  "/" + ENDPOINT_PATHS.API.V0.SUBJECT_EPISODES_RATINGS,
-  async (ctx) => {
-    const claimedUserID = //
-      tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id");
-    const subjectID = tryExtractNumberFromCTXSearchParams(ctx, "subject_id");
+router.get("/subject-episodes-ratings", async (ctx) => {
+  const claimedUserID = //
+    tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id");
+  const subjectID = tryExtractNumberFromCTXSearchParams(ctx, "subject_id");
 
-    if (!subjectID) {
-      ctx.response.body = //
-        stringifyResponseForAPI(["error", "BAD_REQUEST", "参数有误。"]);
-      return;
-    }
+  if (!subjectID) {
+    ctx.response.body = //
+      stringifyResponseForAPI(["error", "BAD_REQUEST", "参数有误。"]);
+    return;
+  }
 
-    const kv = await Deno.openKv();
+  const kv = await Deno.openKv();
 
-    const result = await Queries.querySubjectEpisodesRatings(
-      kv,
-      ["token", ctx.state.token],
-      { claimedUserID, subjectID },
-    );
+  const result = await Queries.querySubjectEpisodesRatings(
+    kv,
+    ["token", ctx.state.token],
+    { claimedUserID, subjectID },
+  );
 
-    ctx.response.body = stringifyResponseForAPI(result);
-  },
-);
+  ctx.response.body = stringifyResponseForAPI(result);
+});
 
-router.get("/" + ENDPOINT_PATHS.API.V0.EPISODE_RATINGS, async (ctx) => {
+router.get("/episode-ratings", async (ctx) => {
   const claimedUserID = //
     tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id");
   const subjectID = tryExtractNumberFromCTXSearchParams(ctx, "subject_id");
@@ -98,7 +95,7 @@ router.get("/" + ENDPOINT_PATHS.API.V0.EPISODE_RATINGS, async (ctx) => {
   ctx.response.body = stringifyResponseForAPI(result);
 });
 
-router.get("/" + ENDPOINT_PATHS.API.V0.MY_EPISODE_RATING, async (ctx) => {
+router.get("/my-episode-rating", async (ctx) => {
   const claimedUserID = //
     tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id");
   const subjectID = tryExtractNumberFromCTXSearchParams(ctx, "subject_id");
@@ -121,14 +118,3 @@ router.get("/" + ENDPOINT_PATHS.API.V0.MY_EPISODE_RATING, async (ctx) => {
 
   ctx.response.body = stringifyResponseForAPI(result);
 });
-
-function tryExtractNumberFromCTXSearchParams(
-  // deno-lint-ignore no-explicit-any
-  ctx: RouterContext<string, any, any>,
-  key: string,
-): number | null {
-  const raw = ctx.request.url.searchParams.get(key);
-  if (!raw) return null;
-  if (!/^\d+$/.test(raw)) return null;
-  return Number(raw);
-}

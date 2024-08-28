@@ -7,7 +7,7 @@ import {
   GetEpisodeRatingsResponseData,
   GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
-  RateEpisodeRequestData,
+  RateEpisodeRequestData__V1,
   RateEpisodeResponseData,
 } from "./shared/dto";
 import ENDPOINT_PATHS from "./shared/endpoint-paths";
@@ -34,30 +34,25 @@ export class Client {
   }
 
   async rateEpisode(
-    opts: {
-      userID: number;
-      subjectID: number;
-      episodeID: number;
-      score: Score | null;
-    },
+    opts: { subjectID: number; episodeID: number; score: Score | null },
   ): Promise<APIResponse<RateEpisodeResponseData>> {
     if (!this.token) return ["auth_required"];
 
-    const bodyData: RateEpisodeRequestData = {
-      claimed_user_id: opts.userID,
-      subject_id: opts.subjectID,
-      episode_id: opts.episodeID,
-      score: opts.score,
-    };
+    if (opts.score !== null) {
+      const bodyData: RateEpisodeRequestData__V1 = { score: opts.score };
 
-    return await this.fetch(
-      "api/v0",
-      ENDPOINT_PATHS.API.V0.RATE_EPISODE,
-      {
-        method: "POST",
-        body: JSON.stringify(bodyData),
-      },
-    );
+      return await this.fetch(
+        "api/v1",
+        `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings/mine`,
+        { method: "PUT", body: JSON.stringify(bodyData) },
+      );
+    } else {
+      return await this.fetch(
+        "api/v1",
+        `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings/mine`,
+        { method: "DELETE" },
+      );
+    }
   }
 
   private subjectEpisodesRatingsCache: {
@@ -77,36 +72,20 @@ export class Client {
       return this.subjectEpisodesRatingsCache[opts.subjectID];
     }
 
-    const searchParams = new URLSearchParams();
-    if (Global.claimedUserID) {
-      searchParams.set("claimed_user_id", String(Global.claimedUserID));
-      searchParams.set("subject_id", String(opts.subjectID!));
-    }
-
     return this.subjectEpisodesRatingsCache[opts.subjectID] = this.fetch(
-      "api/v0",
-      ENDPOINT_PATHS.API.V0.SUBJECT_EPISODES_RATINGS,
-      { method: "GET", searchParams },
+      "api/v1",
+      `subjects/${opts.subjectID}/episodes/ratings`,
+      { method: "GET" },
     ).then((resp) =>
       this.subjectEpisodesRatingsCache[opts.subjectID] = unwrap(resp)
     );
   }
 
   async mustGetEpisodeRatings(): Promise<GetEpisodeRatingsResponseData> {
-    const searchParams = new URLSearchParams();
-    if (Global.claimedUserID) {
-      searchParams.set("claimed_user_id", String(Global.claimedUserID));
-      searchParams.set("subject_id", String(Global.subjectID!));
-      searchParams.set("episode_id", String(Global.episodeID!));
-    }
-
     const resp = await this.fetch(
-      "api/v0",
-      ENDPOINT_PATHS.API.V0.EPISODE_RATINGS,
-      {
-        method: "GET",
-        searchParams,
-      },
+      "api/v1",
+      `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings`,
+      { method: "GET" },
     );
 
     return unwrap(resp);
@@ -115,28 +94,18 @@ export class Client {
   async getMyEpisodeRating(): Promise<
     APIResponse<GetMyEpisodeRatingResponseData>
   > {
-    const searchParams = new URLSearchParams();
-    if (Global.claimedUserID) {
-      searchParams.set("claimed_user_id", String(Global.claimedUserID));
-      searchParams.set("subject_id", String(Global.subjectID!));
-      searchParams.set("episode_id", String(Global.episodeID!));
-    }
-
     return await this.fetch(
-      "api/v0",
-      ENDPOINT_PATHS.API.V0.MY_EPISODE_RATING,
-      {
-        method: "GET",
-        searchParams,
-      },
+      "api/v1",
+      `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings/mine`,
+      { method: "GET" },
     );
   }
 
   async fetch<T>(
-    group: "auth" | "api/v0" | "api/dev",
+    group: "auth" | "api/v1",
     endpointPath: string,
     opts: {
-      method: "GET" | "POST";
+      method: "GET" | "POST" | "PUT" | "DELETE";
       searchParams?: URLSearchParams;
       body?: string;
     },
@@ -151,6 +120,9 @@ export class Client {
       headers.set("Authorization", `Basic ${this.token}`);
     }
     headers.set("X-Gadget-Version", Global.version);
+    if (Global.claimedUserID !== null) {
+      headers.set("X-Claimed-User-ID", Global.claimedUserID.toString());
+    }
 
     try {
       const resp = await fetch(url, {
@@ -176,7 +148,7 @@ export class Client {
   }
 
   buildFullEndpoint(
-    group: "auth" | "api/v0" | "api/dev",
+    group: "auth" | "api/v1",
     endpointPath: string,
   ): string {
     return join(join(this.entrypoint, group + "/"), endpointPath);

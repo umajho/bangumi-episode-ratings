@@ -160,7 +160,6 @@ export function renderMyRating(
     updateMessage(["processing"]);
 
     const resp = await Global.client.rateEpisode({
-      userID: Global.claimedUserID!,
       subjectID: Global.subjectID!,
       episodeID: props.episodeID,
       score: scoreToRate,
