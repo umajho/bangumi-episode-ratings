@@ -1,8 +1,10 @@
 import { describeScore } from "../definitions";
+import { VotesData } from "../models/VotesData";
+import { Watched } from "../utils";
 
 export function renderScoreboard(
   el: JQuery<HTMLElement>,
-  props: { score: number },
+  props: { votesData: Watched<VotesData> },
 ) {
   el = $(/*html*/ `
     <div class="global_score" style="float: right;">
@@ -23,5 +25,7 @@ export function renderScoreboard(
       $(el).find(".description").text(describeScore(score));
     }
   }
-  updateNumber(props.score);
+  props.votesData.watch((votesData) => {
+    updateNumber(votesData.averageScore);
+  });
 }

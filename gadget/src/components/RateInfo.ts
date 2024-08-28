@@ -4,7 +4,7 @@ import { Watched } from "../utils";
 export function renderRateInfo(
   el: JQuery<HTMLElement>,
   props: {
-    votesData: Watched<VotesData | null>;
+    votesData: Watched<VotesData>;
     requiresClickToReveal: Watched<boolean>;
     onReveal?: () => void;
   },
@@ -13,7 +13,7 @@ export function renderRateInfo(
     <div>
       <p class="rateInfo" style="display: none;">
         <span class="starstop-s">
-          <span class="maybe-starlight starlight"></span>
+          <span data-sel="starlight" class="starlight"></span>
           </span> <small class="fade"></small> <span class="tip_j">
         </span> 
       </p>
@@ -22,6 +22,7 @@ export function renderRateInfo(
   `).replaceAll(el);
 
   const rateInfoEl = el.find(".rateInfo");
+  const starlightEl = $(rateInfoEl).find('[data-sel="starlight"]');
   const buttonEl = el.find("button");
 
   props.votesData.watch((votesData) => {
@@ -33,12 +34,10 @@ export function renderRateInfo(
 
     const score = votesData.averageScore;
     if (Number.isNaN(score)) {
-      $(rateInfoEl).find(".maybe-starlight")
-        .removeClass()
-        .addClass("maybe-starlight");
+      $(starlightEl).removeClass();
       $(rateInfoEl).find("small.fade").text("--");
     } else {
-      $(rateInfoEl).find(".maybe-starlight")
+      $(starlightEl).removeClass()
         .addClass("starlight")
         .addClass(`stars${Math.round(score)}`);
       $(rateInfoEl).find("small.fade").text(score.toFixed(4));

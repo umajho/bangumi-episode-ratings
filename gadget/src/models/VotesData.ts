@@ -5,6 +5,10 @@ export class VotesData {
     private readonly data: { [_ in Score]?: number },
   ) {}
 
+  getClonedData(): { [_ in Score]?: number } {
+    return { ...this.data };
+  }
+
   getScoreVotes(score: Score): number {
     return this.data[score] ?? 0;
   }

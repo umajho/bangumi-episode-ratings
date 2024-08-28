@@ -60,7 +60,9 @@ export async function processSubjectEpListPage() {
       // TODO: 在此种情况时，允许用户主动获取。
       return;
     }
-    const votesData = new VotesData(ratings ?? {} as { [_ in Score]?: number });
+    const votesData = new Watched(
+      new VotesData(ratings ?? {} as { [_ in Score]?: number }),
+    );
 
     const myRating = epsRatings.my_ratings?.[episodeID];
     const hasUserWatched = $(li).find(".statusWatched").length ||
@@ -75,14 +77,15 @@ export async function processSubjectEpListPage() {
       ratedScore: (myRating ?? null) as Score | null,
       isPrimary: isFirst,
       canRefetchAfterAuth: false,
+      votesData,
     });
 
     const rateInfoEl = $("<div />");
     $(li).append(rateInfoEl);
     renderRateInfo(rateInfoEl, {
-      votesData: new Watched<VotesData | null>(votesData),
+      votesData,
       requiresClickToReveal: //
-        new Watched(!hasUserWatched && !!votesData.totalVotes),
+        new Watched(!hasUserWatched && !!votesData.getValueOnce().totalVotes),
     });
 
     $(li).append($(/*html*/ `<div class="clear"></div>`));

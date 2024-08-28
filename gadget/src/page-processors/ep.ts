@@ -4,6 +4,7 @@ import { renderScoreboard } from "../components/Scoreboard";
 import { renderScoreChart } from "../components/ScoreChart";
 import { VotesData } from "../models/VotesData";
 import { Score } from "../definitions";
+import { Watched } from "../utils";
 
 export async function processEpPage() {
   const scoreboardEl = $(/*html*/ `
@@ -14,11 +15,13 @@ export async function processEpPage() {
   $("#columnEpA").prepend(scoreboardEl);
 
   const ratingsData = await Global.client.mustGetEpisodeRatings();
-  const votesData = new VotesData(
-    ratingsData.votes as { [_ in Score]?: number },
+  const votesData = new Watched(
+    new VotesData(
+      ratingsData.votes as { [_ in Score]?: number },
+    ),
   );
 
-  renderScoreboard(scoreboardEl, { score: votesData.averageScore });
+  renderScoreboard(scoreboardEl, { votesData });
 
   const scoreChartEl = $("<div />").insertBefore("#columnEpA > .epDesc");
   renderScoreChart(scoreChartEl, { votesData });
@@ -33,5 +36,6 @@ export async function processEpPage() {
     ratedScore: (ratingsData.my_rating?.score ?? null) as Score | null,
     isPrimary: true,
     canRefetchAfterAuth: true,
+    votesData,
   });
 }

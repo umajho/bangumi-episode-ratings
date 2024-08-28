@@ -1,12 +1,11 @@
 import { Score, scores } from "../definitions";
 import { VotesData } from "../models/VotesData";
+import { Watched } from "../utils";
 
 export function renderScoreChart(
   el: JQuery<HTMLElement>,
-  props: { votesData: VotesData },
+  props: { votesData: Watched<VotesData> },
 ) {
-  const { votesData } = props;
-
   el = $(/*html*/ `
     <div id="ChartWarpper" class="chartWrapper" style="float: right; width: 218px;">
       <div class="chart_desc"><small class="grey"><span class="votes"></span> votes</small></div>
@@ -19,39 +18,44 @@ export function renderScoreChart(
     </div>
   `).replaceAll(el);
 
-  $(el).find(".votes").text(votesData.totalVotes);
-
   const chartEl = el.find(".horizontalChart");
-  const totalVotes = votesData.totalVotes;
-  const votesOfMostVotedScore = votesData.votesOfMostVotedScore;
-  for (const score of scores) {
-    const votes = votesData.getScoreVotes(score);
+  const barEls = scores.map(() => $("<div />").appendTo(chartEl));
+  props.votesData.watch((votesData) => {
+    $(el).find(".votes").text(votesData.totalVotes);
 
-    const barEl = $("<div />");
-    chartEl.prepend(barEl);
-    renderBar(barEl, {
-      score,
-      votes,
-      totalVotes,
-      votesOfMostVotedScore,
-      updateTooltip,
-    });
-  }
+    const totalVotes = votesData.totalVotes;
+    const votesOfMostVotedScore = votesData.votesOfMostVotedScore;
 
-  function updateTooltip(props: { score: Score | null }) {
+    for (const score of scores) {
+      const votes = votesData.getScoreVotes(score);
+
+      const barIndex = 10 - score;
+      const { el: newBarEl } = renderBar(barEls[barIndex], {
+        score,
+        votes,
+        totalVotes,
+        votesOfMostVotedScore,
+        updateTooltip,
+      });
+      barEls[barIndex] = newBarEl;
+    }
+  });
+
+  function updateTooltip(opts: { score: Score | null }) {
     let tooltipEl = $(chartEl).find(".tooltip");
 
-    if (props.score === null) {
+    if (opts.score === null) {
       tooltipEl.css("display", "none");
       return;
     }
 
     tooltipEl.css("display", "block");
-    const barEl = $(chartEl).find(`li`).eq(10 - props.score);
+    const barEl = $(chartEl).find(`li`).eq(10 - opts.score);
     const barElRelativeOffsetLeft = barEl.offset()!.left - el.offset()!.left;
     tooltipEl.css("left", `${barElRelativeOffsetLeft + barEl.width()! / 2}px`);
 
-    let scoreVotes = votesData.getScoreVotes(props.score);
+    const votesData = props.votesData.getValueOnce();
+    let scoreVotes = votesData.getScoreVotes(opts.score);
     const percentage = votesData.totalVotes
       ? (scoreVotes / votesData.totalVotes * 100)
       : 0;
@@ -93,4 +97,6 @@ function renderBar(
   $(el)
     .on("mouseover", () => props.updateTooltip({ score: props.score }))
     .on("mouseout", () => props.updateTooltip({ score: null }));
+
+  return { el };
 }

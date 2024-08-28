@@ -51,7 +51,7 @@ export function processCluetip() {
 
     if (currentCounter !== counter) return;
 
-    const votesData = new Watched<VotesData | null>(
+    const votesData = new Watched(
       new VotesData(
         epsRatings.episodes_votes[opts.episodeID] ??
           {} as { [_ in Score]?: number },

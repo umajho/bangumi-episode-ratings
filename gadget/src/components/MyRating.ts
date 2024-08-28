@@ -2,6 +2,7 @@ import { describeScoreEx, Score } from "../definitions";
 import { Watched } from "../utils";
 import Global from "../global";
 import { renderStars } from "./Stars";
+import { VotesData } from "../models/VotesData";
 
 export function renderMyRating(
   el: JQuery<HTMLElement>,
@@ -10,6 +11,7 @@ export function renderMyRating(
     ratedScore: Score | null;
     isPrimary: boolean;
     canRefetchAfterAuth: boolean;
+    votesData: Watched<VotesData>;
   },
 ) {
   const ratedScore = new Watched<Score | null>(props.ratedScore);
@@ -118,6 +120,10 @@ export function renderMyRating(
             } else if (resp[0] === "ok") {
               const [_, data] = resp;
               updateMessage(["none"]);
+              updateVotesData(props.votesData, {
+                oldScore: ratedScore.getValueOnce(),
+                newScore: data.score as Score | null,
+              });
               ratedScore.setValue(data.score as Score | null);
             } else {
               resp satisfies never;
@@ -173,9 +179,33 @@ export function renderMyRating(
     } else if (resp[0] === "ok") {
       const [_, data] = resp;
       updateMessage(["none"]);
+      updateVotesData(props.votesData, {
+        oldScore: ratedScore.getValueOnce(),
+        newScore: data.score as Score | null,
+      });
       ratedScore.setValue(data.score as Score | null);
     } else {
       resp satisfies never;
     }
   }
+}
+
+function updateVotesData(
+  votesData: Watched<VotesData>,
+  opts: {
+    oldScore: Score | null;
+    newScore: Score | null;
+  },
+) {
+  const newVotesData = votesData.getValueOnce().getClonedData();
+
+  if (opts.oldScore !== null) {
+    newVotesData[opts.oldScore]!--;
+  }
+  if (opts.newScore !== null) {
+    newVotesData[opts.newScore] ??= 0;
+    newVotesData[opts.newScore]!++;
+  }
+
+  votesData.setValue(new VotesData(newVotesData));
 }
