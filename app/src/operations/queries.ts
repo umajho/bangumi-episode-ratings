@@ -1,6 +1,8 @@
 import env from "../env.ts";
+import { GetEpisodeRatingsResponseData__Until_0_3_0 } from "../shared/dto.ts";
 import {
   APIResponse,
+  GetEpisodePublicRatingsResponseData,
   GetEpisodeRatingsResponseData,
   GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
@@ -87,8 +89,20 @@ export async function querySubjectEpisodesRatings(
 export async function queryEpisodeRatings(
   kv: Deno.Kv,
   tokenOrUserID: ["token", string | null] | ["userID", number],
-  opts: { claimedUserID: number | null; subjectID: number; episodeID: number },
-): Promise<APIResponse<GetEpisodeRatingsResponseData>> {
+  opts: {
+    claimedUserID: number | null;
+    subjectID: number;
+    episodeID: number;
+
+    compatibility: {
+      noPublicRatings: boolean;
+    };
+  },
+): Promise<
+  APIResponse<
+    GetEpisodeRatingsResponseData | GetEpisodeRatingsResponseData__Until_0_3_0
+  >
+> {
   const votes: { [score: number]: number } = {};
   for await (
     const result of kv.list({
@@ -104,10 +118,23 @@ export async function queryEpisodeRatings(
     }
   }
 
+  const publicRatingsResult: APIResponse<
+    GetEpisodePublicRatingsResponseData | null
+  > = opts.compatibility.noPublicRatings
+    ? ["ok", null]
+    : await queryEpisodePublicRatings(kv, opts);
+  if (publicRatingsResult[0] !== "ok") return publicRatingsResult;
+
+  const data:
+    | GetEpisodeRatingsResponseData
+    | GetEpisodeRatingsResponseData__Until_0_3_0 = { votes };
+
+  if (publicRatingsResult[1] !== null) {
+    (data as GetEpisodeRatingsResponseData).public_ratings =
+      publicRatingsResult[1];
+  }
+
   const userID = await matchTokenOrUserID(kv, tokenOrUserID, opts);
-
-  const data: GetEpisodeRatingsResponseData = { votes };
-
   if (userID !== null && opts.claimedUserID === userID) {
     const myRatingResult = //
       await queryEpisodeMyRating(kv, ["userID", userID], opts);
@@ -140,4 +167,26 @@ export async function queryEpisodeMyRating(
   );
 
   return ["ok", { score: ratingResult.value?.score ?? null }];
+}
+
+export async function queryEpisodePublicRatings(
+  kv: Deno.Kv,
+  opts: { subjectID: number; episodeID: number },
+): Promise<APIResponse<GetEpisodePublicRatingsResponseData>> {
+  const votersByScore: { [score: number]: number[] } = {};
+  for await (
+    const result of kv.list({
+      prefix: env.buildKVPrefixSubjectEpisodeScorePublicVoters(
+        [opts.subjectID, opts.episodeID],
+      ),
+    })
+  ) {
+    const score = result.key.at(-2) as number;
+    const voterUserID = result.key.at(-1) as number;
+
+    const voters = votersByScore[score] ?? (votersByScore[score] = []);
+    voters.push(voterUserID);
+  }
+
+  return ["ok", { public_voters_by_score: votersByScore }];
 }

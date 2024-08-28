@@ -4,8 +4,8 @@ import { match, P } from "npm:ts-pattern";
 import { StateForAPI } from "../../../types.ts";
 import {
   APIResponse,
-  GetEpisodeRatingsResponseData,
   GetEpisodeRatingsResponseData__Until_0_1_13,
+  GetEpisodeRatingsResponseData__Until_0_3_0,
   RateEpisodeRequestData__V0,
 } from "../../../shared/dto.ts";
 import { stringifyResponseForAPI } from "../../../responses.tsx";
@@ -69,13 +69,18 @@ router.get("/episode-ratings", async (ctx) => {
   const result_ = await Queries.queryEpisodeRatings(
     kv,
     ["token", ctx.state.token],
-    { claimedUserID, subjectID, episodeID },
-  );
+    {
+      claimedUserID,
+      subjectID,
+      episodeID,
+      compatibility: { noPublicRatings: true },
+    },
+  ) as APIResponse<GetEpisodeRatingsResponseData__Until_0_3_0>;
 
   const result = match(result_)
     .returnType<
       APIResponse<
-        | GetEpisodeRatingsResponseData
+        | GetEpisodeRatingsResponseData__Until_0_3_0
         | GetEpisodeRatingsResponseData__Until_0_1_13
       >
     >()

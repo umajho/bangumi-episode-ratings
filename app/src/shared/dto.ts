@@ -39,8 +39,14 @@ export interface GetEpisodeRatingsResponseData__Until_0_1_13 {
   userScore?: number | null;
 }
 
+export interface GetEpisodeRatingsResponseData__Until_0_3_0 {
+  votes: { [score: number]: number };
+  my_rating?: GetMyEpisodeRatingResponseData;
+}
+
 export interface GetEpisodeRatingsResponseData {
   votes: { [score: number]: number };
+  public_ratings: GetEpisodePublicRatingsResponseData;
   my_rating?: GetMyEpisodeRatingResponseData;
 }
 
@@ -53,4 +59,15 @@ export interface GetSubjectEpisodesResponseData {
   /** 是否确定所有剧集的评分得票数据都在 `episodes_votes` 中。 */
   is_certain_that_episodes_votes_are_integral: boolean;
   my_ratings?: { [episode_id: number]: number };
+}
+
+export interface ChangeUserEpisodeRatingVisibilityResponseData {
+  is_visible: boolean;
+}
+
+export interface GetEpisodePublicRatingsResponseData {
+  /**
+   * 数组由投了那个分数的用户的用户 ID 组成。
+   */
+  public_voters_by_score: { [score: number]: number[] };
 }

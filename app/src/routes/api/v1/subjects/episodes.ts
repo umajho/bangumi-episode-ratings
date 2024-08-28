@@ -14,6 +14,7 @@ router.get("/ratings", handleGetEpisodeRatings);
 router.get("/ratings/mine", handleGetEpisodeRatingOfMine);
 router.put("/ratings/mine", handlePutEpisodeRatingOfMine);
 router.delete("/ratings/mine", handleDeleteEpisodeRatingOfMine);
+router.put("/ratings/mine/is-visible", handlePutIsVisibleOfEpisodeRatingOfMine);
 
 async function handleGetEpisodeRatings(
   // deno-lint-ignore no-explicit-any
@@ -35,7 +36,14 @@ async function handleGetEpisodeRatings(
   const result = await Queries.queryEpisodeRatings(
     kv,
     ["token", ctx.state.token],
-    { claimedUserID, subjectID, episodeID },
+    {
+      claimedUserID,
+      subjectID,
+      episodeID,
+      compatibility: {
+        noPublicRatings: (ctx.state.gadgetVersion ?? 0) < 3_000, // < 0.3.0
+      },
+    },
   );
 
   ctx.response.body = stringifyResponseForAPI(result);
@@ -120,6 +128,41 @@ async function handleDeleteEpisodeRatingOfMine(
     claimedSubjectID: subjectID,
     episodeID,
     score: null,
+  });
+
+  ctx.response.body = stringifyResponseForAPI(result);
+}
+
+async function handlePutIsVisibleOfEpisodeRatingOfMine(
+  // deno-lint-ignore no-explicit-any
+  ctx: RouterContext<string, any, StateForAPI>,
+) {
+  const claimedUserID = ctx.state.claimedUserID;
+  const subjectID = tryExtractNumberFromCTXParams(ctx, "subjectID");
+  const episodeID = tryExtractNumberFromCTXParams(ctx, "episodeID");
+
+  const data = await ctx.request.body.json() as boolean;
+
+  if (
+    subjectID === null || episodeID === null || claimedUserID === null ||
+    typeof data !== "boolean"
+  ) {
+    ctx.response.body = stringifyResponseForAPI(
+      ["error", "BAD_REQUEST", "参数有误。"],
+    );
+    return;
+  }
+
+  const kv = await Deno.openKv();
+
+  const result = await Commands.changeUserEpisodeRatingVisibility(kv, [
+    "token",
+    ctx.state.token,
+  ], {
+    claimedUserID,
+    claimedSubjectID: subjectID,
+    episodeID,
+    isVisible: data,
   });
 
   ctx.response.body = stringifyResponseForAPI(result);

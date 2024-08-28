@@ -34,6 +34,7 @@ export interface EpisodeInfoData {
 
 export interface UserSubjectEpisodeRatingData {
   score: number | null;
+  isVisible?: boolean;
   submittedAtMs: number;
   history: {
     score: number | null;

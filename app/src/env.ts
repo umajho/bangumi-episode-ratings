@@ -7,6 +7,7 @@ const reversedKVPrefixes = {
   4: "episode-infos",
   5: "user-subject-episode-rating-map",
   6: "subject-episode-score-votes",
+  7: "subject-episode-score-public-voters",
 } as const;
 const kvPrefixes = Object.fromEntries(
   Object.entries(reversedKVPrefixes).map(([k, v]) => [v, Number(k)]),
@@ -104,6 +105,28 @@ const env = {
     subKey: [subjectID: number] | [subjectID: number, episodeID: number],
   ) {
     return [kvPrefixes["subject-episode-score-votes"], ...subKey] as const;
+  },
+  buildKVKeySubjectEpisodeScorePublicVoters(
+    subjectID: number,
+    episodeID: number,
+    score: number,
+    userID: number,
+  ) {
+    return [
+      kvPrefixes["subject-episode-score-public-voters"],
+      subjectID,
+      episodeID,
+      score,
+      userID,
+    ] as const;
+  },
+  buildKVPrefixSubjectEpisodeScorePublicVoters(
+    subKey: [subjectID: number, episodeID: number],
+  ) {
+    return [
+      kvPrefixes["subject-episode-score-public-voters"],
+      ...subKey,
+    ] as const;
   },
 } as const;
 
