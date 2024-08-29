@@ -32,6 +32,9 @@ export interface RateEpisodeRequestData__V1 {
 
 export interface RateEpisodeResponseData {
   score: number | null;
+  visibility: {
+    is_visible: boolean;
+  } | null;
 }
 
 export interface GetEpisodeRatingsResponseData__Until_0_1_13 {

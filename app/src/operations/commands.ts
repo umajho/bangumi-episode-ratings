@@ -62,7 +62,12 @@ export async function rateEpisode(
       await kv.get<UserSubjectEpisodeRatingData>(userSubjectEpisodeRatingKey);
 
     if (oldRatingResult.value && oldRatingResult.value.score === opts.score) {
-      return ["ok", { score: opts.score }];
+      return ["ok", {
+        score: opts.score,
+        visibility: opts.score !== null
+          ? { is_visible: !!oldRatingResult.value.isVisible }
+          : null,
+      }];
     }
 
     let tx = kv.atomic();
@@ -133,7 +138,12 @@ export async function rateEpisode(
     isOk = result.ok;
   }
 
-  return ["ok", { score: opts.score }];
+  return ["ok", {
+    score: opts.score,
+    visibility: opts.score !== null
+      ? { is_visible: !!oldRatingResult.value?.isVisible }
+      : null,
+  }];
 }
 
 export async function changeUserEpisodeRatingVisibility(
