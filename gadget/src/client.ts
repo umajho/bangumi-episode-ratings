@@ -4,6 +4,7 @@ import {
   APIErrorResponse,
   APIOkResponse,
   APIResponse,
+  ChangeUserEpisodeRatingVisibilityResponseData,
   GetEpisodeRatingsResponseData,
   GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
@@ -110,6 +111,16 @@ export class Client {
       "api/v1",
       `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings/mine`,
       { method: "GET" },
+    );
+  }
+
+  async changeUserEpisodeRatingVisibility(
+    opts: { isVisible: boolean },
+  ): Promise<APIResponse<ChangeUserEpisodeRatingVisibilityResponseData>> {
+    return await this.fetch(
+      "api/v1",
+      `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings/mine/is-visible`,
+      { method: "PUT", body: JSON.stringify(opts.isVisible) },
     );
   }
 

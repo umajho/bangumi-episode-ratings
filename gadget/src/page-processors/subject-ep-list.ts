@@ -74,7 +74,7 @@ export async function processSubjectEpListPage() {
     $(li).append(myRatingEl);
     renderMyRating(myRatingEl, {
       episodeID,
-      ratedScore: (myRating ?? null) as Score | null,
+      ratedScore: new Watched((myRating ?? null) as Score | null),
       isPrimary: isFirst,
       canRefetchAfterAuth: false,
       votesData,

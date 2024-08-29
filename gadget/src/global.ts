@@ -9,6 +9,10 @@ export default global;
 
 export function initializeGlobal() {
   Object.assign(global, makeGlobal());
+
+  // @ts-ignore
+  (((window as any).unsafeWindow ?? window).__bgm_ep_ratings__debug ??= {})
+    .Global = global;
 }
 
 function makeGlobal() {

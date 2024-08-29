@@ -1,5 +1,6 @@
 import { VotesData } from "../models/VotesData";
 import { Watched } from "../utils";
+import { renderSmallStars } from "./SmallStars";
 
 export function renderRateInfo(
   el: JQuery<HTMLElement>,
@@ -12,37 +13,24 @@ export function renderRateInfo(
   el = $(/*html*/ `
     <div>
       <p class="rateInfo" style="display: none;">
-        <span class="starstop-s">
-          <span data-sel="starlight" class="starlight"></span>
-          </span> <small class="fade"></small> <span class="tip_j">
-        </span> 
+        <div data-sel="small-stars"></div>
+        <span class="tip_j"></span>
       </p>
       <button type="button" style="display: none;">显示评分</button>
     </div>
   `).replaceAll(el);
 
   const rateInfoEl = el.find(".rateInfo");
-  const starlightEl = $(rateInfoEl).find('[data-sel="starlight"]');
+  const smallStarsEl = el.find('[data-sel="small-stars"]');
   const buttonEl = el.find("button");
 
-  props.votesData.watch((votesData) => {
-    if (!votesData) {
-      el.css("display", "none");
-      return;
-    }
-    el.css("display", "");
+  const score = props.votesData.createComputed(
+    (votesData) => votesData.averageScore,
+  );
+  renderSmallStars(smallStarsEl, { score, shouldShowNumber: true });
 
-    const score = votesData.averageScore;
-    if (Number.isNaN(score)) {
-      $(starlightEl).removeClass();
-      $(rateInfoEl).find("small.fade").text("--");
-    } else {
-      $(starlightEl).removeClass()
-        .addClass("starlight")
-        .addClass(`stars${Math.round(score)}`);
-      $(rateInfoEl).find("small.fade").text(score.toFixed(4));
-    }
-    $(rateInfoEl).find(".tip_j").text(`(${votesData.totalVotes}人评分)`);
+  props.votesData.watch((votesData) => {
+    $(el).find(".tip_j").text(`(${votesData.totalVotes}人评分)`);
   });
 
   buttonEl.on("click", () => {

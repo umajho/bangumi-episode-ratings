@@ -8,13 +8,13 @@ export function renderMyRating(
   el: JQuery<HTMLElement>,
   props: {
     episodeID: number;
-    ratedScore: Score | null;
+    ratedScore: Watched<Score | null>;
     isPrimary: boolean;
     canRefetchAfterAuth: boolean;
     votesData: Watched<VotesData>;
+    onVisibilityChange?: (visibility: { isVisible: boolean } | null) => void;
   },
 ) {
-  const ratedScore = new Watched<Score | null>(props.ratedScore);
   const hoveredScore = new Watched<Score | null | "cancel">(null);
 
   el = $(/*html*/ `
@@ -45,7 +45,7 @@ export function renderMyRating(
     .on("mouseout", () => hoveredScore.setValue(null))
     .on("click", () => rateEpisode(null));
 
-  ratedScore.watchDeferred((ratedScore) =>
+  props.ratedScore.watchDeferred((ratedScore) =>
     updateStarsContainer(["normal", {
       ratedScore,
       hoveredScore: hoveredScore.getValueOnce(),
@@ -53,7 +53,7 @@ export function renderMyRating(
   );
   hoveredScore.watch((hoveredScore) => {
     updateStarsContainer(["normal", {
-      ratedScore: ratedScore.getValueOnce(),
+      ratedScore: props.ratedScore.getValueOnce(),
       hoveredScore,
     }]);
   });
@@ -121,16 +121,16 @@ export function renderMyRating(
               const [_, data] = resp;
               updateMessage(["none"]);
               updateVotesData(props.votesData, {
-                oldScore: ratedScore.getValueOnce(),
+                oldScore: props.ratedScore.getValueOnce(),
                 newScore: data.score as Score | null,
               });
-              ratedScore.setValue(data.score as Score | null);
+              props.ratedScore.setValue(data.score as Score | null);
             } else {
               resp satisfies never;
             }
           });
         } else {
-          messageEl.text("请刷新本页以获取。 ");
+          messageEl.text("请刷新本页以获取。");
         }
         break;
       }
@@ -180,10 +180,15 @@ export function renderMyRating(
       const [_, data] = resp;
       updateMessage(["none"]);
       updateVotesData(props.votesData, {
-        oldScore: ratedScore.getValueOnce(),
+        oldScore: props.ratedScore.getValueOnce(),
         newScore: data.score as Score | null,
       });
-      ratedScore.setValue(data.score as Score | null);
+      props.ratedScore.setValue(data.score as Score | null);
+      if (data.visibility === null) {
+        props.onVisibilityChange?.(null);
+      } else {
+        props.onVisibilityChange?.({ isVisible: data.visibility.is_visible });
+      }
     } else {
       resp satisfies never;
     }
