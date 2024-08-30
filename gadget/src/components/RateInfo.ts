@@ -12,10 +12,10 @@ export function renderRateInfo(
 ) {
   el = $(/*html*/ `
     <div>
-      <p class="rateInfo" style="display: none;">
+      <div class="rateInfo" style="display: none;">
         <div data-sel="small-stars"></div>
         <span class="tip_j"></span>
-      </p>
+      </div>
       <button type="button" style="display: none;">显示评分</button>
     </div>
   `).replaceAll(el);
