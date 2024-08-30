@@ -3,9 +3,16 @@ type Callback<T> = (newValue: T, oldValue: T | undefined) => void;
 export class Watched<T> {
   private _watchers: (Callback<T>)[] = [];
 
+  private _shouldDeduplicateShallowly: boolean;
   private _broadcastID: string | null;
 
-  constructor(private _value: T, opts?: { broadcastID?: string }) {
+  constructor(private _value: T, opts?: {
+    shouldDeduplicateShallowly?: boolean;
+    broadcastID?: string;
+  }) {
+    this._shouldDeduplicateShallowly = //
+      opts?.shouldDeduplicateShallowly ?? false;
+
     this._broadcastID = opts?.broadcastID ?? null;
     if (this._broadcastID) {
       window.addEventListener("storage", (ev) => {
@@ -25,6 +32,11 @@ export class Watched<T> {
 
   setValue(newValue: T) {
     const oldValue = this._value;
+
+    if (this._shouldDeduplicateShallowly && oldValue === newValue) {
+      return;
+    }
+
     this._value = newValue;
     this._watchers.forEach((w) => w(newValue, oldValue));
 

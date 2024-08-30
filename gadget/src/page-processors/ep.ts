@@ -7,6 +7,7 @@ import { Score } from "../definitions";
 import { Watched } from "../utils";
 import { renderSmallStars } from "../components/SmallStars";
 import { renderReplyFormVisibilityControl } from "../components/ReplyFormVisibilityControl";
+import { renderMyRatingInComment } from "../components/MyRatingInComment";
 
 export async function processEpPage() {
   const scoreboardEl = $(/*html*/ `
@@ -22,18 +23,9 @@ export async function processEpPage() {
       ratingsData.votes as { [_ in Score]?: number },
     ),
   );
-  const currentVisibility = new Watched<{ isVisible: boolean } | null>(
-    ratingsData.my_rating?.visibility
-      ? { isVisible: ratingsData.my_rating.visibility?.is_visible }
-      : null,
-    {
-      broadcastID:
-        `bgm_ep_ratings::broadcasts::${Global.episodeID}::visibility`,
-    },
+  Global.updateCurrentEpisodeVisibilityFromServerRaw(
+    ratingsData.my_rating?.visibility,
   );
-  function onVisibilityChange(visibility: { isVisible: boolean } | null) {
-    currentVisibility.setValue(visibility);
-  }
 
   renderScoreboard(scoreboardEl, { votesData });
 
@@ -54,7 +46,6 @@ export async function processEpPage() {
     isPrimary: true,
     canRefetchAfterAuth: true,
     votesData,
-    onVisibilityChange,
   });
 
   const userReplyMap = await collectUserReplyMap();
@@ -71,10 +62,27 @@ export async function processEpPage() {
     };
   }
 
+  const currentVisibility = (() => {
+    const watched = new Watched<{ isVisible: boolean } | null>(null);
+    function update() {
+      if (!myReplies.getValueOnce().length) {
+        watched.setValue(null);
+      } else {
+        watched.setValue(
+          Global.currentEpisodeVisibilityFromServer.getValueOnce(),
+        );
+      }
+    }
+    myReplies.watchDeferred(update);
+    Global.currentEpisodeVisibilityFromServer.watch(update);
+    return watched;
+  })();
+
   const ratedScoreGeneric = ratedScore.createComputed((score) => score ?? NaN);
   myReplies.watch((myReplies) => {
     processMyUnprocessedComments({
       ratedScore: ratedScoreGeneric,
+      currentVisibility,
       replies: myReplies,
     });
   });
@@ -90,14 +98,37 @@ export async function processEpPage() {
     myUserID: Global.claimedUserID!,
   });
 
+  const isVisibilityCheckboxRelevant = (() => {
+    const watched = new Watched(true);
+    function update() {
+      watched.setValue(
+        ratedScore.getValueOnce() !== null &&
+          currentVisibility.getValueOnce() === null,
+      );
+    }
+    ratedScore.watchDeferred(update);
+    currentVisibility.watch(update);
+    return watched;
+  })();
+  const visibilityCheckboxValue = new Watched(false, {
+    shouldDeduplicateShallowly: true,
+  });
+
   processReplyForm({
-    ratedScore,
+    isVisibilityCheckboxRelevant,
+    visibilityCheckboxValue,
+    currentVisibility,
+  });
+  processReplysForm({
+    isVisibilityCheckboxRelevant,
+    visibilityCheckboxValue,
     currentVisibility,
   });
 }
 
 function processReplyForm(opts: {
-  ratedScore: Watched<Score | null>;
+  isVisibilityCheckboxRelevant: Watched<boolean>;
+  visibilityCheckboxValue: Watched<boolean>;
   currentVisibility: Watched<{ isVisible: boolean } | null>;
 }) {
   const el = $("#ReplyForm");
@@ -105,32 +136,97 @@ function processReplyForm(opts: {
   const submitButtonEl = $(el).find("#submitBtnO");
 
   const controlEl = $("<div />").insertBefore(submitButtonEl);
-  const { getChangedVisibility } = renderReplyFormVisibilityControl(controlEl, {
-    hasUserVoted: opts.ratedScore.createComputed((s) => s !== null),
-    currentVisibility: opts.currentVisibility,
-  });
+  renderReplyFormVisibilityControl(controlEl, opts);
 
   $(el.on("submit", async () => {
-    const changedVisibility = getChangedVisibility();
-    if (changedVisibility !== null) {
-      const result = await Global.client.changeUserEpisodeRatingVisibility({
-        isVisible: changedVisibility.isVisible,
-      });
-      if (result[0] === "auth_required") {
-        Global.token.setValue(null);
-      } else if (result[0] !== "ok") {
-        console.warn(
-          "单集评分组件",
-          "`changeUserEpisodeRatingVisibility`",
-          result,
-        );
-      }
-    }
+    changeVisibilityIfNecessary({
+      isRelevant: opts.isVisibilityCheckboxRelevant.getValueOnce(),
+      currentVisibility: opts.currentVisibility.getValueOnce(),
+      changedVisibility: {
+        isVisible: !opts.visibilityCheckboxValue.getValueOnce(),
+      },
+    });
   }));
+}
+
+/**
+ * 处理子评论的表单。
+ */
+function processReplysForm(opts: {
+  isVisibilityCheckboxRelevant: Watched<boolean>;
+  visibilityCheckboxValue: Watched<boolean>;
+  currentVisibility: Watched<{ isVisible: boolean } | null>;
+}) {
+  const unmountFns: (() => void)[] = [];
+
+  // @ts-ignore
+  const oldSubReplyFn = (window.unsafeWindow ?? window).subReply;
+  // @ts-ignore
+  (window.unsafeWindow ?? window).subReply = function (...args: any[]) {
+    oldSubReplyFn(...args);
+
+    const el = $("#ReplysForm");
+
+    const submitButtonEl = $(el).find("#submitBtnO");
+
+    const controlEl = $("<div />").insertBefore(submitButtonEl);
+    const { unmount: unmountFn } = //
+      renderReplyFormVisibilityControl(controlEl, opts);
+    unmountFns.push(unmountFn);
+
+    $(el.on("submit", async () => {
+      unmountFns.forEach((fn) => fn());
+      await changeVisibilityIfNecessary({
+        isRelevant: opts.isVisibilityCheckboxRelevant.getValueOnce(),
+        currentVisibility: opts.currentVisibility.getValueOnce(),
+        changedVisibility: {
+          isVisible: !opts.visibilityCheckboxValue.getValueOnce(),
+        },
+      });
+    }));
+  };
+
+  // @ts-ignore
+  const oldSubReplycancelFn = (window.unsafeWindow ?? window).subReplycancel;
+  // @ts-ignore
+  (window.unsafeWindow ?? window).subReplycancel = function (...args: any[]) {
+    unmountFns.forEach((fn) => fn());
+    oldSubReplycancelFn(...args);
+  };
+}
+
+async function changeVisibilityIfNecessary(opts: {
+  isRelevant: boolean;
+  currentVisibility: { isVisible: boolean } | null;
+  changedVisibility: { isVisible: boolean };
+}) {
+  if (!opts.isRelevant) return;
+
+  if (opts.currentVisibility?.isVisible === opts.changedVisibility.isVisible) {
+    return;
+  }
+
+  const result = await Global.client.changeUserEpisodeRatingVisibility({
+    isVisible: opts.changedVisibility.isVisible,
+  });
+  if (result[0] === "auth_required") {
+    Global.token.setValue(null);
+  } else if (result[0] === "error") {
+    console.warn(
+      "单集评分组件",
+      "`changeUserEpisodeRatingVisibility`",
+      result,
+    );
+  } else if (result[0] === "ok") {
+    Global.updateCurrentEpisodeVisibilityFromServerRaw(result[1]);
+  } else {
+    result satisfies never;
+  }
 }
 
 function processMyUnprocessedComments(opts: {
   ratedScore: Watched<number>;
+  currentVisibility: Watched<{ isVisible: boolean } | null>;
   replies: ReplyLite[];
 }) {
   for (const reply of opts.replies) {
@@ -138,13 +234,10 @@ function processMyUnprocessedComments(opts: {
     if (el.hasClass("__bgm_ep_ratings__processed")) continue;
     el.addClass("__bgm_ep_ratings__processed");
 
-    const smallStarsEl = $("<div />").insertBefore(
+    const myRatingInCommentEl = $("<div />").insertBefore(
       $(el).find(".inner > .reply_content,.cmt_sub_content").eq(0),
     );
-    renderSmallStars(smallStarsEl, {
-      score: opts.ratedScore,
-      shouldShowNumber: false,
-    });
+    renderMyRatingInComment(myRatingInCommentEl, opts);
   }
 }
 

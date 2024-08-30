@@ -71,6 +71,24 @@ function makeGlobal() {
     client.clearCache();
   });
 
+  // 不用第三方包，响应式状态管理太麻烦了，摆了。
+  // 下面这个变量只在章节页面有效。
+  const currentEpisodeVisibilityFromServer = //
+    new Watched<{ isVisible: boolean } | null>(null, {
+      broadcastID: `bgm_ep_ratings::broadcasts::${episodeID}::visibility`,
+    });
+  function updateCurrentEpisodeVisibilityFromServerRaw(
+    raw: { is_visible: boolean } | null | undefined,
+  ) {
+    if (!raw) {
+      currentEpisodeVisibilityFromServer.setValue(null);
+    } else {
+      currentEpisodeVisibilityFromServer.setValue({
+        isVisible: raw.is_visible,
+      });
+    }
+  }
+
   return {
     version,
     subjectID,
@@ -78,5 +96,8 @@ function makeGlobal() {
     claimedUserID,
     token,
     client,
+
+    currentEpisodeVisibilityFromServer,
+    updateCurrentEpisodeVisibilityFromServerRaw,
   };
 }

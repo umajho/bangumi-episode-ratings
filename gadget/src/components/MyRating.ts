@@ -12,7 +12,6 @@ export function renderMyRating(
     isPrimary: boolean;
     canRefetchAfterAuth: boolean;
     votesData: Watched<VotesData>;
-    onVisibilityChange?: (visibility: { isVisible: boolean } | null) => void;
   },
 ) {
   const hoveredScore = new Watched<Score | null | "cancel">(null);
@@ -125,6 +124,8 @@ export function renderMyRating(
                 newScore: data.score as Score | null,
               });
               props.ratedScore.setValue(data.score as Score | null);
+              Global
+                .updateCurrentEpisodeVisibilityFromServerRaw(data.visibility);
             } else {
               resp satisfies never;
             }
@@ -184,11 +185,7 @@ export function renderMyRating(
         newScore: data.score as Score | null,
       });
       props.ratedScore.setValue(data.score as Score | null);
-      if (data.visibility === null) {
-        props.onVisibilityChange?.(null);
-      } else {
-        props.onVisibilityChange?.({ isVisible: data.visibility.is_visible });
-      }
+      Global.updateCurrentEpisodeVisibilityFromServerRaw(data.visibility);
     } else {
       resp satisfies never;
     }
