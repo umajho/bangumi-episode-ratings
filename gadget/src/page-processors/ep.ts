@@ -22,6 +22,18 @@ export async function processEpPage() {
       ratingsData.votes as { [_ in Score]?: number },
     ),
   );
+  const currentVisibility = new Watched<{ isVisible: boolean } | null>(
+    ratingsData.my_rating?.visibility
+      ? { isVisible: ratingsData.my_rating.visibility?.is_visible }
+      : null,
+    {
+      broadcastID:
+        `bgm_ep_ratings::broadcasts::${Global.episodeID}::visibility`,
+    },
+  );
+  function onVisibilityChange(visibility: { isVisible: boolean } | null) {
+    currentVisibility.setValue(visibility);
+  }
 
   renderScoreboard(scoreboardEl, { votesData });
 
@@ -77,25 +89,6 @@ export async function processEpPage() {
     userReplyMap,
     myUserID: Global.claimedUserID!,
   });
-
-  const currentVisibility = new Watched(
-    determineCurrentVisibility(),
-    {
-      broadcastID:
-        `bgm_ep_ratings::broadcasts::${Global.episodeID}::visibility`,
-    },
-  );
-  function determineCurrentVisibility(): { isVisible: boolean } | null {
-    if (
-      !myReplies.getValueOnce().length || ratedScore.getValueOnce() === null
-    ) return null;
-    return {
-      isVisible: Global.claimedUserID! in votersToScore,
-    };
-  }
-  function onVisibilityChange(visibility: { isVisible: boolean } | null) {
-    currentVisibility.setValue(visibility);
-  }
 
   processReplyForm({
     ratedScore,

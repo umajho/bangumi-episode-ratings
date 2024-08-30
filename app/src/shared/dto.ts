@@ -55,6 +55,9 @@ export interface GetEpisodeRatingsResponseData {
 
 export interface GetMyEpisodeRatingResponseData {
   score: number | null;
+  visibility: {
+    is_visible: boolean;
+  } | null;
 }
 
 export interface GetSubjectEpisodesResponseData {

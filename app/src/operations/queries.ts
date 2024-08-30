@@ -166,7 +166,12 @@ export async function queryEpisodeMyRating(
     userSubjectEpisodeRatingKey,
   );
 
-  return ["ok", { score: ratingResult.value?.score ?? null }];
+  return ["ok", {
+    score: ratingResult.value?.score ?? null,
+    visibility: ratingResult.value
+      ? { is_visible: ratingResult.value.isVisible ?? false }
+      : null,
+  }];
 }
 
 export async function queryEpisodePublicRatings(

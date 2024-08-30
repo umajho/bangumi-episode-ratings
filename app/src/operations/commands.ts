@@ -140,8 +140,8 @@ export async function rateEpisode(
 
   return ["ok", {
     score: opts.score,
-    visibility: opts.score !== null
-      ? { is_visible: !!oldRatingResult.value?.isVisible }
+    visibility: oldRatingResult.value
+      ? { is_visible: oldRatingResult.value.isVisible ?? false }
       : null,
   }];
 }
