@@ -1,2 +1,2 @@
-dev:
-	deno run --allow-net --env=.env.dev main.ts
+#dev:
+#	deno run --allow-net --env=.env.dev main.ts
