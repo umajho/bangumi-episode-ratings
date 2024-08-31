@@ -106,23 +106,7 @@ router.post("/" + ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON, async (ctx) => {
 
   const repo = await Repo.open();
 
-  let isOk = false;
-  let token!: string | null;
-  while (!isOk) {
-    token = null;
-    const tokenCouponEntryResult = await repo
-      .getTokenCouponEntryResult(tokenCoupon);
-    const tokenCouponEntry = tokenCouponEntryResult.value;
-    if (!tokenCouponEntry) break;
-    if (Date.now() <= tokenCouponEntry.expiry) {
-      token = tokenCouponEntry.token;
-    }
-
-    const result = await repo.tx((tx) => {
-      tx.deleteTokenCouponEntry(tokenCoupon, tokenCouponEntryResult);
-    });
-    isOk = result.ok;
-  }
+  const token = await repo.popTokenCouponEntryToken(tokenCoupon);
 
   ctx.response.body = stringifyResponseForAPI(["ok", token]);
 });

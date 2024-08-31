@@ -94,7 +94,7 @@ export async function rateEpisode(
         }
       }
 
-      tx.setUserSubjectEpisodeRating //
+      tx.setUserEpisodeRating //
       (userID, subjectID, opts.episodeID, userRatingData, oldRatingResult);
     });
     isOk = result.ok;
@@ -164,7 +164,7 @@ export async function changeUserEpisodeRatingVisibility(
         }
       }
 
-      tx.setUserSubjectEpisodeRating //
+      tx.setUserEpisodeRating //
       (userID, subjectID, opts.episodeID, userRatingData, userRatingResult);
     });
     isOk = result.ok;

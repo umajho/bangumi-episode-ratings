@@ -15,7 +15,9 @@ export async function querySubjectEpisodesRatings(
   opts: { claimedUserID: UserID | null; subjectID: SubjectID },
 ): Promise<APIResponse<GetSubjectEpisodesResponseData>> {
   const { votesByScoreBySubject, isCertainThatEpisodesVotesAreIntegral } = //
-    await repo.getAllEpisodesVotesByScoreBySubjectEx(opts.subjectID);
+    await repo.getAllEpisodesVotesInSubjectGroupedByScoreAndEpisodeEx(
+      opts.subjectID,
+    );
 
   const data: GetSubjectEpisodesResponseData = {
     episodes_votes: votesByScoreBySubject,
@@ -52,7 +54,7 @@ export async function queryEpisodeRatings(
   >
 > {
   const votes = await repo
-    .getAllEpisodeVotesByScore(opts.subjectID, opts.episodeID);
+    .getAllEpisodeVotesGroupedByScore(opts.subjectID, opts.episodeID);
 
   const publicRatingsResult: APIResponse<
     GetEpisodePublicRatingsResponseData | null
@@ -108,7 +110,7 @@ export async function queryEpisodePublicRatings(
   repo: Repo,
   opts: { subjectID: SubjectID; episodeID: EpisodeID },
 ): Promise<APIResponse<GetEpisodePublicRatingsResponseData>> {
-  const votersByScore = await repo.getAllEpisodePublicVotersByScore //
+  const votersByScore = await repo.getAllEpisodePublicVotersGroupedByScore //
   (opts.subjectID, opts.episodeID);
 
   return ["ok", { public_voters_by_score: votersByScore }];

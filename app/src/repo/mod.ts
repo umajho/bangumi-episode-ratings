@@ -80,11 +80,32 @@ export class Repo {
     return userID;
   }
 
-  async getTokenCouponEntryResult(
+  async __getTokenCouponEntryResult(
     tokenCoupon: string,
   ): Promise<Deno.KvEntryMaybe<TokenCouponEntryData>> {
     const key = env.buildKVKeyTokenCoupon(tokenCoupon);
     return await this.#kv.get<TokenCouponEntryData>(key);
+  }
+  async popTokenCouponEntryToken(tokenCoupon: string): Promise<string | null> {
+    let isOk = false;
+    let token!: string | null;
+    while (!isOk) {
+      token = null;
+      const tokenCouponEntryResult = await this
+        .__getTokenCouponEntryResult(tokenCoupon);
+      const tokenCouponEntry = tokenCouponEntryResult.value;
+      if (!tokenCouponEntry) break;
+      if (Date.now() <= tokenCouponEntry.expiry) {
+        token = tokenCouponEntry.token;
+      }
+
+      const result = await this.tx((tx) => {
+        tx.deleteTokenCouponEntry(tokenCoupon, tokenCouponEntryResult);
+      });
+      isOk = result.ok;
+    }
+
+    return token;
   }
 
   async getEpisodeInfoResult(
@@ -132,7 +153,13 @@ export class Repo {
     return ratings;
   }
 
-  async getAllEpisodeVotesByScore(subjectID: SubjectID, episodeID: EpisodeID) {
+  /**
+   * 获取指定章节的评分，并以评分分组。
+   */
+  async getAllEpisodeVotesGroupedByScore(
+    subjectID: SubjectID,
+    episodeID: EpisodeID,
+  ) {
     const prefix = env.buildKVPrefixSubjectEpisodeScoreVotes //
     ([subjectID, episodeID]);
 
@@ -149,16 +176,23 @@ export class Repo {
     return votes;
   }
 
-  async getAllEpisodesVotesByScoreBySubjectEx(subjectID: SubjectID) {
+  /**
+   * 获取指定条目中各个章节的评分，并以章节和评分分组。
+   */
+  async getAllEpisodesVotesInSubjectGroupedByScoreAndEpisodeEx(
+    subjectID: SubjectID,
+    opts?: { limit?: number },
+  ) {
+    const limit = opts?.limit ?? 1000;
+
     const prefix = env.buildKVPrefixSubjectEpisodeScoreVotes([subjectID]);
 
-    const LIMIT = 1000;
     const votesByScoreBySubject: {
       [episodeID: EpisodeID]: { [score: number]: number } | null;
     } = {};
     let lastEpisodeID: EpisodeID | null = null;
     let count = 0;
-    for await (const result of this.#kv.list({ prefix }, { limit: LIMIT })) {
+    for await (const result of this.#kv.list({ prefix }, { limit })) {
       count++;
 
       const episodeID = result.key.at(-2) as EpisodeID;
@@ -176,7 +210,7 @@ export class Repo {
       }
     }
 
-    const isCertainThatEpisodesVotesAreIntegral = count < LIMIT;
+    const isCertainThatEpisodesVotesAreIntegral = count < limit;
     if (
       !isCertainThatEpisodesVotesAreIntegral &&
       votesByScoreBySubject[lastEpisodeID!] &&
@@ -190,11 +224,14 @@ export class Repo {
     return { votesByScoreBySubject, isCertainThatEpisodesVotesAreIntegral };
   }
 
-  async getAllEpisodePublicVotersByScore(
+  /**
+   * 获取指定章节中选择公开了自己的评分的用户，并以这些用户所评的分分组。
+   */
+  async getAllEpisodePublicVotersGroupedByScore(
     subjectID: SubjectID,
     episodeID: EpisodeID,
   ) {
-    const votersByScore: { [score: number]: number[] } = {};
+    const votersByScore: { [score: number]: UserID[] } = {};
     for await (
       const result of this.#kv.list({
         prefix: env.buildKVPrefixSubjectEpisodeScorePublicVoters(
@@ -203,7 +240,7 @@ export class Repo {
       })
     ) {
       const score = result.key.at(-2) as number;
-      const voterUserID = result.key.at(-1) as number;
+      const voterUserID = result.key.at(-1) as UserID;
 
       const voters = votersByScore[score] ?? (votersByScore[score] = []);
       voters.push(voterUserID);
@@ -244,15 +281,19 @@ export class RepoTransaction {
     this.#tx = this.#tx.delete(key);
   }
 
-  setTokenCouponEntry(tokenCoupon: string, opts: { token: string }) {
+  setTokenCouponEntry(tokenCoupon: string, opts: {
+    token: string;
+    expiresInMs?: number;
+  }) {
+    opts.expiresInMs ??= 1000 * 10; // 10 秒。
+
     const key = env.buildKVKeyTokenCoupon(tokenCoupon);
 
-    const expireIn = 1000 * 10; // 10 秒。
     const data: TokenCouponEntryData = {
       token: opts.token,
-      expiry: Date.now() + expireIn,
+      expiry: Date.now() + opts.expiresInMs,
     };
-    this.#tx = this.#tx.set(key, data, { expireIn });
+    this.#tx = this.#tx.set(key, data, { expireIn: opts.expiresInMs });
   }
   deleteTokenCouponEntry(
     tokenCoupon: string,
@@ -264,7 +305,7 @@ export class RepoTransaction {
       .delete(key);
   }
 
-  setUserSubjectEpisodeRating(
+  setUserEpisodeRating(
     userID: UserID,
     subjectID: SubjectID,
     episodeID: EpisodeID,
