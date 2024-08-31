@@ -5,7 +5,9 @@ import {
   EpisodeID,
   EpisodeInfoData,
   SubjectID,
-  TokenData,
+  TokenCouponEntryData,
+  TokenEntryData,
+  UserData,
   UserID,
   UserSubjectEpisodeRatingData,
 } from "../types.ts";
@@ -23,6 +25,10 @@ export class Repo {
     return new Repo(kv);
   }
 
+  __closeForTest() {
+    this.#kv.close();
+  }
+
   async tx(
     block: (tx: RepoTransaction) => Promise<void> | void,
   ): Promise<Deno.KvCommitResult | Deno.KvCommitError> {
@@ -31,17 +37,25 @@ export class Repo {
     return await tx.__commit();
   }
 
-  async getUserIDByToken(token: string | null): Promise<UserID | null> {
-    if (!token) return null;
-
-    const tokenResult = await this.#kv
-      .get<TokenData>(env.buildKVKeyToken(token));
-    if (!tokenResult.value) return null;
-
-    return tokenResult.value.userID;
+  async getUserResult(userID: UserID): Promise<Deno.KvEntryMaybe<UserData>> {
+    const key = env.buildKVKeyUser(userID);
+    return await this.#kv.get<UserData>(key);
   }
 
-  async getUserEx(
+  async getTokenEntryResult(
+    token: string,
+  ): Promise<Deno.KvEntryMaybe<TokenEntryData>> {
+    const key = env.buildKVKeyToken(token);
+    return await this.#kv.get<TokenEntryData>(key);
+  }
+  async getTokenEntry(token: string): Promise<TokenEntryData | null> {
+    return (await this.getTokenEntryResult(token)).value;
+  }
+  async getUserIDByToken(token: string | null): Promise<UserID | null> {
+    if (!token) return null;
+    return (await this.getTokenEntry(token))?.userID ?? null;
+  }
+  async getUserIDEx(
     tokenOrUserID: ["token", string | null] | ["userID", UserID],
     opts: { claimedUserID: UserID | null },
   ) {
@@ -52,6 +66,13 @@ export class Repo {
       .with(["userID", P.select()], (id) => Promise.resolve(id))
       .with(["token", P.select()], (token) => this.getUserIDByToken(token))
       .exhaustive();
+  }
+
+  async getTokenCouponEntryResult(
+    tokenCoupon: string,
+  ): Promise<Deno.KvEntryMaybe<TokenCouponEntryData>> {
+    const key = env.buildKVKeyTokenCoupon(tokenCoupon);
+    return await this.#kv.get<TokenCouponEntryData>(key);
   }
 
   async getEpisodeInfoResult(
@@ -193,6 +214,42 @@ export class RepoTransaction {
 
   check(...checks: Deno.AtomicCheck[]) {
     this.#tx = this.#tx.check(...checks);
+  }
+
+  setUser(userID: UserID, user: UserData, check: Deno.KvEntryMaybe<UserData>) {
+    const key = env.buildKVKeyUser(userID);
+    this.#tx = this.#tx
+      .check(check)
+      .set(key, user);
+  }
+
+  setTokenEntry(token: string, tokenEntry: TokenEntryData) {
+    const key = env.buildKVKeyToken(token);
+    this.#tx = this.#tx.set(key, tokenEntry);
+  }
+  deleteTokenEntry(token: string) {
+    const key = env.buildKVKeyToken(token);
+    this.#tx = this.#tx.delete(key);
+  }
+
+  setTokenCouponEntry(tokenCoupon: string, opts: { token: string }) {
+    const key = env.buildKVKeyTokenCoupon(tokenCoupon);
+
+    const expireIn = 1000 * 10; // 10 秒。
+    const data: TokenCouponEntryData = {
+      token: opts.token,
+      expiry: Date.now() + expireIn,
+    };
+    this.#tx = this.#tx.set(key, data, { expireIn });
+  }
+  deleteTokenCouponEntry(
+    tokenCoupon: string,
+    check: Deno.KvEntryMaybe<TokenCouponEntryData>,
+  ) {
+    const key = env.buildKVKeyTokenCoupon(tokenCoupon);
+    this.#tx = this.#tx
+      .check(check)
+      .delete(key);
   }
 
   setUserSubjectEpisodeRating(

@@ -35,7 +35,7 @@ export async function rateEpisode(
 
   repo ??= await Repo.open();
 
-  const userID = await repo.getUserEx(tokenOrUserID, opts);
+  const userID = await repo.getUserIDEx(tokenOrUserID, opts);
   if (userID === null || opts.claimedUserID !== userID) {
     if (opts.claimedUserID !== userID) {
       // TODO: 无效化 token。
@@ -136,7 +136,7 @@ export async function changeUserEpisodeRatingVisibility(
     isVisible: boolean;
   },
 ): Promise<APIResponse<ChangeUserEpisodeRatingVisibilityResponseData>> {
-  const userID = await repo.getUserEx(tokenOrUserID, opts);
+  const userID = await repo.getUserIDEx(tokenOrUserID, opts);
   if (userID === null || opts.claimedUserID !== userID) {
     if (opts.claimedUserID !== userID) {
       // TODO: 无效化 token。

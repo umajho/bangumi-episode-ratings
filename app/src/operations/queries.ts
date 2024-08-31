@@ -17,7 +17,7 @@ export async function querySubjectEpisodesRatings(
   const { votesByScoreBySubject, isCertainThatEpisodesVotesAreIntegral } = //
     await repo.getAllEpisodesVotesByScoreBySubjectEx(opts.subjectID);
 
-  const userID = await repo.getUserEx(tokenOrUserID, opts);
+  const userID = await repo.getUserIDEx(tokenOrUserID, opts);
 
   const data: GetSubjectEpisodesResponseData = {
     episodes_votes: votesByScoreBySubject,
@@ -71,7 +71,7 @@ export async function queryEpisodeRatings(
       publicRatingsResult[1];
   }
 
-  const userID = await repo.getUserEx(tokenOrUserID, opts);
+  const userID = await repo.getUserIDEx(tokenOrUserID, opts);
   if (userID !== null && opts.claimedUserID === userID) {
     const myRatingResult = //
       await queryEpisodeMyRating(repo, ["userID", userID], opts);
@@ -91,7 +91,7 @@ export async function queryEpisodeMyRating(
     episodeID: EpisodeID;
   },
 ): Promise<APIResponse<GetMyEpisodeRatingResponseData>> {
-  const userID = await repo.getUserEx(tokenOrUserID, opts);
+  const userID = await repo.getUserIDEx(tokenOrUserID, opts);
 
   if (!userID || opts.claimedUserID !== userID) {
     return ["auth_required"];

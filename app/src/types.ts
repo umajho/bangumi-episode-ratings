@@ -24,11 +24,11 @@ export interface UserData {
   tokens: string[];
 }
 
-export interface TokenData {
+export interface TokenEntryData {
   userID: UserID;
 }
 
-export interface TokenCouponData {
+export interface TokenCouponEntryData {
   token: string;
   expiry: number;
 }
