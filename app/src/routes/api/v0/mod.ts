@@ -12,6 +12,7 @@ import { stringifyResponseForAPI } from "../../../responses.tsx";
 import * as Commands from "../../../operations/commands.ts";
 import * as Queries from "../../../operations/queries.ts";
 import { tryExtractNumberFromCTXSearchParams } from "../utils.ts";
+import { Repo } from "../../../repo/mod.ts";
 
 export const router = new Router<StateForAPI>();
 export default router;
@@ -41,10 +42,10 @@ router.get("/subject-episodes-ratings", async (ctx) => {
     return;
   }
 
-  const kv = await Deno.openKv();
+  const repo = await Repo.open();
 
   const result = await Queries.querySubjectEpisodesRatings(
-    kv,
+    repo,
     ["token", ctx.state.token],
     { claimedUserID, subjectID },
   );
@@ -67,10 +68,10 @@ router.get("/episode-ratings", async (ctx) => {
     return;
   }
 
-  const kv = await Deno.openKv();
+  const repo = await Repo.open();
 
   const result_ = await Queries.queryEpisodeRatings(
-    kv,
+    repo,
     ["token", ctx.state.token],
     {
       claimedUserID,
@@ -118,10 +119,10 @@ router.get("/my-episode-rating", async (ctx) => {
     return;
   }
 
-  const kv = await Deno.openKv();
+  const repo = await Repo.open();
 
   const result = await Queries.queryEpisodeMyRating(
-    kv,
+    repo,
     ["token", ctx.state.token],
     { claimedUserID, subjectID, episodeID },
   );

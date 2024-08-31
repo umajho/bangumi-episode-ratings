@@ -6,6 +6,7 @@ import { stringifyResponseForAPI } from "../../../../responses.tsx";
 import * as Commands from "../../../../operations/commands.ts";
 import * as Queries from "../../../../operations/queries.ts";
 import { RateEpisodeRequestData__V1 } from "../../../../shared/dto.ts";
+import { Repo } from "../../../../repo/mod.ts";
 
 export const router = new Router<StateForAPI>();
 export default router;
@@ -33,10 +34,10 @@ async function handleGetEpisodeRatings(
     return;
   }
 
-  const kv = await Deno.openKv();
+  const repo = await Repo.open();
 
   const result = await Queries.queryEpisodeRatings(
-    kv,
+    repo,
     ["token", ctx.state.token],
     {
       claimedUserID,
@@ -68,10 +69,10 @@ async function handleGetEpisodeRatingOfMine(
     return;
   }
 
-  const kv = await Deno.openKv();
+  const repo = await Repo.open();
 
   const result = await Queries.queryEpisodeMyRating(
-    kv,
+    repo,
     ["token", ctx.state.token],
     { claimedUserID, subjectID, episodeID },
   );
@@ -101,9 +102,9 @@ async function handlePutEpisodeRatingOfMine(
     return;
   }
 
-  const kv = await Deno.openKv();
+  const repo = await Repo.open();
 
-  const result = await Commands.rateEpisode(kv, ["token", ctx.state.token], {
+  const result = await Commands.rateEpisode(repo, ["token", ctx.state.token], {
     claimedUserID,
     claimedSubjectID: subjectID,
     episodeID,
@@ -129,9 +130,9 @@ async function handleDeleteEpisodeRatingOfMine(
     return;
   }
 
-  const kv = await Deno.openKv();
+  const repo = await Repo.open();
 
-  const result = await Commands.rateEpisode(kv, ["token", ctx.state.token], {
+  const result = await Commands.rateEpisode(repo, ["token", ctx.state.token], {
     claimedUserID,
     claimedSubjectID: subjectID,
     episodeID,
@@ -163,9 +164,9 @@ async function handlePutIsVisibleOfEpisodeRatingOfMine(
     return;
   }
 
-  const kv = await Deno.openKv();
+  const repo = await Repo.open();
 
-  const result = await Commands.changeUserEpisodeRatingVisibility(kv, [
+  const result = await Commands.changeUserEpisodeRatingVisibility(repo, [
     "token",
     ctx.state.token,
   ], {

@@ -3,21 +3,18 @@ import {
   ChangeUserEpisodeRatingVisibilityResponseData,
   RateEpisodeResponseData,
 } from "../shared/dto.ts";
-import * as KVUtils from "../kv-utils.ts";
-import env from "../env.ts";
 import {
   EpisodeID,
-  EpisodeInfoData,
   SubjectID,
   UserID,
   UserSubjectEpisodeRatingData,
 } from "../types.ts";
 import { bangumiClient } from "../global.ts";
-import { matchTokenOrUserID } from "./utils.ts";
 import { APIErrorResponse } from "../shared/dto.ts";
+import { Repo } from "../repo/mod.ts";
 
 export async function rateEpisode(
-  kv: Deno.Kv | null,
+  repo: Repo | null,
   tokenOrUserID: ["token", string | null] | ["userID", UserID],
   opts: {
     claimedUserID: UserID;
@@ -36,9 +33,9 @@ export async function rateEpisode(
     }
   }
 
-  kv ??= await Deno.openKv();
+  repo ??= await Repo.open();
 
-  const userID = await matchTokenOrUserID(kv, tokenOrUserID, opts);
+  const userID = await repo.getUserEx(tokenOrUserID, opts);
   if (userID === null || opts.claimedUserID !== userID) {
     if (opts.claimedUserID !== userID) {
       // TODO: 无效化 token。
@@ -47,7 +44,7 @@ export async function rateEpisode(
   }
 
   const checkSubjectIDResult = checkSubjectID({
-    subjectID: await fetchSubjectID(kv, opts),
+    subjectID: await fetchSubjectID(repo, opts),
     claimedSubjectID: opts.claimedSubjectID,
     episodeID: opts.episodeID,
   });
@@ -56,104 +53,81 @@ export async function rateEpisode(
 
   let scoreDelta = opts.score ?? 0;
 
-  const userSubjectEpisodeRatingKey = //
-    env.buildKVKeyUserSubjectEpisodeRating(userID, subjectID, opts.episodeID);
-
   let isOk: boolean;
 
-  let oldRatingResult!: Deno.KvEntryMaybe<UserSubjectEpisodeRatingData>;
+  let oldRating!: UserSubjectEpisodeRatingData | null;
   isOk = false;
   while (!isOk) {
-    oldRatingResult = //
-      await kv.get<UserSubjectEpisodeRatingData>(userSubjectEpisodeRatingKey);
+    const oldRatingResult = await repo
+      .getUserEpisodeRatingResult(userID, subjectID, opts.episodeID);
+    oldRating = oldRatingResult.value;
 
-    if (oldRatingResult.value && oldRatingResult.value.score === opts.score) {
+    if (oldRating && oldRating.score === opts.score) {
       return ["ok", {
         score: opts.score,
         visibility: opts.score !== null
-          ? { is_visible: !!oldRatingResult.value.isVisible }
+          ? { is_visible: !!oldRating.isVisible }
           : null,
       }];
     }
 
-    let tx = kv.atomic();
-
     const userRatingData: UserSubjectEpisodeRatingData = {
       score: opts.score,
-      isVisible: oldRatingResult.value?.isVisible ?? false,
+      isVisible: oldRating?.isVisible ?? false,
       submittedAtMs: Date.now(),
-      history: oldRatingResult.value?.history || [],
+      history: oldRating?.history || [],
     };
-    if (oldRatingResult.value) {
-      const oldRating = oldRatingResult.value;
-
+    if (oldRating) {
       scoreDelta -= oldRating.score ?? 0;
       userRatingData.history.push({
         score: oldRating.score,
         submittedAtMs: oldRating.submittedAtMs,
       });
-
-      if (oldRating.isVisible) {
-        if (oldRating.score !== null) {
-          const publicVotersKey = env.buildKVKeySubjectEpisodeScorePublicVoters(
-            subjectID,
-            opts.episodeID,
-            oldRating.score,
-            userID,
-          );
-          tx = tx.delete(publicVotersKey);
-        }
-        if (userRatingData.score !== null) {
-          const publicVotersKey = env.buildKVKeySubjectEpisodeScorePublicVoters(
-            subjectID,
-            opts.episodeID,
-            userRatingData.score,
-            userID,
-          );
-          tx = tx.set(publicVotersKey, 1);
-        }
-      }
     }
 
-    const result = await tx
-      .check(oldRatingResult)
-      .set(userSubjectEpisodeRatingKey, userRatingData).commit();
+    const result = await repo.tx((tx) => {
+      if (oldRating && oldRating.isVisible) {
+        if (
+          userRatingData.score === null &&
+          oldRating.score !== null
+        ) {
+          tx.deleteSubjectEpisodeScorePublicVoter //
+          (subjectID, opts.episodeID, oldRating.score, userID);
+        } else if (userRatingData.score !== null) {
+          tx.setSubjectEpisodeScorePublicVoter //
+          (subjectID, opts.episodeID, userRatingData.score, userID);
+        }
+      }
+
+      tx.setUserSubjectEpisodeRating //
+      (userID, subjectID, opts.episodeID, userRatingData, oldRatingResult);
+    });
     isOk = result.ok;
   }
 
   isOk = false;
   while (!isOk) {
-    let tx = kv.atomic();
-    if (opts.score !== null) {
-      const key = env.buildKVKeySubjectEpisodeScoreVotes(
-        subjectID,
-        opts.episodeID,
-        opts.score,
-      );
-      tx = tx.sum(key, 1n);
-    }
-    if (oldRatingResult.value && oldRatingResult.value.score !== null) {
-      const key = env.buildKVKeySubjectEpisodeScoreVotes(
-        subjectID,
-        opts.episodeID,
-        oldRatingResult.value.score,
-      );
-      tx = KVUtils.sumFreely(tx, key, -1n);
-    }
-    const result = await tx.commit();
+    const result = await repo.tx((tx) => {
+      if (opts.score !== null) {
+        tx.increaseSubjectEpisodeScoreVotes //
+        (subjectID, opts.episodeID, opts.score);
+      }
+      if (oldRating && oldRating.score !== null) {
+        tx.decreaseSubjectEpisodeScoreVotes //
+        (subjectID, opts.episodeID, oldRating.score);
+      }
+    });
     isOk = result.ok;
   }
 
   return ["ok", {
     score: opts.score,
-    visibility: oldRatingResult.value
-      ? { is_visible: oldRatingResult.value.isVisible ?? false }
-      : null,
+    visibility: oldRating ? { is_visible: oldRating.isVisible ?? false } : null,
   }];
 }
 
 export async function changeUserEpisodeRatingVisibility(
-  kv: Deno.Kv,
+  repo: Repo,
   tokenOrUserID: ["token", string | null] | ["userID", UserID],
   opts: {
     claimedUserID: UserID;
@@ -162,7 +136,7 @@ export async function changeUserEpisodeRatingVisibility(
     isVisible: boolean;
   },
 ): Promise<APIResponse<ChangeUserEpisodeRatingVisibilityResponseData>> {
-  const userID = await matchTokenOrUserID(kv, tokenOrUserID, opts);
+  const userID = await repo.getUserEx(tokenOrUserID, opts);
   if (userID === null || opts.claimedUserID !== userID) {
     if (opts.claimedUserID !== userID) {
       // TODO: 无效化 token。
@@ -171,50 +145,38 @@ export async function changeUserEpisodeRatingVisibility(
   }
 
   const checkSubjectIDResult = checkSubjectID({
-    subjectID: await fetchSubjectID(kv, opts),
+    subjectID: await fetchSubjectID(repo, opts),
     claimedSubjectID: opts.claimedSubjectID,
     episodeID: opts.episodeID,
   });
   if (checkSubjectIDResult[0] !== "ok") return checkSubjectIDResult;
   const subjectID = checkSubjectIDResult[1];
 
-  const userRatingKey = env.buildKVKeyUserSubjectEpisodeRating(
-    userID,
-    subjectID,
-    opts.episodeID,
-  );
-
   let isOk: boolean;
 
   isOk = false;
   while (!isOk) {
-    const userRatingResult = //
-      await kv.get<UserSubjectEpisodeRatingData>(userRatingKey);
+    const userRatingResult = await repo
+      .getUserEpisodeRatingResult(userID, subjectID, opts.episodeID);
     const userRatingData = userRatingResult.value!;
     if (!!userRatingData.isVisible === opts.isVisible) break;
 
     userRatingData.isVisible = opts.isVisible;
 
-    let tx = kv.atomic();
-
-    if (userRatingData.score !== null) {
-      const publicVotersKey = env.buildKVKeySubjectEpisodeScorePublicVoters(
-        subjectID,
-        opts.episodeID,
-        userRatingData.score,
-        userID,
-      );
-      if (opts.isVisible) {
-        tx = tx.set(publicVotersKey, 1);
-      } else {
-        tx = tx.delete(publicVotersKey);
+    const result = await repo.tx((tx) => {
+      if (userRatingData.score !== null) {
+        if (opts.isVisible) {
+          tx.setSubjectEpisodeScorePublicVoter //
+          (subjectID, opts.episodeID, userRatingData.score, userID);
+        } else {
+          tx.deleteSubjectEpisodeScorePublicVoter //
+          (subjectID, opts.episodeID, userRatingData.score, userID);
+        }
       }
-    }
 
-    const result = await tx
-      .check(userRatingResult)
-      .set(userRatingKey, userRatingData)
-      .commit();
+      tx.setUserSubjectEpisodeRating //
+      (userID, subjectID, opts.episodeID, userRatingData, userRatingResult);
+    });
     isOk = result.ok;
   }
 
@@ -222,18 +184,17 @@ export async function changeUserEpisodeRatingVisibility(
 }
 
 async function fetchSubjectID(
-  kv: Deno.Kv,
+  repo: Repo,
   opts: { episodeID: EpisodeID },
 ): Promise<SubjectID | null> {
-  const episodeInfoKey = env.buildKVKeyEpisodeInfo(opts.episodeID);
-  const episodeInfo = await kv.get<EpisodeInfoData>(episodeInfoKey);
-  if (episodeInfo.value) return episodeInfo.value.subjectID;
+  const episodeInfo = await repo.getEpisodeInfo(opts.episodeID);
+  if (episodeInfo) return episodeInfo.subjectID;
 
   const episodeData = await bangumiClient.getEpisode(opts.episodeID);
   if (!episodeData) return null;
 
   const subjectID = episodeData.subject_id as SubjectID;
-  await kv.set(episodeInfoKey, { subjectID } satisfies EpisodeInfoData);
+  await repo.setEpisodeInfo(opts.episodeID, { subjectID });
 
   return subjectID;
 }
