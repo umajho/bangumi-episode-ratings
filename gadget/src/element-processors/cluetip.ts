@@ -41,7 +41,10 @@ export function processCluetip() {
       <div class="grey">
         单集评分加载中…
       </div>
-    `).insertBefore($(popupEl).find(".tip .board"));
+    `).insertBefore(
+      // `:first` 用于兼容 https://bangumi.tv/dev/app/3265。
+      $(popupEl).find(".tip .board:first"),
+    );
 
     const epsRatings = await Global.client.mustGetSubjectEpisodesRatings({
       subjectID: opts.subjectID,
@@ -70,8 +73,10 @@ export function processCluetip() {
       requiresClickToReveal.setValue(false);
     }
 
-    const rateInfoEl = $("<div />")
-      .insertBefore($(popupEl).find(".tip .board"));
+    const rateInfoEl = $("<div />").insertBefore(
+      // `:first` 用于兼容 https://bangumi.tv/dev/app/3265。
+      $(popupEl).find(".tip .board:first"),
+    );
     renderRateInfo(rateInfoEl, {
       votesData,
       requiresClickToReveal,
