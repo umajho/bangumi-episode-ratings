@@ -1,6 +1,6 @@
 import { Router, RouterContext } from "jsr:@oak/oak@14";
 
-import { StateForAPI } from "../../../../types.ts";
+import { EpisodeID, StateForAPI, SubjectID } from "../../../../types.ts";
 import { tryExtractNumberFromCTXParams } from "../../utils.ts";
 import { stringifyResponseForAPI } from "../../../../responses.tsx";
 import * as Commands from "../../../../operations/commands.ts";
@@ -21,8 +21,10 @@ async function handleGetEpisodeRatings(
   ctx: RouterContext<string, any, StateForAPI>,
 ) {
   const claimedUserID = ctx.state.claimedUserID;
-  const subjectID = tryExtractNumberFromCTXParams(ctx, "subjectID");
-  const episodeID = tryExtractNumberFromCTXParams(ctx, "episodeID");
+  const subjectID = //
+    tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+  const episodeID = //
+    tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
 
   if (subjectID === null || episodeID === null) {
     ctx.response.body = stringifyResponseForAPI(
@@ -54,8 +56,10 @@ async function handleGetEpisodeRatingOfMine(
   ctx: RouterContext<string, any, StateForAPI>,
 ) {
   const claimedUserID = ctx.state.claimedUserID;
-  const subjectID = tryExtractNumberFromCTXParams(ctx, "subjectID");
-  const episodeID = tryExtractNumberFromCTXParams(ctx, "episodeID");
+  const subjectID = //
+    tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+  const episodeID = //
+    tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
 
   if (subjectID === null || episodeID === null || claimedUserID === null) {
     ctx.response.body = stringifyResponseForAPI(
@@ -79,8 +83,10 @@ async function handlePutEpisodeRatingOfMine(
   ctx: RouterContext<string, any, StateForAPI>,
 ) {
   const claimedUserID = ctx.state.claimedUserID;
-  const subjectID = tryExtractNumberFromCTXParams(ctx, "subjectID");
-  const episodeID = tryExtractNumberFromCTXParams(ctx, "episodeID");
+  const subjectID = //
+    tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+  const episodeID = //
+    tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
 
   const data = await ctx.request.body.json() as RateEpisodeRequestData__V1;
 
@@ -111,8 +117,10 @@ async function handleDeleteEpisodeRatingOfMine(
   ctx: RouterContext<string, any, StateForAPI>,
 ) {
   const claimedUserID = ctx.state.claimedUserID;
-  const subjectID = tryExtractNumberFromCTXParams(ctx, "subjectID");
-  const episodeID = tryExtractNumberFromCTXParams(ctx, "episodeID");
+  const subjectID = //
+    tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+  const episodeID = //
+    tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
 
   if (subjectID === null || episodeID === null || claimedUserID === null) {
     ctx.response.body = stringifyResponseForAPI(
@@ -138,8 +146,10 @@ async function handlePutIsVisibleOfEpisodeRatingOfMine(
   ctx: RouterContext<string, any, StateForAPI>,
 ) {
   const claimedUserID = ctx.state.claimedUserID;
-  const subjectID = tryExtractNumberFromCTXParams(ctx, "subjectID");
-  const episodeID = tryExtractNumberFromCTXParams(ctx, "episodeID");
+  const subjectID = //
+    tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+  const episodeID = //
+    tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
 
   const data = await ctx.request.body.json() as boolean;
 

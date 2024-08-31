@@ -1,10 +1,10 @@
 import env from "./env.ts";
-import { TokenData } from "./types.ts";
+import { TokenData, UserID } from "./types.ts";
 
 export async function getUserID(
   kv: Deno.Kv,
   token: string | null,
-): Promise<number | null> {
+): Promise<UserID | null> {
   if (!token) return null;
 
   const tokenResult = await kv.get<TokenData>(env.buildKVKeyToken(token));

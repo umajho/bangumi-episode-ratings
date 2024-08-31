@@ -1,7 +1,7 @@
 import { Router } from "jsr:@oak/oak@14";
 import { match, P } from "npm:ts-pattern";
 
-import { StateForAPI } from "../../../types.ts";
+import { EpisodeID, StateForAPI, SubjectID, UserID } from "../../../types.ts";
 import {
   APIResponse,
   GetEpisodeRatingsResponseData__Until_0_1_13,
@@ -20,9 +20,9 @@ router.post("/rate-episode", async (ctx) => {
   const data = await ctx.request.body.json() as RateEpisodeRequestData__V0;
 
   const result = await Commands.rateEpisode(null, ["token", ctx.state.token], {
-    claimedUserID: data.claimed_user_id,
-    claimedSubjectID: data.subject_id,
-    episodeID: data.episode_id,
+    claimedUserID: data.claimed_user_id as UserID,
+    claimedSubjectID: data.subject_id as SubjectID,
+    episodeID: data.episode_id as EpisodeID,
     score: data.score,
   });
 
@@ -31,8 +31,9 @@ router.post("/rate-episode", async (ctx) => {
 
 router.get("/subject-episodes-ratings", async (ctx) => {
   const claimedUserID = //
-    tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id");
-  const subjectID = tryExtractNumberFromCTXSearchParams(ctx, "subject_id");
+    tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id") as UserID;
+  const subjectID = //
+    tryExtractNumberFromCTXSearchParams(ctx, "subject_id") as SubjectID;
 
   if (!subjectID) {
     ctx.response.body = //
@@ -53,9 +54,11 @@ router.get("/subject-episodes-ratings", async (ctx) => {
 
 router.get("/episode-ratings", async (ctx) => {
   const claimedUserID = //
-    tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id");
-  const subjectID = tryExtractNumberFromCTXSearchParams(ctx, "subject_id");
-  const episodeID = tryExtractNumberFromCTXSearchParams(ctx, "episode_id");
+    tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id") as UserID;
+  const subjectID = //
+    tryExtractNumberFromCTXSearchParams(ctx, "subject_id") as SubjectID;
+  const episodeID = //
+    tryExtractNumberFromCTXSearchParams(ctx, "episode_id") as EpisodeID;
 
   if (!subjectID || !episodeID) {
     ctx.response.body = stringifyResponseForAPI(
@@ -102,9 +105,11 @@ router.get("/episode-ratings", async (ctx) => {
 
 router.get("/my-episode-rating", async (ctx) => {
   const claimedUserID = //
-    tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id");
-  const subjectID = tryExtractNumberFromCTXSearchParams(ctx, "subject_id");
-  const episodeID = tryExtractNumberFromCTXSearchParams(ctx, "episode_id");
+    tryExtractNumberFromCTXSearchParams(ctx, "claimed_user_id") as UserID;
+  const subjectID = //
+    tryExtractNumberFromCTXSearchParams(ctx, "subject_id") as SubjectID;
+  const episodeID = //
+    tryExtractNumberFromCTXSearchParams(ctx, "episode_id") as EpisodeID;
 
   if (!subjectID || !episodeID) {
     ctx.response.body = stringifyResponseForAPI(

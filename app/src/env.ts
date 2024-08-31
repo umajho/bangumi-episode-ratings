@@ -1,4 +1,5 @@
 import { ReverseMap } from "./type-utils.ts";
+import { EpisodeID, SubjectID, UserID } from "./types.ts";
 
 const reversedKVPrefixes = {
   1: "users",
@@ -60,7 +61,7 @@ const env = {
 
   BGM_API_PATH_V0_EPISODES: "/v0/episodes",
 
-  buildKVKeyUser(userID: number) {
+  buildKVKeyUser(userID: UserID) {
     return [kvPrefixes["users"], userID] as const;
   },
   buildKVKeyToken(token: string) {
@@ -69,13 +70,13 @@ const env = {
   buildKVKeyTokenCoupon(tokenCoupon: string) {
     return [kvPrefixes["token-coupons"], tokenCoupon] as const;
   },
-  buildKVKeyEpisodeInfo(episodeID: number) {
+  buildKVKeyEpisodeInfo(episodeID: EpisodeID) {
     return [kvPrefixes["episode-infos"], episodeID] as const;
   },
   buildKVKeyUserSubjectEpisodeRating(
-    userID: number,
-    subjectID: number,
-    episodeID: number,
+    userID: UserID,
+    subjectID: SubjectID,
+    episodeID: EpisodeID,
   ) {
     return [
       kvPrefixes["user-subject-episode-rating-map"],
@@ -85,13 +86,13 @@ const env = {
     ] as const;
   },
   buildKVPrefixUserSubjectEpisodeRating(
-    subKey: [userID: number, subjectID: number],
+    subKey: [userID: UserID, subjectID: SubjectID],
   ) {
     return [kvPrefixes["user-subject-episode-rating-map"], ...subKey] as const;
   },
   buildKVKeySubjectEpisodeScoreVotes(
-    subjectID: number,
-    episodeID: number,
+    subjectID: SubjectID,
+    episodeID: EpisodeID,
     score: number,
   ) {
     return [
@@ -102,15 +103,17 @@ const env = {
     ] as const;
   },
   buildKVPrefixSubjectEpisodeScoreVotes(
-    subKey: [subjectID: number] | [subjectID: number, episodeID: number],
+    subKey:
+      | [subjectID: SubjectID]
+      | [subjectID: SubjectID, episodeID: EpisodeID],
   ) {
     return [kvPrefixes["subject-episode-score-votes"], ...subKey] as const;
   },
   buildKVKeySubjectEpisodeScorePublicVoters(
-    subjectID: number,
-    episodeID: number,
+    subjectID: SubjectID,
+    episodeID: EpisodeID,
     score: number,
-    userID: number,
+    userID: UserID,
   ) {
     return [
       kvPrefixes["subject-episode-score-public-voters"],
@@ -121,7 +124,7 @@ const env = {
     ] as const;
   },
   buildKVPrefixSubjectEpisodeScorePublicVoters(
-    subKey: [subjectID: number, episodeID: number],
+    subKey: [subjectID: SubjectID, episodeID: EpisodeID],
   ) {
     return [
       kvPrefixes["subject-episode-score-public-voters"],

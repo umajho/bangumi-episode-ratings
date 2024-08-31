@@ -1,6 +1,6 @@
 import { Router, RouterContext } from "jsr:@oak/oak@14";
 
-import { StateForAPI } from "../../../../types.ts";
+import { StateForAPI, SubjectID } from "../../../../types.ts";
 import { tryExtractNumberFromCTXParams } from "../../utils.ts";
 import { stringifyResponseForAPI } from "../../../../responses.tsx";
 import * as Queries from "../../../../operations/queries.ts";
@@ -23,7 +23,8 @@ async function handleGetSubjectEpisodesRatings(
   ctx: RouterContext<string, any, StateForAPI>,
 ) {
   const claimedUserID = ctx.state.claimedUserID;
-  const subjectID = tryExtractNumberFromCTXParams(ctx, "subjectID");
+  const subjectID = //
+    tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
 
   if (subjectID === null) {
     ctx.response.body = //

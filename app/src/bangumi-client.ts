@@ -1,4 +1,5 @@
 import env from "./env.ts";
+import { EpisodeID } from "./types.ts";
 
 type BangumiAPIResponse<T> =
   | ["ok", T]
@@ -34,7 +35,7 @@ export class BangumiClient {
     return unwrap(data);
   }
 
-  async getEpisode(episodeID: number): Promise<GetEpisodeResponse | null> {
+  async getEpisode(episodeID: EpisodeID): Promise<GetEpisodeResponse | null> {
     const url = `${env.BGM_API_PATH_V0_EPISODES}/${episodeID}`;
 
     const data = await this.fetch<GetEpisodeResponse>("api", url, {

@@ -8,6 +8,7 @@ import {
   TokenCouponData,
   TokenData,
   UserData,
+  UserID,
 } from "../../types.ts";
 import {
   stringifyErrorResponse,
@@ -64,7 +65,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
     );
     return;
   }
-  const userID = Number(userIDRaw);
+  const userID = Number(userIDRaw) as UserID;
   const userToken = generateToken(userID);
   const userTokenCoupon = generateToken(userID);
 

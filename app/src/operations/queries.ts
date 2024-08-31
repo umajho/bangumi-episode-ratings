@@ -7,21 +7,26 @@ import {
   GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
 } from "../shared/dto.ts";
-import { UserSubjectEpisodeRatingData } from "../types.ts";
+import {
+  EpisodeID,
+  SubjectID,
+  UserID,
+  UserSubjectEpisodeRatingData,
+} from "../types.ts";
 import { matchTokenOrUserID } from "./utils.ts";
 
 export async function querySubjectEpisodesRatings(
   kv: Deno.Kv,
-  tokenOrUserID: ["token", string | null] | ["userID", number],
-  opts: { claimedUserID: number | null; subjectID: number },
+  tokenOrUserID: ["token", string | null] | ["userID", UserID],
+  opts: { claimedUserID: UserID | null; subjectID: SubjectID },
 ): Promise<APIResponse<GetSubjectEpisodesResponseData>> {
   const { episodesVotes, isCertainThatEpisodesVotesAreIntegral } =
     await (async () => {
       const LIMIT = 1000;
       const episodesVotes: {
-        [episodeID: number]: { [score: number]: number } | null;
+        [episodeID: EpisodeID]: { [score: number]: number } | null;
       } = {};
-      let lastEpisodeID: number | null = null;
+      let lastEpisodeID: EpisodeID | null = null;
       let count = 0;
       for await (
         const result of kv.list({
@@ -30,7 +35,7 @@ export async function querySubjectEpisodesRatings(
       ) {
         count++;
 
-        const episodeID = result.key.at(-2) as number;
+        const episodeID = result.key.at(-2) as EpisodeID;
         lastEpisodeID = episodeID;
 
         const score = result.key.at(-1) as number;
@@ -88,11 +93,11 @@ export async function querySubjectEpisodesRatings(
 
 export async function queryEpisodeRatings(
   kv: Deno.Kv,
-  tokenOrUserID: ["token", string | null] | ["userID", number],
+  tokenOrUserID: ["token", string | null] | ["userID", UserID],
   opts: {
-    claimedUserID: number | null;
-    subjectID: number;
-    episodeID: number;
+    claimedUserID: UserID | null;
+    subjectID: SubjectID;
+    episodeID: EpisodeID;
 
     compatibility: {
       noPublicRatings: boolean;
@@ -147,8 +152,12 @@ export async function queryEpisodeRatings(
 
 export async function queryEpisodeMyRating(
   kv: Deno.Kv,
-  tokenOrUserID: ["token", string | null] | ["userID", number],
-  opts: { claimedUserID: number | null; subjectID: number; episodeID: number },
+  tokenOrUserID: ["token", string | null] | ["userID", UserID],
+  opts: {
+    claimedUserID: UserID | null;
+    subjectID: SubjectID;
+    episodeID: EpisodeID;
+  },
 ): Promise<APIResponse<GetMyEpisodeRatingResponseData>> {
   const userID = await matchTokenOrUserID(kv, tokenOrUserID, opts);
 
@@ -176,7 +185,7 @@ export async function queryEpisodeMyRating(
 
 export async function queryEpisodePublicRatings(
   kv: Deno.Kv,
-  opts: { subjectID: number; episodeID: number },
+  opts: { subjectID: SubjectID; episodeID: EpisodeID },
 ): Promise<APIResponse<GetEpisodePublicRatingsResponseData>> {
   const votersByScore: { [score: number]: number[] } = {};
   for await (

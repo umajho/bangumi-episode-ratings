@@ -1,6 +1,8 @@
 import { Buffer } from "node:buffer";
 
-export function generateToken(userID: number): string {
+import { UserID } from "./types.ts";
+
+export function generateToken(userID: UserID): string {
   const prefix = (() => { // see: https://stackoverflow.com/a/78574144
     const dv = new DataView(new ArrayBuffer(8));
     dv.setBigUint64(0, BigInt(userID));

@@ -1,6 +1,6 @@
 import { Context, Next } from "jsr:@oak/oak@14";
 
-import { State } from "../types.ts";
+import { State, UserID } from "../types.ts";
 import { stringifyErrorResponse } from "../responses.tsx";
 import env from "../env.ts";
 
@@ -27,7 +27,7 @@ export const headers = () => async (ctx: Context<State, State>, next: Next) => {
   {
     const claimedUserID = ctx.request.headers.get("X-Claimed-User-ID");
     if (claimedUserID && /^\d+$/.test(claimedUserID)) {
-      ctx.state.claimedUserID = Number(claimedUserID);
+      ctx.state.claimedUserID = Number(claimedUserID) as UserID;
     } else {
       ctx.state.claimedUserID = null;
     }

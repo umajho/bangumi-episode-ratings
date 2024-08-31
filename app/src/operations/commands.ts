@@ -5,18 +5,24 @@ import {
 } from "../shared/dto.ts";
 import * as KVUtils from "../kv-utils.ts";
 import env from "../env.ts";
-import { EpisodeInfoData, UserSubjectEpisodeRatingData } from "../types.ts";
+import {
+  EpisodeID,
+  EpisodeInfoData,
+  SubjectID,
+  UserID,
+  UserSubjectEpisodeRatingData,
+} from "../types.ts";
 import { bangumiClient } from "../global.ts";
 import { matchTokenOrUserID } from "./utils.ts";
 import { APIErrorResponse } from "../shared/dto.ts";
 
 export async function rateEpisode(
   kv: Deno.Kv | null,
-  tokenOrUserID: ["token", string | null] | ["userID", number],
+  tokenOrUserID: ["token", string | null] | ["userID", UserID],
   opts: {
-    claimedUserID: number;
-    claimedSubjectID: number;
-    episodeID: number;
+    claimedUserID: UserID;
+    claimedSubjectID: SubjectID;
+    episodeID: EpisodeID;
     score: number | null;
   },
 ): Promise<APIResponse<RateEpisodeResponseData>> {
@@ -148,11 +154,11 @@ export async function rateEpisode(
 
 export async function changeUserEpisodeRatingVisibility(
   kv: Deno.Kv,
-  tokenOrUserID: ["token", string | null] | ["userID", number],
+  tokenOrUserID: ["token", string | null] | ["userID", UserID],
   opts: {
-    claimedUserID: number;
-    claimedSubjectID: number;
-    episodeID: number;
+    claimedUserID: UserID;
+    claimedSubjectID: SubjectID;
+    episodeID: EpisodeID;
     isVisible: boolean;
   },
 ): Promise<APIResponse<ChangeUserEpisodeRatingVisibilityResponseData>> {
@@ -217,8 +223,8 @@ export async function changeUserEpisodeRatingVisibility(
 
 async function fetchSubjectID(
   kv: Deno.Kv,
-  opts: { episodeID: number },
-): Promise<number | null> {
+  opts: { episodeID: EpisodeID },
+): Promise<SubjectID | null> {
   const episodeInfoKey = env.buildKVKeyEpisodeInfo(opts.episodeID);
   const episodeInfo = await kv.get<EpisodeInfoData>(episodeInfoKey);
   if (episodeInfo.value) return episodeInfo.value.subjectID;
@@ -226,18 +232,18 @@ async function fetchSubjectID(
   const episodeData = await bangumiClient.getEpisode(opts.episodeID);
   if (!episodeData) return null;
 
-  const subjectID = episodeData.subject_id;
+  const subjectID = episodeData.subject_id as SubjectID;
   await kv.set(episodeInfoKey, { subjectID } satisfies EpisodeInfoData);
 
   return subjectID;
 }
 
 function checkSubjectID(opts: {
-  subjectID: number | null;
-  claimedSubjectID: number;
+  subjectID: SubjectID | null;
+  claimedSubjectID: SubjectID;
 
-  episodeID: number;
-}): ["ok", number] | APIErrorResponse {
+  episodeID: EpisodeID;
+}): ["ok", SubjectID] | APIErrorResponse {
   if (opts.subjectID === null) {
     return [
       "error",

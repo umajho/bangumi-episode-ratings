@@ -1,5 +1,10 @@
 import env from "./env.ts";
 
+// see: https://kubyshkin.name/posts/newtype-in-typescript/
+export type UserID = number & { readonly __tag: unique symbol };
+export type SubjectID = number & { readonly __tag: unique symbol };
+export type EpisodeID = number & { readonly __tag: unique symbol };
+
 export interface State {
   referrerHostname:
     | `https://${(typeof env.VALID_BGM_HOSTNAMES)[number]}`
@@ -7,7 +12,7 @@ export interface State {
 
   gadgetVersion: number | null;
   token: string | null;
-  claimedUserID: number | null;
+  claimedUserID: UserID | null;
 }
 
 export type StateForAuth = State & {
@@ -20,7 +25,7 @@ export interface UserData {
 }
 
 export interface TokenData {
-  userID: number;
+  userID: UserID;
 }
 
 export interface TokenCouponData {
@@ -29,7 +34,7 @@ export interface TokenCouponData {
 }
 
 export interface EpisodeInfoData {
-  subjectID: number;
+  subjectID: SubjectID;
 }
 
 export interface UserSubjectEpisodeRatingData {
