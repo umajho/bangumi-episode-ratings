@@ -1,2 +1,2 @@
-#dev:
-#	deno run --allow-net --env=.env.dev main.ts
+test *args:
+	deno test --unstable-kv {{args}}

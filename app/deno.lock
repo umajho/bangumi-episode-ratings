@@ -6,16 +6,22 @@
       "jsr:@oak/oak@14": "jsr:@oak/oak@14.2.0",
       "jsr:@std/assert@0.218": "jsr:@std/assert@0.218.2",
       "jsr:@std/assert@^0.218.2": "jsr:@std/assert@0.218.2",
+      "jsr:@std/assert@^1.0.3": "jsr:@std/assert@1.0.3",
       "jsr:@std/bytes@0.218": "jsr:@std/bytes@0.218.2",
       "jsr:@std/bytes@^0.218.2": "jsr:@std/bytes@0.218.2",
       "jsr:@std/crypto@0.218": "jsr:@std/crypto@0.218.2",
       "jsr:@std/encoding@0.218": "jsr:@std/encoding@0.218.2",
       "jsr:@std/encoding@^0.218.2": "jsr:@std/encoding@0.218.2",
+      "jsr:@std/expect": "jsr:@std/expect@1.0.1",
       "jsr:@std/http@0.218": "jsr:@std/http@0.218.2",
+      "jsr:@std/internal@^1.0.2": "jsr:@std/internal@1.0.2",
       "jsr:@std/io@0.218": "jsr:@std/io@0.218.2",
       "jsr:@std/media-types@0.218": "jsr:@std/media-types@0.218.2",
       "jsr:@std/path@0.218": "jsr:@std/path@0.218.2",
+      "jsr:@std/testing": "jsr:@std/testing@1.0.1",
+      "npm:@sinonjs/fake-timers": "npm:@sinonjs/fake-timers@13.0.1",
       "npm:@types/node": "npm:@types/node@18.16.19",
+      "npm:@types/sinonjs__fake-timers": "npm:@types/sinonjs__fake-timers@8.1.5",
       "npm:jsxte": "npm:jsxte@3.3.1",
       "npm:path-to-regexp@6.2.1": "npm:path-to-regexp@6.2.1",
       "npm:react": "npm:react@18.3.1",
@@ -50,6 +56,12 @@
       "@std/assert@0.218.2": {
         "integrity": "7f0a5a1a8cf86607cd6c2c030584096e1ffad27fc9271429a8cb48cfbdee5eaf"
       },
+      "@std/assert@1.0.3": {
+        "integrity": "b0d03ce1ced880df67132eea140623010d415848df66f6aa5df76507ca7c26d8",
+        "dependencies": [
+          "jsr:@std/internal@^1.0.2"
+        ]
+      },
       "@std/bytes@0.218.2": {
         "integrity": "91fe54b232dcca73856b79a817247f4a651dbb60d51baafafb6408c137241670"
       },
@@ -63,12 +75,22 @@
       "@std/encoding@0.218.2": {
         "integrity": "da55a763c29bf0dbf06fd286430b358266eb99c28789d89fe9a3e28edecb8d8e"
       },
+      "@std/expect@1.0.1": {
+        "integrity": "44075d9c2cb701ddfc4d5a260da2fb26ba3cfd94c45d3a0359f63cabbf85a058",
+        "dependencies": [
+          "jsr:@std/assert@^1.0.3",
+          "jsr:@std/internal@^1.0.2"
+        ]
+      },
       "@std/http@0.218.2": {
         "integrity": "54223b62702e665b9dab6373ea2e51235e093ef47228d21cfa0469ee5ac75c9b",
         "dependencies": [
           "jsr:@std/assert@^0.218.2",
           "jsr:@std/encoding@^0.218.2"
         ]
+      },
+      "@std/internal@1.0.2": {
+        "integrity": "f4cabe2021352e8bfc24e6569700df87bf070914fc38d4b23eddd20108ac4495"
       },
       "@std/io@0.218.2": {
         "integrity": "c64fbfa087b7c9d4d386c5672f291f607d88cb7d44fc299c20c713e345f2785f",
@@ -84,11 +106,30 @@
         "dependencies": [
           "jsr:@std/assert@^0.218.2"
         ]
+      },
+      "@std/testing@1.0.1": {
+        "integrity": "9c25841137ee818933e1722091bb9ed5fdc251c35e84c97979a52196bdb6c5c3"
       }
     },
     "npm": {
+      "@sinonjs/commons@3.0.1": {
+        "integrity": "sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==",
+        "dependencies": {
+          "type-detect": "type-detect@4.0.8"
+        }
+      },
+      "@sinonjs/fake-timers@13.0.1": {
+        "integrity": "sha512-ZEbLYOvZQHccQJzbg2E5r+/Mdjb6BMdjToL4r8WwUw0VTjTnyY3gCnwLeiovcXI3/Uo25exmqmiwsjL/eE/rSg==",
+        "dependencies": {
+          "@sinonjs/commons": "@sinonjs/commons@3.0.1"
+        }
+      },
       "@types/node@18.16.19": {
         "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
+        "dependencies": {}
+      },
+      "@types/sinonjs__fake-timers@8.1.5": {
+        "integrity": "sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==",
         "dependencies": {}
       },
       "csstype@3.1.3": {
@@ -153,6 +194,10 @@
       },
       "ts-pattern@5.3.1": {
         "integrity": "sha512-1RUMKa8jYQdNfmnK4jyzBK3/PS/tnjcZ1CW0v1vWDeYe5RBklc/nquw03MEoB66hVBm4BnlCfmOqDVxHyT1DpA==",
+        "dependencies": {}
+      },
+      "type-detect@4.0.8": {
+        "integrity": "sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==",
         "dependencies": {}
       }
     }
