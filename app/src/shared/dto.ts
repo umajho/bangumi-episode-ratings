@@ -8,7 +8,8 @@ export type ErrorName =
   | "AUTH_REQUIRED"
   | "BAD_SCORE"
   | "UNABLE_TO_VERIFY_THAT_EPISODE_IS_IN_SUBJECT"
-  | "EPISODE_NOT_IN_SUBJECT";
+  | "EPISODE_NOT_IN_SUBJECT"
+  | "NOT_RATED_YET";
 
 export type APIOkResponse<T> = [tag: "ok", data: T];
 export type APIErrorResponse = [tag: "error", name: ErrorName, msg: string];

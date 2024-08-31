@@ -148,7 +148,14 @@ export async function changeUserEpisodeRatingVisibility(
   while (!isOk) {
     const userRatingResult = await repo
       .getUserEpisodeRatingResult(userID, subjectID, opts.episodeID);
-    const userRatingData = userRatingResult.value!;
+    const userRatingData = userRatingResult.value;
+    if (userRatingData === null) {
+      return [
+        "error",
+        "NOT_RATED_YET",
+        "既然还没有评分，那就应该不会涉及到其可见性，为什么会执行到这里…？",
+      ];
+    }
     if (!!userRatingData.isVisible === opts.isVisible) break;
 
     userRatingData.isVisible = opts.isVisible;

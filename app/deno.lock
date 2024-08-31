@@ -2,11 +2,13 @@
   "version": "3",
   "packages": {
     "specifiers": {
+      "jsr:@c4spar/mock-fetch": "jsr:@c4spar/mock-fetch@1.0.0",
       "jsr:@oak/commons@0.7": "jsr:@oak/commons@0.7.0",
       "jsr:@oak/oak@14": "jsr:@oak/oak@14.2.0",
       "jsr:@std/assert@0.218": "jsr:@std/assert@0.218.2",
       "jsr:@std/assert@^0.218.2": "jsr:@std/assert@0.218.2",
       "jsr:@std/assert@^1.0.3": "jsr:@std/assert@1.0.3",
+      "jsr:@std/assert@~0.225.2": "jsr:@std/assert@0.225.3",
       "jsr:@std/bytes@0.218": "jsr:@std/bytes@0.218.2",
       "jsr:@std/bytes@^0.218.2": "jsr:@std/bytes@0.218.2",
       "jsr:@std/crypto@0.218": "jsr:@std/crypto@0.218.2",
@@ -31,6 +33,12 @@
       "npm:ts-pattern": "npm:ts-pattern@5.3.1"
     },
     "jsr": {
+      "@c4spar/mock-fetch@1.0.0": {
+        "integrity": "f25d3ff42b3785dfe307459857eef360c32c8f2106597c98a2cef627bad0c7f7",
+        "dependencies": [
+          "jsr:@std/assert@~0.225.2"
+        ]
+      },
       "@oak/commons@0.7.0": {
         "integrity": "4bd889b3dc9ddac1b602034d88c137f06de7078775961b51081beb5f175c120b",
         "dependencies": [
@@ -55,6 +63,9 @@
       },
       "@std/assert@0.218.2": {
         "integrity": "7f0a5a1a8cf86607cd6c2c030584096e1ffad27fc9271429a8cb48cfbdee5eaf"
+      },
+      "@std/assert@0.225.3": {
+        "integrity": "b3c2847aecf6955b50644cdb9cf072004ea3d1998dd7579fc0acb99dbb23bd4f"
       },
       "@std/assert@1.0.3": {
         "integrity": "b0d03ce1ced880df67132eea140623010d415848df66f6aa5df76507ca7c26d8",

@@ -1,2 +1,2 @@
 test *args:
-	deno test --unstable-kv {{args}}
+	deno test --allow-env --env=.env.test --unstable-kv {{args}}
