@@ -25,6 +25,11 @@ export class Repo {
     return new Repo(kv);
   }
 
+  static async __openForTest() {
+    const kv = await Deno.openKv(":memory:");
+    return new Repo(kv);
+  }
+
   __closeForTest() {
     this.#kv.close();
   }
@@ -55,17 +60,24 @@ export class Repo {
     if (!token) return null;
     return (await this.getTokenEntry(token))?.userID ?? null;
   }
+  /**
+   * TODO: 在传入 token 且 token 对应的实际的用户 ID 与 `opts.claimedUserID` 不
+   * 一致时，清理掉 token。
+   */
   async getUserIDEx(
     tokenOrUserID: ["token", string | null] | ["userID", UserID],
     opts: { claimedUserID: UserID | null },
   ) {
     if (opts.claimedUserID === null) return null;
 
-    return await match(tokenOrUserID)
+    const userID = await match(tokenOrUserID)
       .returnType<Promise<UserID | null>>()
       .with(["userID", P.select()], (id) => Promise.resolve(id))
       .with(["token", P.select()], (token) => this.getUserIDByToken(token))
       .exhaustive();
+
+    if (userID !== opts.claimedUserID) return null;
+    return userID;
   }
 
   async getTokenCouponEntryResult(

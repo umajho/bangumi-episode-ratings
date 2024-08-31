@@ -36,12 +36,7 @@ export async function rateEpisode(
   repo ??= await Repo.open();
 
   const userID = await repo.getUserIDEx(tokenOrUserID, opts);
-  if (userID === null || opts.claimedUserID !== userID) {
-    if (opts.claimedUserID !== userID) {
-      // TODO: 无效化 token。
-    }
-    return ["auth_required"];
-  }
+  if (userID === null) return ["auth_required"];
 
   const checkSubjectIDResult = checkSubjectID({
     subjectID: await fetchSubjectID(repo, opts),
@@ -137,12 +132,7 @@ export async function changeUserEpisodeRatingVisibility(
   },
 ): Promise<APIResponse<ChangeUserEpisodeRatingVisibilityResponseData>> {
   const userID = await repo.getUserIDEx(tokenOrUserID, opts);
-  if (userID === null || opts.claimedUserID !== userID) {
-    if (opts.claimedUserID !== userID) {
-      // TODO: 无效化 token。
-    }
-    return ["auth_required"];
-  }
+  if (userID === null) return ["auth_required"];
 
   const checkSubjectIDResult = checkSubjectID({
     subjectID: await fetchSubjectID(repo, opts),
