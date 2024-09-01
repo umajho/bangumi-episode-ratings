@@ -5,6 +5,7 @@ import { mockFetch, resetFetch } from "jsr:@c4spar/mock-fetch";
 
 import { EpisodeID, SubjectID, UserID } from "../types.ts";
 import { Repo } from "../repo/mod.ts";
+import { BangumiClient } from "../bangumi-client.ts";
 
 import { rateEpisode } from "./commands.ts";
 import { changeUserEpisodeRatingVisibility } from "./commands.ts";
@@ -28,10 +29,13 @@ beforeEach(async () => {
 });
 afterEach(() => repo.__closeForTest());
 
+// TODO: 直接 mock？目前的方案是用 "jsr:@c4spar/mock-fetch" 来 mock fetch。
+const bangumiClient = new BangumiClient();
+
 describe("function rateEpisode", () => {
   it("能处理非法输入", async () => {
     for (const input of [-1, 11, 1.1, 0, NaN, Infinity]) {
-      const resp = await rateEpisode(repo, ["userID", U1], {
+      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
         claimedUserID: U1,
         claimedSubjectID: S1,
         episodeID: S1E1,
@@ -49,7 +53,7 @@ describe("function rateEpisode", () => {
         body: JSON.stringify({ subject_id: S1 }),
       });
 
-      const resp = await rateEpisode(repo, ["userID", U1], {
+      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
         claimedUserID: U1,
         claimedSubjectID: S1,
         episodeID: S1E1,
@@ -75,7 +79,7 @@ describe("function rateEpisode", () => {
     }
 
     {
-      const resp = await rateEpisode(repo, ["userID", U1], {
+      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
         claimedUserID: U1,
         claimedSubjectID: S1,
         episodeID: S1E1,
@@ -105,6 +109,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
       });
       const resp = await changeUserEpisodeRatingVisibility(
         repo,
+        bangumiClient,
         ["userID", U1],
         {
           claimedUserID: U1,
@@ -128,7 +133,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
         body: JSON.stringify({ subject_id: S1 }),
       });
 
-      const resp = await rateEpisode(repo, ["userID", U1], {
+      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
         claimedUserID: U1,
         claimedSubjectID: S1,
         episodeID: S1E1,
@@ -144,6 +149,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
     {
       const resp = await changeUserEpisodeRatingVisibility(
         repo,
+        bangumiClient,
         ["userID", U1],
         {
           claimedUserID: U1,
@@ -158,7 +164,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
     }
 
     {
-      const resp = await rateEpisode(repo, ["userID", U2], {
+      const resp = await rateEpisode(repo, bangumiClient, ["userID", U2], {
         claimedUserID: U2,
         claimedSubjectID: S1,
         episodeID: S1E1,
@@ -172,6 +178,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
     {
       const resp = await changeUserEpisodeRatingVisibility(
         repo,
+        bangumiClient,
         ["userID", U2],
         {
           claimedUserID: U2,
@@ -186,7 +193,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
     }
 
     {
-      const resp = await rateEpisode(repo, ["userID", U1], {
+      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
         claimedUserID: U1,
         claimedSubjectID: S1,
         episodeID: S1E1,
@@ -201,7 +208,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
     }
 
     {
-      const resp = await rateEpisode(repo, ["userID", U1], {
+      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
         claimedUserID: U1,
         claimedSubjectID: S1,
         episodeID: S1E1,
@@ -218,6 +225,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
     {
       const resp = await changeUserEpisodeRatingVisibility(
         repo,
+        bangumiClient,
         ["userID", U2],
         {
           claimedUserID: U2,

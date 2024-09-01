@@ -6,7 +6,6 @@ import { stringifyResponseForAPI } from "../../../../responses.tsx";
 import * as Commands from "../../../../operations/commands.ts";
 import * as Queries from "../../../../operations/queries.ts";
 import { RateEpisodeRequestData__V1 } from "../../../../shared/dto.ts";
-import { Repo } from "../../../../repo/mod.ts";
 
 export const router = new Router<StateForAPI>();
 export default router;
@@ -34,10 +33,8 @@ async function handleGetEpisodeRatings(
     return;
   }
 
-  const repo = await Repo.open();
-
   const result = await Queries.queryEpisodeRatings(
-    repo,
+    ctx.state.repo,
     ["token", ctx.state.token],
     {
       claimedUserID,
@@ -69,10 +66,8 @@ async function handleGetEpisodeRatingOfMine(
     return;
   }
 
-  const repo = await Repo.open();
-
   const result = await Queries.queryEpisodeMyRating(
-    repo,
+    ctx.state.repo,
     ["token", ctx.state.token],
     { claimedUserID, subjectID, episodeID },
   );
@@ -102,14 +97,17 @@ async function handlePutEpisodeRatingOfMine(
     return;
   }
 
-  const repo = await Repo.open();
-
-  const result = await Commands.rateEpisode(repo, ["token", ctx.state.token], {
-    claimedUserID,
-    claimedSubjectID: subjectID,
-    episodeID,
-    score: data.score,
-  });
+  const result = await Commands.rateEpisode(
+    ctx.state.repo,
+    ctx.state.bangumiClient,
+    ["token", ctx.state.token],
+    {
+      claimedUserID,
+      claimedSubjectID: subjectID,
+      episodeID,
+      score: data.score,
+    },
+  );
 
   ctx.response.body = stringifyResponseForAPI(result);
 }
@@ -130,14 +128,17 @@ async function handleDeleteEpisodeRatingOfMine(
     return;
   }
 
-  const repo = await Repo.open();
-
-  const result = await Commands.rateEpisode(repo, ["token", ctx.state.token], {
-    claimedUserID,
-    claimedSubjectID: subjectID,
-    episodeID,
-    score: null,
-  });
+  const result = await Commands.rateEpisode(
+    ctx.state.repo,
+    ctx.state.bangumiClient,
+    ["token", ctx.state.token],
+    {
+      claimedUserID,
+      claimedSubjectID: subjectID,
+      episodeID,
+      score: null,
+    },
+  );
 
   ctx.response.body = stringifyResponseForAPI(result);
 }
@@ -164,17 +165,17 @@ async function handlePutIsVisibleOfEpisodeRatingOfMine(
     return;
   }
 
-  const repo = await Repo.open();
-
-  const result = await Commands.changeUserEpisodeRatingVisibility(repo, [
-    "token",
-    ctx.state.token,
-  ], {
-    claimedUserID,
-    claimedSubjectID: subjectID,
-    episodeID,
-    isVisible: data,
-  });
+  const result = await Commands.changeUserEpisodeRatingVisibility(
+    ctx.state.repo,
+    ctx.state.bangumiClient,
+    ["token", ctx.state.token],
+    {
+      claimedUserID,
+      claimedSubjectID: subjectID,
+      episodeID,
+      isVisible: data,
+    },
+  );
 
   ctx.response.body = stringifyResponseForAPI(result);
 }

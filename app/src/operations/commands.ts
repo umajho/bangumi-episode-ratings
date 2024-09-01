@@ -9,12 +9,13 @@ import {
   UserID,
   UserSubjectEpisodeRatingData,
 } from "../types.ts";
-import { bangumiClient } from "../global.ts";
 import { APIErrorResponse } from "../shared/dto.ts";
 import { Repo } from "../repo/mod.ts";
+import { BangumiClient } from "../bangumi-client.ts";
 
 export async function rateEpisode(
-  repo: Repo | null,
+  repo: Repo,
+  bangumiClient: BangumiClient,
   tokenOrUserID: ["token", string | null] | ["userID", UserID],
   opts: {
     claimedUserID: UserID;
@@ -33,13 +34,11 @@ export async function rateEpisode(
     }
   }
 
-  repo ??= await Repo.open();
-
   const userID = await repo.getUserIDEx(tokenOrUserID, opts);
   if (userID === null) return ["auth_required"];
 
   const checkSubjectIDResult = checkSubjectID({
-    subjectID: await fetchSubjectID(repo, opts),
+    subjectID: await fetchSubjectID(repo, bangumiClient, opts),
     claimedSubjectID: opts.claimedSubjectID,
     episodeID: opts.episodeID,
   });
@@ -123,6 +122,7 @@ export async function rateEpisode(
 
 export async function changeUserEpisodeRatingVisibility(
   repo: Repo,
+  bangumiClient: BangumiClient,
   tokenOrUserID: ["token", string | null] | ["userID", UserID],
   opts: {
     claimedUserID: UserID;
@@ -135,7 +135,7 @@ export async function changeUserEpisodeRatingVisibility(
   if (userID === null) return ["auth_required"];
 
   const checkSubjectIDResult = checkSubjectID({
-    subjectID: await fetchSubjectID(repo, opts),
+    subjectID: await fetchSubjectID(repo, bangumiClient, opts),
     claimedSubjectID: opts.claimedSubjectID,
     episodeID: opts.episodeID,
   });
@@ -182,6 +182,7 @@ export async function changeUserEpisodeRatingVisibility(
 
 async function fetchSubjectID(
   repo: Repo,
+  bangumiClient: BangumiClient,
   opts: { episodeID: EpisodeID },
 ): Promise<SubjectID | null> {
   const episodeInfo = await repo.getEpisodeInfo(opts.episodeID);
