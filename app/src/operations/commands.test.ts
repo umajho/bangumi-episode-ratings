@@ -9,19 +9,22 @@ import { Repo } from "../repo/mod.ts";
 import { rateEpisode } from "./commands.ts";
 import { changeUserEpisodeRatingVisibility } from "./commands.ts";
 
-const U1 = 11 as UserID;
-const T1 = "TA";
+const U1 = 11 as UserID, U2 = 12 as UserID;
+const T1 = "TA", T2 = "TB";
 const S1 = 21 as SubjectID;
 const S1E1 = 31 as EpisodeID;
 
 let repo!: Repo;
 beforeEach(async () => {
   repo = await Repo.__openForTest();
-  const oldUser = await repo.getUserResult(U1);
-  const result = await repo.tx((tx) => {
-    tx.setUser(U1, { tokens: [T1] }, oldUser);
-  });
-  expect(result.ok).toBe(true);
+
+  for (const [u, t] of [[U1, T1], [U2, T2]] as const) {
+    const oldUser = await repo.getUserResult(u);
+    const result = await repo.tx((tx) => {
+      tx.setUser(u, { tokens: [t] }, oldUser);
+    });
+    expect(result.ok).toBe(true);
+  }
 });
 afterEach(() => repo.__closeForTest());
 
@@ -67,8 +70,6 @@ describe("function rateEpisode", () => {
       expect(rating?.history).toEqual([]);
       expect(await repo.getAllEpisodeVotesGroupedByScore(S1, S1E1))
         .toEqual({ 7: 1 });
-      expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
-        .toEqual({});
     } finally {
       resetFetch();
     }
@@ -92,8 +93,6 @@ describe("function rateEpisode", () => {
       expect(rating?.history[0].score).toBe(7);
       expect(await repo.getAllEpisodeVotesGroupedByScore(S1, S1E1))
         .toEqual({});
-      expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
-        .toEqual({});
     }
   });
 });
@@ -104,7 +103,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
       mockFetch(`https://api.bgm.tv/v0/episodes/${S1E1}`, {
         body: JSON.stringify({ subject_id: S1 }),
       });
-      const result = await changeUserEpisodeRatingVisibility(
+      const resp = await changeUserEpisodeRatingVisibility(
         repo,
         ["userID", U1],
         {
@@ -114,13 +113,122 @@ describe("function changeUserEpisodeRatingVisibility", () => {
           isVisible: true,
         },
       );
-      expect(result[0]).toBe("error");
+      expect(resp[0]).toBe("error");
     } finally {
       resetFetch();
     }
   });
 
   it("works", async () => {
-    // TODO!!!
+    expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
+      .toEqual({});
+
+    try {
+      mockFetch(`https://api.bgm.tv/v0/episodes/${S1E1}`, {
+        body: JSON.stringify({ subject_id: S1 }),
+      });
+
+      const resp = await rateEpisode(repo, ["userID", U1], {
+        claimedUserID: U1,
+        claimedSubjectID: S1,
+        episodeID: S1E1,
+        score: 7,
+      });
+      expect(resp).toEqual(["ok", { score: 7, visibility: null }]);
+      expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
+        .toEqual({});
+    } finally {
+      resetFetch();
+    }
+
+    {
+      const resp = await changeUserEpisodeRatingVisibility(
+        repo,
+        ["userID", U1],
+        {
+          claimedUserID: U1,
+          claimedSubjectID: S1,
+          episodeID: S1E1,
+          isVisible: true,
+        },
+      );
+      expect(resp).toEqual(["ok", { is_visible: true }]);
+      expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
+        .toEqual({ 7: [U1] });
+    }
+
+    {
+      const resp = await rateEpisode(repo, ["userID", U2], {
+        claimedUserID: U2,
+        claimedSubjectID: S1,
+        episodeID: S1E1,
+        score: 7,
+      });
+      expect(resp).toEqual(["ok", { score: 7, visibility: null }]);
+      expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
+        .toEqual({ 7: [U1] });
+    }
+
+    {
+      const resp = await changeUserEpisodeRatingVisibility(
+        repo,
+        ["userID", U2],
+        {
+          claimedUserID: U2,
+          claimedSubjectID: S1,
+          episodeID: S1E1,
+          isVisible: true,
+        },
+      );
+      expect(resp).toEqual(["ok", { is_visible: true }]);
+      expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
+        .toEqual({ 7: [U1, U2] });
+    }
+
+    {
+      const resp = await rateEpisode(repo, ["userID", U1], {
+        claimedUserID: U1,
+        claimedSubjectID: S1,
+        episodeID: S1E1,
+        score: null,
+      });
+      expect(resp).toEqual(["ok", {
+        score: null,
+        visibility: { is_visible: true },
+      }]);
+      expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
+        .toEqual({ 7: [U2] });
+    }
+
+    {
+      const resp = await rateEpisode(repo, ["userID", U1], {
+        claimedUserID: U1,
+        claimedSubjectID: S1,
+        episodeID: S1E1,
+        score: 8,
+      });
+      expect(resp).toEqual(["ok", {
+        score: 8,
+        visibility: { is_visible: true },
+      }]);
+      expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
+        .toEqual({ 7: [U2], 8: [U1] });
+    }
+
+    {
+      const resp = await changeUserEpisodeRatingVisibility(
+        repo,
+        ["userID", U2],
+        {
+          claimedUserID: U2,
+          claimedSubjectID: S1,
+          episodeID: S1E1,
+          isVisible: false,
+        },
+      );
+      expect(resp).toEqual(["ok", { is_visible: false }]);
+      expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
+        .toEqual({ 8: [U1] });
+    }
   });
 });
