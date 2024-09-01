@@ -1,0 +1,26 @@
+# see: https://github.com/actions/starter-workflows/blob/main/pages/static.yml
+# see: https://github.com/actions/deploy-pages
+
+name: 测试
+
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version-file: app/.dvmrc
+      - name: Setup Just
+        uses: extractions/setup-just@v1
+      - name: Run tests
+        run: |
+          cd app && just test
