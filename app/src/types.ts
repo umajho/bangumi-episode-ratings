@@ -1,6 +1,4 @@
-import { BangumiClient } from "./bangumi-client.ts";
 import env from "./env.ts";
-import { Repo } from "./repo/mod.ts";
 
 // see: https://kubyshkin.name/posts/newtype-in-typescript/
 export type UserID = number & { readonly __tag: unique symbol };
@@ -8,9 +6,6 @@ export type SubjectID = number & { readonly __tag: unique symbol };
 export type EpisodeID = number & { readonly __tag: unique symbol };
 
 export interface State {
-  repo: Repo;
-  bangumiClient: BangumiClient;
-
   referrerHostname:
     | `https://${(typeof env.VALID_BGM_HOSTNAMES)[number]}`
     | null;

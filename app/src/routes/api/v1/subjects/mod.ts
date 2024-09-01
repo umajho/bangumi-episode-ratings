@@ -4,6 +4,7 @@ import { StateForAPI, SubjectID } from "../../../../types.ts";
 import { tryExtractNumberFromCTXParams } from "../../utils.ts";
 import { stringifyResponseForAPI } from "../../../../responses.tsx";
 import * as Queries from "../../../../operations/queries.ts";
+import * as Global from "../../../../global.ts";
 
 import episodesRouter from "./episodes.ts";
 
@@ -33,7 +34,7 @@ async function handleGetSubjectEpisodesRatings(
   }
 
   const result = await Queries.querySubjectEpisodesRatings(
-    ctx.state.repo,
+    Global.repo,
     ["token", ctx.state.token],
     { claimedUserID, subjectID },
   );

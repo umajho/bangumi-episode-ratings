@@ -12,6 +12,7 @@ import { stringifyResponseForAPI } from "../../../responses.tsx";
 import * as Commands from "../../../operations/commands.ts";
 import * as Queries from "../../../operations/queries.ts";
 import { tryExtractNumberFromCTXSearchParams } from "../utils.ts";
+import * as Global from "../../../global.ts";
 
 export const router = new Router<StateForAPI>();
 export default router;
@@ -20,8 +21,8 @@ router.post("/rate-episode", async (ctx) => {
   const data = await ctx.request.body.json() as RateEpisodeRequestData__V0;
 
   const result = await Commands.rateEpisode(
-    ctx.state.repo,
-    ctx.state.bangumiClient,
+    Global.repo,
+    Global.bangumiClient,
     ["token", ctx.state.token],
     {
       claimedUserID: data.claimed_user_id as UserID,
@@ -47,7 +48,7 @@ router.get("/subject-episodes-ratings", async (ctx) => {
   }
 
   const result = await Queries.querySubjectEpisodesRatings(
-    ctx.state.repo,
+    Global.repo,
     ["token", ctx.state.token],
     { claimedUserID, subjectID },
   );
@@ -71,7 +72,7 @@ router.get("/episode-ratings", async (ctx) => {
   }
 
   const result_ = await Queries.queryEpisodeRatings(
-    ctx.state.repo,
+    Global.repo,
     ["token", ctx.state.token],
     {
       claimedUserID,
@@ -120,7 +121,7 @@ router.get("/my-episode-rating", async (ctx) => {
   }
 
   const result = await Queries.queryEpisodeMyRating(
-    ctx.state.repo,
+    Global.repo,
     ["token", ctx.state.token],
     { claimedUserID, subjectID, episodeID },
   );

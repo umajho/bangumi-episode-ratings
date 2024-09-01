@@ -9,6 +9,7 @@ import {
   stringifyResponseForAPI,
 } from "../../responses.tsx";
 import env from "../../env.ts";
+import * as Global from "../../global.ts";
 
 export const router = new Router<StateForAuth>();
 export default router;
@@ -40,7 +41,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
 
   const code = ctx.request.url.searchParams.get("code")!;
 
-  const data = await ctx.state.bangumiClient.postToGetAccessToken({
+  const data = await Global.bangumiClient.postToGetAccessToken({
     clientID: env.BGM_APP_ID,
     clientSecret: env.BGM_APP_SECRET,
     code,
@@ -64,10 +65,10 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
 
   let isOk = false;
   while (!isOk) {
-    const userResult = await ctx.state.repo.getUserResult(userID);
+    const userResult = await Global.repo.getUserResult(userID);
     const user = userResult.value ?? { tokens: [] };
 
-    const result = await ctx.state.repo.tx((tx) => {
+    const result = await Global.repo.tx((tx) => {
       if (user.tokens.length >= 10) {
         // 用户持有的 tokens 太多了。目前也懒得去实现记录各个 token 的使用频率/最
         // 后使用时间，直接去掉最早的那个对用户而言也有些不可预测（至少我不会记得
@@ -100,7 +101,7 @@ router.get("/" + ENDPOINT_PATHS.AUTH.CALLBACK, async (ctx) => {
 router.post("/" + ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON, async (ctx) => {
   const { tokenCoupon } = await ctx.request.body.json();
 
-  const token = await ctx.state.repo.popTokenCouponEntryToken(tokenCoupon);
+  const token = await Global.repo.popTokenCouponEntryToken(tokenCoupon);
 
   ctx.response.body = stringifyResponseForAPI(["ok", token]);
 });

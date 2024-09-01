@@ -6,6 +6,7 @@ import { stringifyResponseForAPI } from "../../../../responses.tsx";
 import * as Commands from "../../../../operations/commands.ts";
 import * as Queries from "../../../../operations/queries.ts";
 import { RateEpisodeRequestData__V1 } from "../../../../shared/dto.ts";
+import * as Global from "../../../../global.ts";
 
 export const router = new Router<StateForAPI>();
 export default router;
@@ -34,7 +35,7 @@ async function handleGetEpisodeRatings(
   }
 
   const result = await Queries.queryEpisodeRatings(
-    ctx.state.repo,
+    Global.repo,
     ["token", ctx.state.token],
     {
       claimedUserID,
@@ -67,7 +68,7 @@ async function handleGetEpisodeRatingOfMine(
   }
 
   const result = await Queries.queryEpisodeMyRating(
-    ctx.state.repo,
+    Global.repo,
     ["token", ctx.state.token],
     { claimedUserID, subjectID, episodeID },
   );
@@ -98,8 +99,8 @@ async function handlePutEpisodeRatingOfMine(
   }
 
   const result = await Commands.rateEpisode(
-    ctx.state.repo,
-    ctx.state.bangumiClient,
+    Global.repo,
+    Global.bangumiClient,
     ["token", ctx.state.token],
     {
       claimedUserID,
@@ -129,8 +130,8 @@ async function handleDeleteEpisodeRatingOfMine(
   }
 
   const result = await Commands.rateEpisode(
-    ctx.state.repo,
-    ctx.state.bangumiClient,
+    Global.repo,
+    Global.bangumiClient,
     ["token", ctx.state.token],
     {
       claimedUserID,
@@ -166,8 +167,8 @@ async function handlePutIsVisibleOfEpisodeRatingOfMine(
   }
 
   const result = await Commands.changeUserEpisodeRatingVisibility(
-    ctx.state.repo,
-    ctx.state.bangumiClient,
+    Global.repo,
+    Global.bangumiClient,
     ["token", ctx.state.token],
     {
       claimedUserID,
