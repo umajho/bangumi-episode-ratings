@@ -99,7 +99,7 @@ describe("function rateEpisode", () => {
 });
 
 describe("function changeUserEpisodeRatingVisibility", () => {
-  it("在尚未评分时就尝试改变可见性时，500", async () => {
+  it("在尚未评分时就尝试改变可见性时，返回错误", async () => {
     try {
       mockFetch(`https://api.bgm.tv/v0/episodes/${S1E1}`, {
         body: JSON.stringify({ subject_id: S1 }),
