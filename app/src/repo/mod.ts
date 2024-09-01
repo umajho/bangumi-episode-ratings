@@ -11,7 +11,7 @@ import {
   UserID,
   UserSubjectEpisodeRatingData,
 } from "../types.ts";
-import * as KVUtils from "../kv-utils.ts";
+import * as KVUtils from "./utils.ts";
 
 export class Repo {
   #kv: Deno.Kv;
