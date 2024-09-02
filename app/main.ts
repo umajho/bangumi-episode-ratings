@@ -1,18 +1,22 @@
-import { Application } from "jsr:@oak/oak@14";
+import { Hono } from "jsr:@hono/hono";
+import { logger } from "jsr:@hono/hono/logger";
+import { cors } from "jsr:@hono/hono/cors";
+import { compress } from "jsr:@hono/hono/compress";
 
 import env from "./src/env.ts";
-import { State } from "./src/types.ts";
 import router from "./src/routes/mod.ts";
-import * as Middlewares from "./src/middlewares/mod.ts";
 
-const app = new Application<State>();
+const app = new Hono();
 
-app.use(Middlewares.headers());
-app.use(Middlewares.referrer());
-app.use(Middlewares.auth());
-app.use(Middlewares.cors());
+app.use(logger());
+app.use(cors({
+  origin: env.VALID_BGM_HOSTNAMES.map((hostname) => `https://${hostname}`),
+  allowHeaders: ["Authorization", "X-Gadget-Version", "X-Claimed-User-ID"],
+  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
+app.use(compress());
 
-app.use(router.routes());
-app.use(router.allowedMethods());
+app.route("/", router);
 
-await app.listen({ port: env.PORT });
+Deno.serve(app.fetch);

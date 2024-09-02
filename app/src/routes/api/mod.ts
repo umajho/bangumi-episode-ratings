@@ -1,12 +1,32 @@
-import { Router } from "jsr:@oak/oak@14/router";
+import { Hono } from "jsr:@hono/hono";
 
-import { StateForAPI } from "../../types.ts";
+import * as Middlewares from "../../middlewares/mod.ts";
+import { respondForAPI } from "../../responding.tsx";
+import env from "../../env.ts";
 
-import apiV0Router from "./v0/mod.ts";
 import apiV1Router from "./v1/mod.ts";
 
-export const router = new Router<StateForAPI>();
+export const router = new Hono();
 export default router;
 
-router.use("/v0", apiV0Router.routes(), apiV0Router.allowedMethods());
-router.use("/v1", apiV1Router.routes(), apiV1Router.allowedMethods());
+router.use(Middlewares.setIsForAPI());
+
+router.route("/v1", apiV1Router);
+
+router.all(
+  "/v0/*",
+  Middlewares.referrers(),
+  // deno-lint-ignore require-await
+  async (ctx) => {
+    const gadgetURL = new URL(
+      "/dev/app/3263",
+      ctx.var.referrerHostname ?? `https://${env.VALID_BGM_HOSTNAMES[0]}`,
+    );
+
+    return respondForAPI(ctx, [
+      "error",
+      "VERSION_TOO_OLD",
+      `版本过旧，需要更新。（现已上架为超合金组件：<${gadgetURL}>）`,
+    ]);
+  },
+);

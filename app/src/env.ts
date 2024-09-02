@@ -20,6 +20,15 @@ const env = {
     "bangumi.tv",
     "chii.in",
   ] as const,
+  validateBgmHostname(
+    hostname: string,
+  ): (typeof this.VALID_BGM_HOSTNAMES)[number] | null {
+    if ((env.VALID_BGM_HOSTNAMES as readonly string[]).includes(hostname)) {
+      return hostname as (typeof this.VALID_BGM_HOSTNAMES)[number];
+    } else {
+      return null;
+    }
+  },
 
   get ENTRYPOINT(): string {
     return Deno.env.get("ENTRYPOINT_URL")!;

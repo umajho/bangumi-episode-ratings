@@ -1,43 +1,38 @@
-import { Router, RouterContext } from "jsr:@oak/oak@14";
+import { Hono } from "jsr:@hono/hono";
 
-import { StateForAPI, SubjectID } from "../../../../types.ts";
+import * as Middlewares from "../../../../middlewares/mod.ts";
+import { SubjectID } from "../../../../types.ts";
 import { tryExtractNumberFromCTXParams } from "../../utils.ts";
-import { stringifyResponseForAPI } from "../../../../responses.tsx";
+import { respondForAPI } from "../../../../responding.tsx";
 import * as Queries from "../../../../operations/queries.ts";
 import * as Global from "../../../../global.ts";
 
 import episodesRouter from "./episodes.ts";
 
-export const router = new Router<StateForAPI>();
+export const router = new Hono();
 export default router;
 
-router.use(
-  "/episodes/:episodeID",
-  episodesRouter.routes(),
-  episodesRouter.allowedMethods(),
+router.route("/episodes/:episodeID", episodesRouter);
+
+router.get(
+  "/episodes/ratings",
+  Middlewares.auth(),
+  Middlewares.claimedUserID(),
+  async (ctx) => {
+    const claimedUserID = ctx.var.claimedUserID;
+    const subjectID = //
+      tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+
+    if (subjectID === null) {
+      return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
+    }
+
+    const result = await Queries.querySubjectEpisodesRatings(
+      Global.repo,
+      ["token", ctx.var.token],
+      { claimedUserID, subjectID },
+    );
+
+    return respondForAPI(ctx, result);
+  },
 );
-
-router.get("/episodes/ratings", handleGetSubjectEpisodesRatings);
-
-async function handleGetSubjectEpisodesRatings(
-  // deno-lint-ignore no-explicit-any
-  ctx: RouterContext<string, any, StateForAPI>,
-) {
-  const claimedUserID = ctx.state.claimedUserID;
-  const subjectID = //
-    tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
-
-  if (subjectID === null) {
-    ctx.response.body = //
-      stringifyResponseForAPI(["error", "BAD_REQUEST", "参数有误。"]);
-    return;
-  }
-
-  const result = await Queries.querySubjectEpisodesRatings(
-    Global.repo,
-    ["token", ctx.state.token],
-    { claimedUserID, subjectID },
-  );
-
-  ctx.response.body = stringifyResponseForAPI(result);
-}

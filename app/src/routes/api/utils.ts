@@ -1,22 +1,20 @@
-import { RouterContext } from "jsr:@oak/oak@14";
+import { Context } from "jsr:@hono/hono";
 
-export function tryExtractNumberFromCTXSearchParams<T extends string>(
-  // deno-lint-ignore no-explicit-any
-  ctx: RouterContext<T, any, any>,
+export function tryExtractNumberFromCTXSearchParams(
+  ctx: Context,
   key: string,
 ): number | null {
-  const raw = ctx.request.url.searchParams.get(key);
+  const raw = ctx.req.query(key);
   if (!raw) return null;
   if (!/^\d+$/.test(raw)) return null;
   return Number(raw);
 }
 
 export function tryExtractNumberFromCTXParams(
-  // deno-lint-ignore no-explicit-any
-  ctx: RouterContext<string, any, any>,
+  ctx: Context,
   key: string,
 ): number | null {
-  const raw = ctx.params?.[key];
+  const raw = ctx.req.param(key);
   if (!raw) return null;
   if (!/^\d+$/.test(raw)) return null;
   return Number(raw);

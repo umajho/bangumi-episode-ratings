@@ -1,128 +1,119 @@
-import { Context, Next } from "jsr:@oak/oak@14";
+import { Context } from "jsr:@hono/hono";
+import { createMiddleware } from "jsr:@hono/hono/factory";
 
-import { State, UserID } from "../types.ts";
-import { stringifyErrorResponse } from "../responses.tsx";
+import { UserID } from "../types.ts";
+import { respondWithError } from "../responding.tsx";
 import env from "../env.ts";
 
-export const headers = () => async (ctx: Context<State, State>, next: Next) => {
-  {
-    const gadgetVersion = ctx.request.headers.get("X-Gadget-Version");
-    if (gadgetVersion) {
-      const parts = gadgetVersion?.split(".");
-      if (parts.length !== 3 || parts.some((part) => !/^\d+$/.test(part))) {
-        throw new Error("unreachable!");
-      }
-      const numberParts = parts
-        .map((part) => parseInt(part)) as [number, number, number];
-      if (numberParts[1] >= 1_000 || numberParts[2] >= 1_000) {
-        throw new Error("unreachable!");
-      }
-      ctx.state.gadgetVersion = numberParts[0] * 1_000_000 +
-        numberParts[1] * 1_000 + numberParts[2];
+export const setIsForAPI = () =>
+  createMiddleware<{
+    Variables: { isForAPI: true };
+  }>(async (ctx, next) => {
+    ctx.set("isForAPI", true);
+    await next();
+  });
+
+// deno-lint-ignore no-explicit-any
+function checkIsForAPI(ctx: Context<any>): boolean {
+  return !!ctx.var.isForAPI;
+}
+
+type GadgetVersion = number & { readonly __tag: unique symbol };
+
+export const gadgetVersion = () =>
+  createMiddleware<{
+    Variables: { gadgetVersion: GadgetVersion | null };
+  }>(async (ctx, next) => {
+    ctx.set(
+      "gadgetVersion",
+      parseGadgetVersion(ctx.req.header("X-Gadget-Version")),
+    );
+
+    await next();
+  });
+
+export const claimedUserID = () =>
+  createMiddleware<{
+    Variables: { claimedUserID: UserID | null };
+  }>(async (ctx, next) => {
+    const claimedUserIDRaw = ctx.req.header("X-Claimed-User-ID");
+    if (claimedUserIDRaw && /^\d+$/.test(claimedUserIDRaw)) {
+      ctx.set("claimedUserID", Number(claimedUserIDRaw) as UserID);
     } else {
-      ctx.state.gadgetVersion = null;
+      ctx.set("claimedUserID", null);
     }
+
+    await next();
+  });
+
+function parseGadgetVersion(raw: string | undefined): GadgetVersion | null {
+  if (!raw) return null;
+
+  const parts = raw.split(".");
+  if (parts.length !== 3 || parts.some((part) => !/^\d+$/.test(part))) {
+    throw new Error("unreachable!");
+  }
+  const numParts = parts.map(Number) as [number, number, number];
+  if (numParts[1] >= 1_000 || numParts[2] >= 1_000) {
+    throw new Error("unreachable!");
   }
 
-  {
-    const claimedUserID = ctx.request.headers.get("X-Claimed-User-ID");
-    if (claimedUserID && /^\d+$/.test(claimedUserID)) {
-      ctx.state.claimedUserID = Number(claimedUserID) as UserID;
-    } else {
-      ctx.state.claimedUserID = null;
-    }
-  }
+  return (
+    numParts[0] * 1_000_000 + numParts[1] * 1_000 + numParts[2]
+  ) as GadgetVersion;
+}
 
-  await next();
-};
+export const referrers = () =>
+  createMiddleware<{
+    Variables: {
+      referrerHostname:
+        | `https://${(typeof env.VALID_BGM_HOSTNAMES)[number]}`
+        | null;
+    };
+  }>(async (ctx, next) => {
+    const isForAPI = checkIsForAPI(ctx);
 
-export const referrer =
-  () => async (ctx: Context<State, State>, next: Next) => {
-    const isForAPI = ctx.request.url.pathname.startsWith("/api/");
-
-    const referrer = ctx.request.headers.get("Referer");
-
+    const referrer = ctx.req.header("Referer");
     if (referrer) {
-      const hostname_ = (new URL(referrer)).hostname;
-      // TODO: 处理存在端口之类的情况？
-      if (!(env.VALID_BGM_HOSTNAMES as readonly string[]).includes(hostname_)) {
-        ctx.response.body = stringifyErrorResponse(
+      const hostname = (new URL(referrer)).hostname;
+      const validHostname = env.validateBgmHostname(hostname);
+      if (!validHostname) {
+        return respondWithError(
+          ctx,
           "UNSUPPORTED_REFERRER",
-          `“${hostname_}” 好像不是 bangumi 的站点。`,
+          `“${hostname}” 好像不是 bangumi 的站点。`,
           { isForAPI },
         );
-        return;
       }
-      const hostname = hostname_ as (typeof env.VALID_BGM_HOSTNAMES)[number];
-      ctx.state.referrerHostname = `https://${hostname}`;
+      ctx.set("referrerHostname", `https://${validHostname}`);
+    } else {
+      ctx.set("referrerHostname", null);
     }
 
     await next();
-  };
+  });
 
-export const auth = () => async (ctx: Context<State, State>, next: Next) => {
-  const isForAPI = ctx.request.url.pathname.startsWith("/api/");
+export const auth = () =>
+  createMiddleware<{
+    Variables: { token: string | null };
+  }>(async (ctx, next) => {
+    const isForAPI = checkIsForAPI(ctx);
 
-  const authorizationHeader = ctx.request.headers.get("Authorization");
-  if (authorizationHeader) {
-    const [scheme, rest] = authorizationHeader.split(" ", 2);
-    if (scheme !== "Basic") {
-      ctx.response.body = stringifyErrorResponse(
-        "UNSUPPORTED_AUTHORIZATION_HEADER_SCHEME",
-        `不支持 ${scheme} 作为 Authorization Header 的 Scheme。`,
-        { isForAPI },
-      );
-      return;
+    const authorizationHeader = ctx.req.header("Authorization");
+    if (authorizationHeader) {
+      const [scheme, rest] = authorizationHeader.split(" ", 2);
+      if (scheme !== "Basic") {
+        return respondWithError(
+          ctx,
+          "UNSUPPORTED_AUTHORIZATION_HEADER_SCHEME",
+          `不支持 ${scheme} 作为 Authorization Header 的 Scheme。`,
+          { isForAPI },
+        );
+      }
+      ctx.set("token", rest);
+    } else {
+      ctx.set("token", null);
     }
-    ctx.state.token = rest;
-  } else {
-    ctx.state.token = null;
-  }
 
-  await next();
-};
-
-export const cors = () => async (ctx: Context<State, State>, next: Next) => {
-  // 我不知道 oak 的 Router Middleware 该怎么用，按照常识使用 `router.use` 结果
-  // 根本不会触发，就先这么办了。
-  if (
-    !(["/api", "/auth"].some((path) =>
-      ctx.request.url.pathname.startsWith(path)
-    ))
-  ) {
     await next();
-    return;
-  }
-
-  const isForAPI = ctx.request.url.pathname.startsWith("/api/");
-
-  if (!ctx.state.referrerHostname) {
-    ctx.response.body = stringifyErrorResponse(
-      "MISSING_REFERRER",
-      "我是谁？我从哪里来？我要到哪里去？",
-      { isForAPI },
-    );
-    return null;
-  }
-
-  ctx.response.headers.set(
-    "Access-Control-Allow-Origin",
-    ctx.state.referrerHostname,
-  );
-  ctx.response.headers.set("Access-Control-Allow-Credentials", "true");
-  ctx.response.headers.set(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE",
-  );
-  ctx.response.headers.set(
-    "Access-Control-Allow-Headers",
-    "Authorization, X-Gadget-Version, X-Claimed-User-ID",
-  );
-
-  if (ctx.request.method === "OPTIONS") {
-    ctx.response.status = 204;
-    return;
-  } else {
-    await next();
-  }
-};
+  });

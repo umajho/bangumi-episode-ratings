@@ -1,5 +1,6 @@
 export type ErrorName =
   | "UNKNOWN"
+  | "VERSION_TOO_OLD"
   | "MISSING_REFERRER"
   | "UNSUPPORTED_REFERRER"
   | "BAD_REQUEST"

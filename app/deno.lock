@@ -3,6 +3,7 @@
   "packages": {
     "specifiers": {
       "jsr:@c4spar/mock-fetch": "jsr:@c4spar/mock-fetch@1.0.0",
+      "jsr:@hono/hono": "jsr:@hono/hono@4.5.10",
       "jsr:@oak/commons@0.7": "jsr:@oak/commons@0.7.0",
       "jsr:@oak/oak@14": "jsr:@oak/oak@14.2.0",
       "jsr:@std/assert@0.218": "jsr:@std/assert@0.218.2",
@@ -24,6 +25,7 @@
       "npm:@sinonjs/fake-timers": "npm:@sinonjs/fake-timers@13.0.1",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:@types/sinonjs__fake-timers": "npm:@types/sinonjs__fake-timers@8.1.5",
+      "npm:hono": "npm:hono@4.5.10",
       "npm:jsxte": "npm:jsxte@3.3.1",
       "npm:path-to-regexp@6.2.1": "npm:path-to-regexp@6.2.1",
       "npm:react": "npm:react@18.3.1",
@@ -38,6 +40,9 @@
         "dependencies": [
           "jsr:@std/assert@~0.225.2"
         ]
+      },
+      "@hono/hono@4.5.10": {
+        "integrity": "801fe47e233b53480322f7a17c621ceb5e9b4335e5fdc14cfc0c7696e8396c34"
       },
       "@oak/commons@0.7.0": {
         "integrity": "4bd889b3dc9ddac1b602034d88c137f06de7078775961b51081beb5f175c120b",
@@ -147,6 +152,10 @@
         "integrity": "sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==",
         "dependencies": {}
       },
+      "hono@4.5.10": {
+        "integrity": "sha512-az6tdU1U8o/l0v8O37FIQuc+ER/TeD9vHt/qs8JnBDgMxw6Zu5L2AixUyHeXZNcu87r7iYo8Ey85R7IogOINKA==",
+        "dependencies": {}
+      },
       "js-tokens@4.0.0": {
         "integrity": "sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==",
         "dependencies": {}
@@ -226,6 +235,7 @@
     "https://esm.sh/react@18.3.1": "52480d4c00855e4f76843caa4f2818eb001671523740cbf064cbd108721c29c8",
     "https://esm.sh/react@18.3.1/jsx-runtime": "f47f11639cc0531ad2f1e0f6334d9ae7a8d906c905d9b79cb2e8cd4331bc5b10",
     "https://esm.sh/stable/react@18.3.1/denonext/jsx-runtime.js": "5ff1e02a3bb5c69dd3535d77054b182f1ea51c5eeaf24a396984f6b7012c2716",
-    "https://esm.sh/stable/react@18.3.1/denonext/react.mjs": "fc048ffc55366baf7669519127d186761db72046e2bebf35fe8d0de3964defa3"
+    "https://esm.sh/stable/react@18.3.1/denonext/react.mjs": "fc048ffc55366baf7669519127d186761db72046e2bebf35fe8d0de3964defa3",
+    "https://esm.sh/v135/react-dom@18.3.1/denonext/server.js": "b4db56f16b45002b5e9b127a9938ab45b12f39825161dffe875920510c524878"
   }
 }
