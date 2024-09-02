@@ -14,6 +14,11 @@ const kvPrefixes = Object.fromEntries(
   Object.entries(reversedKVPrefixes).map(([k, v]) => [v, Number(k)]),
 ) as ReverseMap<typeof reversedKVPrefixes>;
 
+const caches = {
+  corsOrigins: null as string[] | null,
+  corsAllowedHeaderSetLowered: null as Set<string> | null,
+};
+
 const env = {
   VALID_BGM_HOSTNAMES: [
     "bgm.tv",
@@ -29,6 +34,11 @@ const env = {
       return null;
     }
   },
+  get CORS_ORIGINS(): string[] {
+    return caches.corsOrigins ??= this.VALID_BGM_HOSTNAMES.map((hostname) =>
+      `https://${hostname}`
+    );
+  },
 
   get ENTRYPOINT(): string {
     return Deno.env.get("ENTRYPOINT_URL")!;
@@ -42,6 +52,18 @@ const env = {
 
   get PORT(): number {
     return Number(Deno.env.get("PORT")!);
+  },
+
+  CORS_ALLOWED_METHODS: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  CORS_ALLOWED_HEADERS: [
+    "Authorization",
+    "X-Gadget-Version",
+    "X-Claimed-User-ID",
+  ],
+  get CORS_ALLOWED_HEADER_SET_LOWERED(): Set<string> {
+    return caches.corsAllowedHeaderSetLowered ??= new Set(
+      this.CORS_ALLOWED_HEADERS.map((header) => header.toLowerCase()),
+    );
   },
 
   get BGM_APP_ID(): string {

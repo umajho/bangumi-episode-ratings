@@ -17,7 +17,9 @@ router.get(
   Middlewares.referrers(),
   // deno-lint-ignore require-await
   async (ctx) => {
-    if (!ctx.var.referrerHostname) throw new Error("TODO: handle this!");
+    if (!ctx.var.referrerHostname) {
+      throw new Error("TODO: handle this! (no referrer)");
+    }
 
     const gadgetVersion = ctx.req.query("gadget_version");
 
@@ -44,7 +46,9 @@ router.get(
   Middlewares.referrers(),
   Middlewares.gadgetVersion(),
   async (ctx) => {
-    if (!ctx.var.referrerHostname) throw new Error("TODO: handle this!");
+    if (!ctx.var.referrerHostname) {
+      throw new Error("TODO: handle this! (no referrer)");
+    }
 
     const state = JSON.parse(ctx.req.query("state")!);
     ctx.set("gadgetVersion", state.gadgetVersion);
