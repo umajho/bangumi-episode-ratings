@@ -16,9 +16,8 @@ import { BangumiClient } from "../bangumi-client.ts";
 export async function rateEpisode(
   repo: Repo,
   bangumiClient: BangumiClient,
-  tokenOrUserID: ["token", string | null] | ["userID", UserID],
+  userID: UserID | null,
   opts: {
-    claimedUserID: UserID;
     claimedSubjectID: SubjectID;
     episodeID: EpisodeID;
     score: number | null;
@@ -34,7 +33,6 @@ export async function rateEpisode(
     }
   }
 
-  const userID = await repo.getUserIDEx(tokenOrUserID, opts);
   if (userID === null) return ["auth_required"];
 
   const checkSubjectIDResult = checkSubjectID({
@@ -123,15 +121,13 @@ export async function rateEpisode(
 export async function changeUserEpisodeRatingVisibility(
   repo: Repo,
   bangumiClient: BangumiClient,
-  tokenOrUserID: ["token", string | null] | ["userID", UserID],
+  userID: UserID | null,
   opts: {
-    claimedUserID: UserID;
     claimedSubjectID: SubjectID;
     episodeID: EpisodeID;
     isVisible: boolean;
   },
 ): Promise<APIResponse<ChangeUserEpisodeRatingVisibilityResponseData>> {
-  const userID = await repo.getUserIDEx(tokenOrUserID, opts);
   if (userID === null) return ["auth_required"];
 
   const checkSubjectIDResult = checkSubjectID({

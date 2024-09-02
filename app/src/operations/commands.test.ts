@@ -35,8 +35,7 @@ const bangumiClient = new BangumiClient();
 describe("function rateEpisode", () => {
   it("能处理非法输入", async () => {
     for (const input of [-1, 11, 1.1, 0, NaN, Infinity]) {
-      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
-        claimedUserID: U1,
+      const resp = await rateEpisode(repo, bangumiClient, U1, {
         claimedSubjectID: S1,
         episodeID: S1E1,
         score: input,
@@ -53,8 +52,7 @@ describe("function rateEpisode", () => {
         body: JSON.stringify({ subject_id: S1 }),
       });
 
-      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
-        claimedUserID: U1,
+      const resp = await rateEpisode(repo, bangumiClient, U1, {
         claimedSubjectID: S1,
         episodeID: S1E1,
         score: 7,
@@ -79,8 +77,7 @@ describe("function rateEpisode", () => {
     }
 
     {
-      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
-        claimedUserID: U1,
+      const resp = await rateEpisode(repo, bangumiClient, U1, {
         claimedSubjectID: S1,
         episodeID: S1E1,
         score: null,
@@ -110,13 +107,8 @@ describe("function changeUserEpisodeRatingVisibility", () => {
       const resp = await changeUserEpisodeRatingVisibility(
         repo,
         bangumiClient,
-        ["userID", U1],
-        {
-          claimedUserID: U1,
-          claimedSubjectID: S1,
-          episodeID: S1E1,
-          isVisible: true,
-        },
+        U1,
+        { claimedSubjectID: S1, episodeID: S1E1, isVisible: true },
       );
       expect(resp[0]).toBe("error");
     } finally {
@@ -133,8 +125,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
         body: JSON.stringify({ subject_id: S1 }),
       });
 
-      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
-        claimedUserID: U1,
+      const resp = await rateEpisode(repo, bangumiClient, U1, {
         claimedSubjectID: S1,
         episodeID: S1E1,
         score: 7,
@@ -150,13 +141,8 @@ describe("function changeUserEpisodeRatingVisibility", () => {
       const resp = await changeUserEpisodeRatingVisibility(
         repo,
         bangumiClient,
-        ["userID", U1],
-        {
-          claimedUserID: U1,
-          claimedSubjectID: S1,
-          episodeID: S1E1,
-          isVisible: true,
-        },
+        U1,
+        { claimedSubjectID: S1, episodeID: S1E1, isVisible: true },
       );
       expect(resp).toEqual(["ok", { is_visible: true }]);
       expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
@@ -164,8 +150,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
     }
 
     {
-      const resp = await rateEpisode(repo, bangumiClient, ["userID", U2], {
-        claimedUserID: U2,
+      const resp = await rateEpisode(repo, bangumiClient, U2, {
         claimedSubjectID: S1,
         episodeID: S1E1,
         score: 7,
@@ -179,13 +164,8 @@ describe("function changeUserEpisodeRatingVisibility", () => {
       const resp = await changeUserEpisodeRatingVisibility(
         repo,
         bangumiClient,
-        ["userID", U2],
-        {
-          claimedUserID: U2,
-          claimedSubjectID: S1,
-          episodeID: S1E1,
-          isVisible: true,
-        },
+        U2,
+        { claimedSubjectID: S1, episodeID: S1E1, isVisible: true },
       );
       expect(resp).toEqual(["ok", { is_visible: true }]);
       expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
@@ -193,8 +173,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
     }
 
     {
-      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
-        claimedUserID: U1,
+      const resp = await rateEpisode(repo, bangumiClient, U1, {
         claimedSubjectID: S1,
         episodeID: S1E1,
         score: null,
@@ -208,8 +187,7 @@ describe("function changeUserEpisodeRatingVisibility", () => {
     }
 
     {
-      const resp = await rateEpisode(repo, bangumiClient, ["userID", U1], {
-        claimedUserID: U1,
+      const resp = await rateEpisode(repo, bangumiClient, U1, {
         claimedSubjectID: S1,
         episodeID: S1E1,
         score: 8,
@@ -226,13 +204,8 @@ describe("function changeUserEpisodeRatingVisibility", () => {
       const resp = await changeUserEpisodeRatingVisibility(
         repo,
         bangumiClient,
-        ["userID", U2],
-        {
-          claimedUserID: U2,
-          claimedSubjectID: S1,
-          episodeID: S1E1,
-          isVisible: false,
-        },
+        U2,
+        { claimedSubjectID: S1, episodeID: S1E1, isVisible: false },
       );
       expect(resp).toEqual(["ok", { is_visible: false }]);
       expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))

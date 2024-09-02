@@ -11,8 +11,8 @@ import { EpisodeID, SubjectID, UserID } from "../types.ts";
 
 export async function querySubjectEpisodesRatings(
   repo: Repo,
-  tokenOrUserID: ["token", string | null] | ["userID", UserID],
-  opts: { claimedUserID: UserID | null; subjectID: SubjectID },
+  userID: UserID | null,
+  opts: { subjectID: SubjectID },
 ): Promise<APIResponse<GetSubjectEpisodesResponseData>> {
   const { votesByScoreBySubject, isCertainThatEpisodesVotesAreIntegral } = //
     await repo.getAllEpisodesVotesInSubjectGroupedByScoreAndEpisodeEx(
@@ -25,7 +25,6 @@ export async function querySubjectEpisodesRatings(
       isCertainThatEpisodesVotesAreIntegral,
   };
 
-  const userID = await repo.getUserIDEx(tokenOrUserID, opts);
   if (userID !== null) {
     data.my_ratings = await repo.getAllUserSubjectEpisodesRatings(
       userID,
@@ -38,9 +37,8 @@ export async function querySubjectEpisodesRatings(
 
 export async function queryEpisodeRatings(
   repo: Repo,
-  tokenOrUserID: ["token", string | null] | ["userID", UserID],
+  userID: UserID | null,
   opts: {
-    claimedUserID: UserID | null;
     subjectID: SubjectID;
     episodeID: EpisodeID;
 
@@ -72,10 +70,8 @@ export async function queryEpisodeRatings(
       publicRatingsResult[1];
   }
 
-  const userID = await repo.getUserIDEx(tokenOrUserID, opts);
   if (userID !== null) {
-    const myRatingResult = //
-      await queryEpisodeMyRating(repo, ["userID", userID], opts);
+    const myRatingResult = await queryEpisodeMyRating(repo, userID, opts);
     if (myRatingResult[0] !== "ok") return myRatingResult;
     data.my_rating = myRatingResult[1];
   }
@@ -85,14 +81,12 @@ export async function queryEpisodeRatings(
 
 export async function queryEpisodeMyRating(
   repo: Repo,
-  tokenOrUserID: ["token", string | null] | ["userID", UserID],
+  userID: UserID | null,
   opts: {
-    claimedUserID: UserID | null;
     subjectID: SubjectID;
     episodeID: EpisodeID;
   },
 ): Promise<APIResponse<GetMyEpisodeRatingResponseData>> {
-  const userID = await repo.getUserIDEx(tokenOrUserID, opts);
   if (userID === null) return ["auth_required"];
 
   const ratingResult = await repo.getUserEpisodeRatingResult //

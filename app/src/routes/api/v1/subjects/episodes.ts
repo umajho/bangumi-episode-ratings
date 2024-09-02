@@ -15,10 +15,8 @@ export default router;
 router.get(
   "/ratings",
   Middlewares.auth(),
-  Middlewares.claimedUserID(),
   Middlewares.gadgetVersion(),
   async (ctx) => {
-    const claimedUserID = ctx.var.claimedUserID;
     const subjectID = //
       tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
@@ -30,9 +28,8 @@ router.get(
 
     const result = await Queries.queryEpisodeRatings(
       Global.repo,
-      ["token", ctx.var.token],
+      await ctx.var.authenticate(Global.repo),
       {
-        claimedUserID,
         subjectID,
         episodeID,
         compatibility: {
@@ -48,22 +45,20 @@ router.get(
 router.get(
   "/ratings/mine",
   Middlewares.auth(),
-  Middlewares.claimedUserID(),
   async (ctx) => {
-    const claimedUserID = ctx.var.claimedUserID;
     const subjectID = //
       tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
       tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
 
-    if (subjectID === null || episodeID === null || claimedUserID === null) {
+    if (subjectID === null || episodeID === null) {
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
     }
 
     const result = await Queries.queryEpisodeMyRating(
       Global.repo,
-      ["token", ctx.var.token],
-      { claimedUserID, subjectID, episodeID },
+      await ctx.var.authenticate(Global.repo),
+      { subjectID, episodeID },
     );
 
     return respondForAPI(ctx, result);
@@ -73,9 +68,7 @@ router.get(
 router.put(
   "/ratings/mine",
   Middlewares.auth(),
-  Middlewares.claimedUserID(),
   async (ctx) => {
-    const claimedUserID = ctx.var.claimedUserID;
     const subjectID = //
       tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
@@ -84,7 +77,7 @@ router.put(
     const data = await ctx.req.json() as RateEpisodeRequestData__V1;
 
     if (
-      subjectID === null || episodeID === null || claimedUserID === null ||
+      subjectID === null || episodeID === null ||
       // 更具体的判断是否为整数、是否为 1~10 由 `Commands.rateEpisode` 处理。
       typeof data.score !== "number"
     ) {
@@ -94,13 +87,8 @@ router.put(
     const result = await Commands.rateEpisode(
       Global.repo,
       Global.bangumiClient,
-      ["token", ctx.var.token],
-      {
-        claimedUserID,
-        claimedSubjectID: subjectID,
-        episodeID,
-        score: data.score,
-      },
+      await ctx.var.authenticate(Global.repo),
+      { claimedSubjectID: subjectID, episodeID, score: data.score },
     );
 
     return respondForAPI(ctx, result);
@@ -110,28 +98,21 @@ router.put(
 router.delete(
   "/ratings/mine",
   Middlewares.auth(),
-  Middlewares.claimedUserID(),
   async (ctx) => {
-    const claimedUserID = ctx.var.claimedUserID;
     const subjectID = //
       tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
       tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
 
-    if (subjectID === null || episodeID === null || claimedUserID === null) {
+    if (subjectID === null || episodeID === null) {
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
     }
 
     const result = await Commands.rateEpisode(
       Global.repo,
       Global.bangumiClient,
-      ["token", ctx.var.token],
-      {
-        claimedUserID,
-        claimedSubjectID: subjectID,
-        episodeID,
-        score: null,
-      },
+      await ctx.var.authenticate(Global.repo),
+      { claimedSubjectID: subjectID, episodeID, score: null },
     );
 
     return respondForAPI(ctx, result);
@@ -141,9 +122,7 @@ router.delete(
 router.put(
   "/ratings/mine/is-visible",
   Middlewares.auth(),
-  Middlewares.claimedUserID(),
   async (ctx) => {
-    const claimedUserID = ctx.var.claimedUserID;
     const subjectID = //
       tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
@@ -152,7 +131,7 @@ router.put(
     const data = await ctx.req.json() as boolean;
 
     if (
-      subjectID === null || episodeID === null || claimedUserID === null ||
+      subjectID === null || episodeID === null ||
       typeof data !== "boolean"
     ) {
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
@@ -161,13 +140,8 @@ router.put(
     const result = await Commands.changeUserEpisodeRatingVisibility(
       Global.repo,
       Global.bangumiClient,
-      ["token", ctx.var.token],
-      {
-        claimedUserID,
-        claimedSubjectID: subjectID,
-        episodeID,
-        isVisible: data,
-      },
+      await ctx.var.authenticate(Global.repo),
+      { claimedSubjectID: subjectID, episodeID, isVisible: data },
     );
 
     return respondForAPI(ctx, result);

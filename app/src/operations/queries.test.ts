@@ -40,19 +40,13 @@ describe("function querySubjectEpisodesRatings", () => {
     ]);
 
     expect(
-      await querySubjectEpisodesRatings(repo, ["token", null], {
-        claimedUserID: null,
-        subjectID: S1,
-      }),
+      await querySubjectEpisodesRatings(repo, null, { subjectID: S1 }),
     ).toEqual(["ok", {
       episodes_votes: { [S1E1]: { 7: 2 }, [S1E2]: { 6: 1, 8: 1 } },
       is_certain_that_episodes_votes_are_integral: true,
     }]);
     expect(
-      await querySubjectEpisodesRatings(repo, ["userID", U1], {
-        claimedUserID: U1,
-        subjectID: S1,
-      }),
+      await querySubjectEpisodesRatings(repo, U1, { subjectID: S1 }),
     ).toEqual(["ok", {
       episodes_votes: { [S1E1]: { 7: 2 }, [S1E2]: { 6: 1, 8: 1 } },
       is_certain_that_episodes_votes_are_integral: true,
@@ -71,8 +65,7 @@ describe("function queryEpisodeRatings", () => {
     ]);
 
     expect(
-      await queryEpisodeRatings(repo, ["token", null], {
-        claimedUserID: null,
+      await queryEpisodeRatings(repo, null, {
         subjectID: S1,
         episodeID: S1E1,
         compatibility: { noPublicRatings: false },
@@ -82,8 +75,7 @@ describe("function queryEpisodeRatings", () => {
       public_ratings: { public_voters_by_score: { 7: [U2] } },
     }]);
     expect(
-      await queryEpisodeRatings(repo, ["userID", U1], {
-        claimedUserID: U1,
+      await queryEpisodeRatings(repo, U1, {
         subjectID: S1,
         episodeID: S1E1,
         compatibility: { noPublicRatings: false },
@@ -94,8 +86,7 @@ describe("function queryEpisodeRatings", () => {
       my_rating: { score: 7, visibility: { is_visible: false } },
     }]);
     expect(
-      await queryEpisodeRatings(repo, ["token", null], {
-        claimedUserID: null,
+      await queryEpisodeRatings(repo, null, {
         subjectID: S1,
         episodeID: S1E2,
         compatibility: { noPublicRatings: false },
@@ -140,8 +131,7 @@ describe("function queryEpisodeMyRating", () => {
     }
 
     expect(
-      await queryEpisodeMyRating(repo, ["userID", U1], {
-        claimedUserID: U1,
+      await queryEpisodeMyRating(repo, U1, {
         subjectID: S1,
         episodeID: S1E1,
       }),
@@ -150,8 +140,7 @@ describe("function queryEpisodeMyRating", () => {
       visibility: { is_visible: false },
     }]);
     expect(
-      await queryEpisodeMyRating(repo, ["userID", U1], {
-        claimedUserID: U1,
+      await queryEpisodeMyRating(repo, U1, {
         subjectID: S1,
         episodeID: S1E2,
       }),

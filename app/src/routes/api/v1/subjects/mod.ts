@@ -17,9 +17,7 @@ router.route("/episodes/:episodeID", episodesRouter);
 router.get(
   "/episodes/ratings",
   Middlewares.auth(),
-  Middlewares.claimedUserID(),
   async (ctx) => {
-    const claimedUserID = ctx.var.claimedUserID;
     const subjectID = //
       tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
 
@@ -29,8 +27,8 @@ router.get(
 
     const result = await Queries.querySubjectEpisodesRatings(
       Global.repo,
-      ["token", ctx.var.token],
-      { claimedUserID, subjectID },
+      await ctx.var.authenticate(Global.repo),
+      { subjectID },
     );
 
     return respondForAPI(ctx, result);

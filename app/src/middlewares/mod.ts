@@ -4,6 +4,7 @@ import { createMiddleware } from "jsr:@hono/hono/factory";
 import { UserID } from "../types.ts";
 import { respondWithError } from "../responding.tsx";
 import env from "../env.ts";
+import { Repo } from "../repo/mod.ts";
 
 export const setIsForAPI = () =>
   createMiddleware<{
@@ -28,20 +29,6 @@ export const gadgetVersion = () =>
       "gadgetVersion",
       parseGadgetVersion(ctx.req.header("X-Gadget-Version")),
     );
-
-    await next();
-  });
-
-export const claimedUserID = () =>
-  createMiddleware<{
-    Variables: { claimedUserID: UserID | null };
-  }>(async (ctx, next) => {
-    const claimedUserIDRaw = ctx.req.header("X-Claimed-User-ID");
-    if (claimedUserIDRaw && /^\d+$/.test(claimedUserIDRaw)) {
-      ctx.set("claimedUserID", Number(claimedUserIDRaw) as UserID);
-    } else {
-      ctx.set("claimedUserID", null);
-    }
 
     await next();
   });
@@ -95,14 +82,27 @@ export const referrers = () =>
 
 export const auth = () =>
   createMiddleware<{
-    Variables: { token: string | null };
+    Variables: { authenticate: (repo: Repo) => Promise<UserID | null> };
   }>(async (ctx, next) => {
     const isForAPI = checkIsForAPI(ctx);
 
-    const authorizationHeader = ctx.req.header("Authorization");
-    if (authorizationHeader) {
-      const [scheme, rest] = authorizationHeader.split(" ", 2);
-      if (scheme !== "Basic") {
+    const claimedUserID = extractClaimedUserID(ctx);
+
+    // deno-lint-ignore require-await
+    let fn: (repo: Repo) => Promise<UserID | null> = async () => null;
+
+    const tokenResult = extractToken(ctx);
+    switch (tokenResult[0]) {
+      case "token": {
+        if (!claimedUserID) break;
+        const [_, token] = tokenResult;
+        fn = async (repo) => {
+          return await repo.getUserIDEx(["token", token], { claimedUserID });
+        };
+        break;
+      }
+      case "unsupported": {
+        const [_, scheme] = tokenResult;
         return respondWithError(
           ctx,
           "UNSUPPORTED_AUTHORIZATION_HEADER_SCHEME",
@@ -110,10 +110,38 @@ export const auth = () =>
           { isForAPI },
         );
       }
-      ctx.set("token", rest);
-    } else {
-      ctx.set("token", null);
+      case "none":
+        break;
+      default:
+        tokenResult satisfies never;
     }
+
+    ctx.set("authenticate", fn);
 
     await next();
   });
+
+function extractClaimedUserID(ctx: Context): UserID | null {
+  const claimedUserIDRaw = ctx.req.header("X-Claimed-User-ID");
+  if (claimedUserIDRaw && /^\d+$/.test(claimedUserIDRaw)) {
+    return Number(claimedUserIDRaw) as UserID;
+  } else {
+    return null;
+  }
+}
+
+function extractToken(ctx: Context):
+  | ["token", string]
+  | [type: "unsupported", scheme: string]
+  | ["none"] {
+  const authorizationHeader = ctx.req.header("Authorization");
+  if (authorizationHeader) {
+    const [scheme, rest] = authorizationHeader.split(" ", 2);
+    if (scheme !== "Basic") {
+      return ["unsupported", scheme];
+    }
+    return ["token", rest];
+  } else {
+    return ["none"];
+  }
+}
