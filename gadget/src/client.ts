@@ -1,4 +1,5 @@
 import { Score } from "./definitions";
+import env from "./env";
 import Global from "./global";
 import {
   APIErrorResponse,
@@ -39,6 +40,8 @@ export class Client {
       "auth",
       ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON,
       {
+        tokenType: "basic",
+
         method: "POST",
         body: JSON.stringify({ tokenCoupon }),
       },
@@ -57,13 +60,22 @@ export class Client {
       return await this.fetch(
         "api/v1",
         `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings/mine`,
-        { method: "PUT", body: JSON.stringify(bodyData) },
+        {
+          tokenType: "jwt",
+
+          method: "PUT",
+          body: JSON.stringify(bodyData),
+        },
       );
     } else {
       return await this.fetch(
         "api/v1",
         `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings/mine`,
-        { method: "DELETE" },
+        {
+          tokenType: "jwt",
+
+          method: "DELETE",
+        },
       );
     }
   }
@@ -88,7 +100,11 @@ export class Client {
     return this.subjectEpisodesRatingsCache[opts.subjectID] = this.fetch(
       "api/v1",
       `subjects/${opts.subjectID}/episodes/ratings`,
-      { method: "GET" },
+      {
+        tokenType: "jwt",
+
+        method: "GET",
+      },
     ).then((resp) =>
       this.subjectEpisodesRatingsCache[opts.subjectID] = unwrap(resp)
     );
@@ -98,7 +114,11 @@ export class Client {
     const resp = await this.fetch(
       "api/v1",
       `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings`,
-      { method: "GET" },
+      {
+        tokenType: "jwt",
+
+        method: "GET",
+      },
     );
 
     return unwrap(resp);
@@ -110,7 +130,11 @@ export class Client {
     return await this.fetch(
       "api/v1",
       `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings/mine`,
-      { method: "GET" },
+      {
+        tokenType: "jwt",
+
+        method: "GET",
+      },
     );
   }
 
@@ -120,7 +144,12 @@ export class Client {
     return await this.fetch(
       "api/v1",
       `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings/mine/is-visible`,
-      { method: "PUT", body: JSON.stringify(opts.isVisible) },
+      {
+        tokenType: "jwt",
+
+        method: "PUT",
+        body: JSON.stringify(opts.isVisible),
+      },
     );
   }
 
@@ -128,6 +157,8 @@ export class Client {
     group: "auth" | "api/v1",
     endpointPath: string,
     opts: {
+      tokenType: "basic" | "jwt";
+
       method: "GET" | "POST" | "PUT" | "DELETE";
       searchParams?: URLSearchParams;
       body?: string;
@@ -140,7 +171,14 @@ export class Client {
 
     const headers = new Headers();
     if (this.token) {
-      headers.set("Authorization", `Basic ${this.token}`);
+      if (opts.tokenType === "basic") {
+        headers.set("Authorization", `Basic ${this.token}`);
+      } else {
+        const resp = await this.fetchJWT();
+        if (resp[0] !== "ok") return resp;
+        const [_, jwt] = resp;
+        headers.set("Authorization", `Bearer ${jwt}`);
+      }
     }
     headers.set("X-Gadget-Version", Global.version);
     if (Global.claimedUserID !== null) {
@@ -198,6 +236,38 @@ export class Client {
     return join(join(this.entrypoint, group + "/"), endpointPath);
   }
 
+  private async fetchJWT(): Promise<APIResponse<string>> {
+    const fn = async (): Promise<APIResponse<string>> => {
+      const localToken = localStorage.getItem(env.LOCAL_STORAGE_KEY_JWT);
+      if (localToken && checkJWTExpiry(localToken) === "valid") {
+        return ["ok", localToken];
+      }
+
+      const resp: APIResponse<string> = await this.fetch(
+        "auth",
+        ENDPOINT_PATHS.AUTH.REFRESH_JWT,
+        {
+          tokenType: "basic",
+
+          method: "POST",
+        },
+      );
+
+      if (resp[0] === "ok") {
+        const [_, jwt] = resp;
+        localStorage.setItem(env.LOCAL_STORAGE_KEY_JWT, jwt);
+      }
+
+      return resp;
+    };
+
+    if (window.navigator.locks) {
+      return window.navigator.locks.request(env.LOCAL_STORAGE_KEY_JWT, fn);
+    } else {
+      return fn();
+    }
+  }
+
   clearCache(): void {
     this.subjectEpisodesRatingsCache = {};
   }
@@ -215,4 +285,11 @@ function unwrap<T>(resp: APIOkResponse<T> | APIErrorResponse | unknown): T {
 
   if (resp[0] === "error") throw new Error(resp[2]);
   return resp[1];
+}
+
+function checkJWTExpiry(jwt: string): "expired" | "valid" {
+  const decoded = JSON.parse(atob(jwt.split(".")[1]));
+  const exp = decoded.exp;
+  const now = Math.floor(Date.now() / 1000);
+  return now > exp ? "expired" : "valid";
 }

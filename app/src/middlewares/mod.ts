@@ -1,6 +1,8 @@
 import { Context } from "jsr:@hono/hono";
 import { createMiddleware } from "jsr:@hono/hono/factory";
 
+import * as Djwt from "https://deno.land/x/djwt@v3.0.2/mod.ts";
+
 import { UserID } from "../types.ts";
 import { respondWithError } from "../responding.tsx";
 import config from "../config.ts";
@@ -80,7 +82,9 @@ export const referrers = () =>
     await next();
   });
 
-export const auth = () =>
+export const auth = (opts?: {
+  requiresTokenType?: "basic";
+}) =>
   createMiddleware<{
     Variables: { authenticate: (repo: Repo) => Promise<UserID | null> };
   }>(async (ctx, next) => {
@@ -93,11 +97,26 @@ export const auth = () =>
 
     const tokenResult = extractToken(ctx);
     switch (tokenResult[0]) {
-      case "token": {
+      case "basic": {
         if (!claimedUserID) break;
         const [_, token] = tokenResult;
         fn = async (repo) => {
           return await repo.getUserIDEx(["token", token], { claimedUserID });
+        };
+        break;
+      }
+      case "jwt": {
+        if (opts?.requiresTokenType === "basic") break;
+        const [_, token] = tokenResult;
+        fn = async () => {
+          try {
+            const payload = await Djwt
+              .verify(token, await config.app.getJwtVerifyingKey());
+            return payload.userID as UserID;
+          } catch (e) {
+            console.error(e);
+            return null;
+          }
         };
         break;
       }
@@ -131,16 +150,19 @@ function extractClaimedUserID(ctx: Context): UserID | null {
 }
 
 function extractToken(ctx: Context):
-  | ["token", string]
+  | ["basic", string]
+  | ["jwt", string]
   | [type: "unsupported", scheme: string]
   | ["none"] {
   const authorizationHeader = ctx.req.header("Authorization");
   if (authorizationHeader) {
     const [scheme, rest] = authorizationHeader.split(" ", 2);
-    if (scheme !== "Basic") {
-      return ["unsupported", scheme];
+    if (scheme === "Basic") {
+      return ["basic", rest];
+    } else if (scheme === "Bearer") {
+      return ["jwt", rest];
     }
-    return ["token", rest];
+    return ["unsupported", scheme];
   } else {
     return ["none"];
   }

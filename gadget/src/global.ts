@@ -65,6 +65,7 @@ function makeGlobal() {
       localStorage.setItem(env.LOCAL_STORAGE_KEY_TOKEN, newToken);
     } else {
       localStorage.removeItem(env.LOCAL_STORAGE_KEY_TOKEN);
+      localStorage.removeItem(env.LOCAL_STORAGE_KEY_JWT);
     }
 
     client.token = newToken;

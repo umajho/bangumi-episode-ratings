@@ -4,6 +4,7 @@ const env = {
   },
 
   LOCAL_STORAGE_KEY_TOKEN: "bgm_ep_ratings_token",
+  LOCAL_STORAGE_KEY_JWT: "bgm_ep_ratings_jwt",
   SEARCH_PARAMS_KEY_TOKEN_COUPON: "bgm_ep_ratings_token_coupon",
 };
 

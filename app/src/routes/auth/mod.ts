@@ -1,5 +1,7 @@
 import { Hono } from "jsr:@hono/hono";
 
+import * as Djwt from "https://deno.land/x/djwt@v3.0.2/mod.ts";
+
 import ENDPOINT_PATHS from "../../shared/endpoint-paths.ts";
 
 import * as Middlewares from "../../middlewares/mod.ts";
@@ -122,6 +124,36 @@ router.post(
     const { tokenCoupon } = await ctx.req.json();
 
     const token = await Global.repo.popTokenCouponEntryToken(tokenCoupon);
+
+    return respondForAPI(ctx, ["ok", token]);
+  },
+);
+
+router.post(
+  `/${ENDPOINT_PATHS.AUTH.REFRESH_JWT}`,
+  Middlewares.setIsForAPI(),
+  Middlewares.auth({ requiresTokenType: "basic" }),
+  async (ctx) => {
+    const key = await config.app.getJwtSigningKey();
+    if (!key) {
+      return respondForAPI(ctx, [
+        "error",
+        "NOT_SUPPORTED_TO_CREATE_JWT",
+        "不支持创建 JWT",
+      ]);
+    }
+
+    const userID = await ctx.var.authenticate(Global.repo);
+    if (!userID) return respondForAPI(ctx, ["auth_required"]);
+
+    const token = await Djwt.create(
+      { ...config.app.JWT_KEY_ALGORITHM_FOR_DJWT, typ: "JWT" },
+      {
+        exp: Djwt.getNumericDate(60 * 60 * 24), // 1 天。
+        userID,
+      },
+      key,
+    );
 
     return respondForAPI(ctx, ["ok", token]);
   },

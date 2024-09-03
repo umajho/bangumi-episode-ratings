@@ -19,6 +19,11 @@ const HARD_CODED = {
   BGM_PATH_OAUTH_ACCESS_TOKEN: "/oauth/access_token",
 
   BGM_API_PATH_V0_EPISODES: "/v0/episodes",
+
+  JWT_KEY_ALGORITHM: {
+    FOR_DJWT: { alg: "ES256" },
+    FOR_CRYPTO: { name: "ECDSA", namedCurve: "P-256" },
+  },
 } as const;
 
 const ENV = {
@@ -31,6 +36,13 @@ const ENV = {
   USER_AGENT: mustGetEnv("USER_AGENT"),
 
   BGM_HOMEPAGE_URL: new URL(mustGetEnv("BGM_HOMEPAGE_URL")),
+
+  JWT_SIGNING_KEY_JWK: getEnvAndThen("JWT_SIGNING_KEY_JWK", JSON.parse) as
+    | JsonWebKey
+    | null,
+  JWT_VERIFYING_KEY_JWK: JSON.parse(
+    mustGetEnv("JWT_VERIFYING_KEY_JWK"),
+  ) as JsonWebKey,
 };
 function mustGetEnv(name: string): string {
   const value = Deno.env.get(name);
@@ -46,7 +58,7 @@ function getEnvAndThen<T>(name: string, mapFn: (value: string) => T): T | null {
 class AppConfigManager {
   constructor(
     private readonly env: typeof ENV,
-    private readonly _hardCoded: typeof HARD_CODED,
+    private readonly hardCoded: typeof HARD_CODED,
   ) {}
 
   get BGM_APP_ID() {
@@ -58,6 +70,43 @@ class AppConfigManager {
 
   get USER_AGENT() {
     return this.env.USER_AGENT;
+  }
+
+  get JWT_KEY_ALGORITHM_FOR_DJWT() {
+    return this.hardCoded.JWT_KEY_ALGORITHM.FOR_DJWT;
+  }
+
+  #jwtSigningKeyCache: CryptoKey | Promise<CryptoKey> | null = null;
+  getJwtSigningKey(): CryptoKey | Promise<CryptoKey> | null {
+    if (this.#jwtSigningKeyCache) return this.#jwtSigningKeyCache;
+    const jwk = this.env.JWT_SIGNING_KEY_JWK;
+    if (!jwk) return null;
+    return this.#jwtSigningKeyCache = crypto.subtle.importKey(
+      "jwk",
+      jwk,
+      this.hardCoded.JWT_KEY_ALGORITHM.FOR_CRYPTO,
+      false,
+      ["sign"],
+    ).then((key) => {
+      this.#jwtSigningKeyCache = key;
+      return key;
+    });
+  }
+
+  #jwtVerifyingKeyCache: CryptoKey | Promise<CryptoKey> | null = null;
+  getJwtVerifyingKey(): CryptoKey | Promise<CryptoKey> {
+    if (this.#jwtVerifyingKeyCache) return this.#jwtVerifyingKeyCache;
+    const jwk = this.env.JWT_VERIFYING_KEY_JWK;
+    return this.#jwtVerifyingKeyCache = crypto.subtle.importKey(
+      "jwk",
+      jwk,
+      this.hardCoded.JWT_KEY_ALGORITHM.FOR_CRYPTO,
+      false,
+      ["verify"],
+    ).then((key) => {
+      this.#jwtVerifyingKeyCache = key;
+      return key;
+    });
   }
 }
 
