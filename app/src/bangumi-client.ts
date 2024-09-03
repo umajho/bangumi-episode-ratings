@@ -1,4 +1,4 @@
-import env from "./env.ts";
+import config from "./config.ts";
 import { EpisodeID } from "./types.ts";
 
 type BangumiAPIResponse<T> =
@@ -29,14 +29,14 @@ export class BangumiClient {
 
     const data = await this.fetch<postToGetAccessTokenResponse>(
       null,
-      env.BGM_PATH_OAUTH_ACCESS_TOKEN,
+      config.bangumi.PATH_OAUTH_ACCESS_TOKEN,
       { method: "POST", body: searchParams },
     );
     return unwrap(data);
   }
 
   async getEpisode(episodeID: EpisodeID): Promise<GetEpisodeResponse | null> {
-    const url = `${env.BGM_API_PATH_V0_EPISODES}/${episodeID}`;
+    const url = `${config.bangumi.API_PATH_V0_EPISODES}/${episodeID}`;
 
     const data = await this.fetch<GetEpisodeResponse>("api", url, {
       method: "GET",
@@ -55,7 +55,8 @@ export class BangumiClient {
     },
   ): Promise<BangumiAPIResponse<T>> {
     // NOTE: 必须用 “bgm.tv”，因为只有 “api.bgm.tv” 能用。
-    let domain = "bgm.tv" satisfies (typeof env.VALID_BGM_HOSTNAMES)[number];
+    let domain =
+      "bgm.tv" satisfies (typeof config.bangumi.VALID_HOSTNAMES)[number];
     if (subDomain) {
       domain = `${subDomain}.${domain}`;
     }
@@ -66,7 +67,7 @@ export class BangumiClient {
     }
 
     const headers = new Headers();
-    headers.append("User-Agent", env.USER_AGENT);
+    headers.append("User-Agent", config.app.USER_AGENT);
 
     const resp = await fetch(url.toString(), {
       method: opts.method,

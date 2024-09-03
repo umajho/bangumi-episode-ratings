@@ -6,7 +6,7 @@ import * as Middlewares from "../../middlewares/mod.ts";
 import { generateToken } from "../../utils.ts";
 import { UserID } from "../../types.ts";
 import { respondForAPI, respondWithError } from "../../responding.tsx";
-import env from "../../env.ts";
+import config from "../../config.ts";
 import * as Global from "../../global.ts";
 
 export const router = new Hono();
@@ -23,14 +23,13 @@ router.get(
 
     const gadgetVersion = ctx.req.query("gadget_version");
 
-    const url = new URL(
-      env.buildBGMURLOauthAuthorize(ctx.var.referrerHostname),
-    );
-    url.searchParams.set("client_id", env.BGM_APP_ID);
+    const url = config.bangumi.buildURLOauthAuthorize(ctx.var.referrerHostname);
+    url.searchParams.set("client_id", config.app.BGM_APP_ID);
     url.searchParams.set("response_type", "code");
     url.searchParams.set(
       "redirect_uri",
-      env.buildURLAuthorizationCallback(ENDPOINT_PATHS.AUTH.CALLBACK),
+      config.site.buildURLAuthorizationCallback(ENDPOINT_PATHS.AUTH.CALLBACK)
+        .toString(),
     );
     url.searchParams.set(
       "state",
@@ -56,12 +55,12 @@ router.get(
     const code = ctx.req.query("code")!;
 
     const data = await Global.bangumiClient.postToGetAccessToken({
-      clientID: env.BGM_APP_ID,
-      clientSecret: env.BGM_APP_SECRET,
+      clientID: config.app.BGM_APP_ID,
+      clientSecret: config.app.BGM_APP_SECRET,
       code,
-      redirectURI: env.buildURLAuthorizationCallback(
-        ENDPOINT_PATHS.AUTH.CALLBACK,
-      ),
+      redirectURI: config.site
+        .buildURLAuthorizationCallback(ENDPOINT_PATHS.AUTH.CALLBACK)
+        .toString(),
     });
 
     const userIDRaw = data["user_id"];
@@ -104,7 +103,7 @@ router.get(
     }
 
     const url = new URL(
-      env.BGM_PATH_GADGET_CONFIRM,
+      config.bangumi.PATH_GADGET_CONFIRMATION,
       ctx.var.referrerHostname,
     );
     url.searchParams.set("bgm_ep_ratings_token_coupon", userTokenCoupon);

@@ -2,7 +2,7 @@ import { Hono } from "jsr:@hono/hono";
 
 import * as Middlewares from "../../middlewares/mod.ts";
 import { respondForAPI } from "../../responding.tsx";
-import env from "../../env.ts";
+import config from "../../config.ts";
 
 import apiV1Router from "./v1/mod.ts";
 
@@ -20,7 +20,8 @@ router.all(
   async (ctx) => {
     const gadgetURL = new URL(
       "/dev/app/3263",
-      ctx.var.referrerHostname ?? `https://${env.VALID_BGM_HOSTNAMES[0]}`,
+      ctx.var.referrerHostname ??
+        `https://${config.bangumi.VALID_HOSTNAMES[0]}`,
     );
 
     return respondForAPI(ctx, [

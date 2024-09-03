@@ -3,7 +3,7 @@ import { logger } from "jsr:@hono/hono/logger";
 import { cors } from "jsr:@hono/hono/cors";
 import { compress } from "jsr:@hono/hono/compress";
 
-import env from "./src/env.ts";
+import config from "./src/config.ts";
 import router from "./src/routes/mod.ts";
 import ENDPOINT_PATHS from "./src/shared/endpoint-paths.ts";
 
@@ -11,9 +11,9 @@ const app = new Hono();
 
 app.use(logger());
 app.use(cors({
-  origin: env.CORS_ORIGINS,
-  allowHeaders: env.CORS_ALLOWED_HEADERS as unknown as string[],
-  allowMethods: env.CORS_ALLOWED_METHODS as unknown as string[],
+  origin: config.site.CORS_ORIGINS,
+  allowHeaders: config.site.cloneCorsAllowedHeaders(),
+  allowMethods: config.site.cloneCorsAllowedMethods(),
   credentials: true,
 }));
 app.use(compress());
@@ -23,7 +23,9 @@ app.route("/", router);
 const CORS_PREFLIGHT_BYPASS_FULL_PATH =
   `/${ENDPOINT_PATHS.CORS_PREFLIGHT_BYPASS}/`;
 
-Deno.serve(async (req) => {
+Deno.serve({
+  ...(config.site.PORT && { port: config.site.PORT }),
+}, async (req) => {
   const url = new URL(req.url);
   if (
     req.method === "POST" &&
@@ -53,7 +55,7 @@ async function rewriteRequestForCorsPreflightBypass(
 ): Promise<Request | null> {
   // 由于没了 preflight，无论是否通过 CORS，操作都会进行，所以这里提前确认
   // Origin，以防止未知的 Origin 去触发操作。
-  if (!env.CORS_ORIGINS.includes(opts.origin)) {
+  if (!config.site.CORS_ORIGINS.includes(opts.origin)) {
     console.warn(
       "rewriteRequestForCorsPreflightBypass",
       `未知 Origin：${opts.origin}`,
@@ -74,7 +76,7 @@ async function rewriteRequestForCorsPreflightBypass(
     return null;
   }
 
-  if (!(env.CORS_ALLOWED_METHODS as readonly string[]).includes(method)) {
+  if (!config.site.isCorsAllowedMethod(method)) {
     console.warn(
       "rewriteRequestForCorsPreflightBypass",
       `不支持的 Method：${method}`,
@@ -87,7 +89,7 @@ async function rewriteRequestForCorsPreflightBypass(
 
   const headers = new Headers(req.headers);
   for (const key of Object.keys(additionalHeaders)) {
-    if (!env.CORS_ALLOWED_HEADER_SET_LOWERED.has(key.toLowerCase())) {
+    if (!config.site.isCorsAllowedHeader(key)) {
       console.warn(
         "rewriteRequestForCorsPreflightBypass",
         `不支持的 Header：${key}`,

@@ -3,7 +3,7 @@ import { createMiddleware } from "jsr:@hono/hono/factory";
 
 import { UserID } from "../types.ts";
 import { respondWithError } from "../responding.tsx";
-import env from "../env.ts";
+import config from "../config.ts";
 import { Repo } from "../repo/mod.ts";
 
 export const setIsForAPI = () =>
@@ -54,7 +54,7 @@ export const referrers = () =>
   createMiddleware<{
     Variables: {
       referrerHostname:
-        | `https://${(typeof env.VALID_BGM_HOSTNAMES)[number]}`
+        | `https://${(typeof config.bangumi.VALID_HOSTNAMES)[number]}`
         | null;
     };
   }>(async (ctx, next) => {
@@ -63,7 +63,7 @@ export const referrers = () =>
     const referrer = ctx.req.header("Referer");
     if (referrer) {
       const hostname = (new URL(referrer)).hostname;
-      const validHostname = env.validateBgmHostname(hostname);
+      const validHostname = config.bangumi.validateHostname(hostname);
       if (!validHostname) {
         return respondWithError(
           ctx,

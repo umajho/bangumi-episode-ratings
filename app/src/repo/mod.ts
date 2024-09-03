@@ -1,6 +1,6 @@
 import { match, P } from "npm:ts-pattern";
 
-import env from "../env.ts";
+import config from "../config.ts";
 import {
   EpisodeID,
   EpisodeInfoData,
@@ -43,14 +43,14 @@ export class Repo {
   }
 
   async getUserResult(userID: UserID): Promise<Deno.KvEntryMaybe<UserData>> {
-    const key = env.buildKVKeyUser(userID);
+    const key = config.kv.buildKeyUser(userID);
     return await this.#kv.get<UserData>(key);
   }
 
   async getTokenEntryResult(
     token: string,
   ): Promise<Deno.KvEntryMaybe<TokenEntryData>> {
-    const key = env.buildKVKeyToken(token);
+    const key = config.kv.buildKeyToken(token);
     return await this.#kv.get<TokenEntryData>(key);
   }
   async getTokenEntry(token: string): Promise<TokenEntryData | null> {
@@ -83,7 +83,7 @@ export class Repo {
   async __getTokenCouponEntryResult(
     tokenCoupon: string,
   ): Promise<Deno.KvEntryMaybe<TokenCouponEntryData>> {
-    const key = env.buildKVKeyTokenCoupon(tokenCoupon);
+    const key = config.kv.buildKeyTokenCoupon(tokenCoupon);
     return await this.#kv.get<TokenCouponEntryData>(key);
   }
   async popTokenCouponEntryToken(tokenCoupon: string): Promise<string | null> {
@@ -111,14 +111,14 @@ export class Repo {
   async getEpisodeInfoResult(
     episodeID: EpisodeID,
   ): Promise<Deno.KvEntryMaybe<EpisodeInfoData>> {
-    const key = env.buildKVKeyEpisodeInfo(episodeID);
+    const key = config.kv.buildKeyEpisodeInfo(episodeID);
     return await this.#kv.get<EpisodeInfoData>(key);
   }
   async getEpisodeInfo(episodeID: EpisodeID): Promise<EpisodeInfoData | null> {
     return (await this.getEpisodeInfoResult(episodeID)).value;
   }
   async setEpisodeInfo(episodeID: EpisodeID, episodeInfo: EpisodeInfoData) {
-    const key = env.buildKVKeyEpisodeInfo(episodeID);
+    const key = config.kv.buildKeyEpisodeInfo(episodeID);
     let isOk = false;
     while (!isOk) {
       const result = await this.#kv.set(key, episodeInfo);
@@ -132,13 +132,13 @@ export class Repo {
     episodeID: EpisodeID,
   ): Promise<Deno.KvEntryMaybe<UserSubjectEpisodeRatingData>> {
     const key = //
-      env.buildKVKeyUserSubjectEpisodeRating(userID, subjectID, episodeID);
+      config.kv.buildKeyUserSubjectEpisodeRating(userID, subjectID, episodeID);
     return (await this.#kv.get<UserSubjectEpisodeRatingData>(key));
   }
 
   async getAllUserSubjectEpisodesRatings(userID: UserID, subjectID: SubjectID) {
-    const prefix = env
-      .buildKVPrefixUserSubjectEpisodeRating([userID, subjectID]);
+    const prefix = config.kv
+      .buildPrefixUserSubjectEpisodeRating([userID, subjectID]);
 
     const ratings: { [episodeID: number]: number } = {};
     for await (
@@ -160,7 +160,7 @@ export class Repo {
     subjectID: SubjectID,
     episodeID: EpisodeID,
   ) {
-    const prefix = env.buildKVPrefixSubjectEpisodeScoreVotes //
+    const prefix = config.kv.buildPrefixSubjectEpisodeScoreVotes //
     ([subjectID, episodeID]);
 
     const votes: { [score: number]: number } = {};
@@ -185,7 +185,7 @@ export class Repo {
   ) {
     const limit = opts?.limit ?? 1000;
 
-    const prefix = env.buildKVPrefixSubjectEpisodeScoreVotes([subjectID]);
+    const prefix = config.kv.buildPrefixSubjectEpisodeScoreVotes([subjectID]);
 
     const votesByScoreBySubject: {
       [episodeID: EpisodeID]: { [score: number]: number } | null;
@@ -234,7 +234,7 @@ export class Repo {
     const votersByScore: { [score: number]: UserID[] } = {};
     for await (
       const result of this.#kv.list({
-        prefix: env.buildKVPrefixSubjectEpisodeScorePublicVoters(
+        prefix: config.kv.buildPrefixSubjectEpisodeScorePublicVoters(
           [subjectID, episodeID],
         ),
       })
@@ -266,18 +266,18 @@ export class RepoTransaction {
   }
 
   setUser(userID: UserID, user: UserData, check: Deno.KvEntryMaybe<UserData>) {
-    const key = env.buildKVKeyUser(userID);
+    const key = config.kv.buildKeyUser(userID);
     this.#tx = this.#tx
       .check(check)
       .set(key, user);
   }
 
   setTokenEntry(token: string, tokenEntry: TokenEntryData) {
-    const key = env.buildKVKeyToken(token);
+    const key = config.kv.buildKeyToken(token);
     this.#tx = this.#tx.set(key, tokenEntry);
   }
   deleteTokenEntry(token: string) {
-    const key = env.buildKVKeyToken(token);
+    const key = config.kv.buildKeyToken(token);
     this.#tx = this.#tx.delete(key);
   }
 
@@ -287,7 +287,7 @@ export class RepoTransaction {
   }) {
     opts.expiresInMs ??= 1000 * 10; // 10 秒。
 
-    const key = env.buildKVKeyTokenCoupon(tokenCoupon);
+    const key = config.kv.buildKeyTokenCoupon(tokenCoupon);
 
     const data: TokenCouponEntryData = {
       token: opts.token,
@@ -299,7 +299,7 @@ export class RepoTransaction {
     tokenCoupon: string,
     check: Deno.KvEntryMaybe<TokenCouponEntryData>,
   ) {
-    const key = env.buildKVKeyTokenCoupon(tokenCoupon);
+    const key = config.kv.buildKeyTokenCoupon(tokenCoupon);
     this.#tx = this.#tx
       .check(check)
       .delete(key);
@@ -313,7 +313,7 @@ export class RepoTransaction {
     check: Deno.KvEntryMaybe<UserSubjectEpisodeRatingData>,
   ) {
     const key = //
-      env.buildKVKeyUserSubjectEpisodeRating(userID, subjectID, episodeID);
+      config.kv.buildKeyUserSubjectEpisodeRating(userID, subjectID, episodeID);
     this.#tx = this.#tx
       .check(check)
       .set(key, rating);
@@ -324,7 +324,7 @@ export class RepoTransaction {
     episodeID: EpisodeID,
     score: number,
   ) {
-    const key = env.buildKVKeySubjectEpisodeScoreVotes //
+    const key = config.kv.buildKeySubjectEpisodeScoreVotes //
     (subjectID, episodeID, score);
     this.#tx = this.#tx.sum(key, 1n);
   }
@@ -333,7 +333,7 @@ export class RepoTransaction {
     episodeID: EpisodeID,
     score: number,
   ) {
-    const key = env.buildKVKeySubjectEpisodeScoreVotes //
+    const key = config.kv.buildKeySubjectEpisodeScoreVotes //
     (subjectID, episodeID, score);
     this.#tx = KVUtils.sumFreely(this.#tx, key, -1n);
   }
@@ -344,7 +344,7 @@ export class RepoTransaction {
     score: number,
     voterUserID: UserID,
   ) {
-    const key = env.buildKVKeySubjectEpisodeScorePublicVoters //
+    const key = config.kv.buildKeySubjectEpisodeScorePublicVoters //
     (subjectID, episodeID, score, voterUserID);
     this.#tx = this.#tx.set(key, 1);
   }
@@ -354,7 +354,7 @@ export class RepoTransaction {
     score: number,
     voterUserID: UserID,
   ) {
-    const key = env.buildKVKeySubjectEpisodeScorePublicVoters //
+    const key = config.kv.buildKeySubjectEpisodeScorePublicVoters //
     (subjectID, episodeID, score, voterUserID);
     this.#tx = this.#tx.delete(key);
   }
