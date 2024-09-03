@@ -76,12 +76,12 @@ export function renderMyRating(
       }
       case "processing": {
         messageEl.text("处理中…");
-        messageEl.css("color", "gray");
+        messageEl.css("color", "grey");
         break;
       }
       case "loading": {
         messageEl.text("加载中…");
-        messageEl.css("color", "gray");
+        messageEl.css("color", "grey");
         break;
       }
       case "error": {

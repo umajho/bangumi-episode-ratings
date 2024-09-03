@@ -38,7 +38,7 @@ export function processCluetip() {
     }
 
     const loadingEl = $(/*html*/ `
-      <div class="grey">
+      <div style="color: grey">
         单集评分加载中…
       </div>
     `).insertBefore(

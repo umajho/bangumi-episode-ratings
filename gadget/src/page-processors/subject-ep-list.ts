@@ -15,11 +15,10 @@ export async function processSubjectEpListPage() {
     $(/*html*/ `<div class="clear"></div>`).insertAfter($(li).find("h6"));
 
     loadingEl = $(/*html*/ `
-      <div class="__bgm-ep-ratings-loading grey" style="float: right;">
+      <div style="color: grey; float: right;">
         单集评分加载中…
       </div>
-    `);
-    $(li).append(loadingEl);
+    `).appendTo(li);
 
     return false;
   });

@@ -81,7 +81,7 @@ export function renderVisibilityButton(
       }
       case "processing": {
         messageEl.text("处理中…");
-        messageEl.css("color", "gray");
+        messageEl.css("color", "grey");
         break;
       }
       case "error": {

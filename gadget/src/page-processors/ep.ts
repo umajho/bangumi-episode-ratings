@@ -11,7 +11,7 @@ import { renderMyRatingInComment } from "../components/MyRatingInComment";
 
 export async function processEpPage() {
   const scoreboardEl = $(/*html*/ `
-    <div class="grey" style="float: right;">
+    <div style="color: grey; float: right;">
       单集评分加载中…
     </div>
   `);
