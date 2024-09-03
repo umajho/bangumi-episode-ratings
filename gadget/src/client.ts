@@ -15,16 +15,19 @@ import {
 import ENDPOINT_PATHS from "./shared/endpoint-paths";
 
 export class Client {
-  public readonly entrypoint: string;
+  public readonly authEntrypoint: string;
+  public readonly apiEntrypoint: string;
   public token: string | null;
 
   constructor(
     opts: {
-      entrypoint: string;
+      authEntrypoint: string;
+      apiEntrypoint: string;
       token: string | null;
     },
   ) {
-    this.entrypoint = opts.entrypoint;
+    this.authEntrypoint = opts.authEntrypoint;
+    this.apiEntrypoint = opts.apiEntrypoint;
     this.token = opts.token;
   }
 
@@ -233,7 +236,19 @@ export class Client {
     group: "auth" | "api/v1",
     endpointPath: string,
   ): string {
-    return join(join(this.entrypoint, group + "/"), endpointPath);
+    const entrypoint = ((): string => {
+      switch (group) {
+        case "auth":
+          return this.authEntrypoint;
+        case "api/v1":
+          return this.apiEntrypoint + "v1/";
+        default:
+          group satisfies never;
+          throw new Error("unreachable");
+      }
+    })();
+
+    return join(entrypoint, endpointPath);
   }
 
   private async fetchJWT(): Promise<APIResponse<string>> {

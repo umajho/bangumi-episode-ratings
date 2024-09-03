@@ -1,6 +1,9 @@
 const env = {
-  get APP_ENTRYPOINT(): string {
-    return import.meta.env.VITE_APP_ENTRYPOINT_URL;
+  get APP_AUTH_ENTRYPOINT(): string {
+    return import.meta.env.VITE_APP_AUTH_ENTRYPOINT_URL;
+  },
+  get APP_API_ENTRYPOINT(): string {
+    return import.meta.env.VITE_APP_API_ENTRYPOINT_URL;
   },
 
   LOCAL_STORAGE_KEY_TOKEN: "bgm_ep_ratings_token",

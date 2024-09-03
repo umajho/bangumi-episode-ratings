@@ -56,7 +56,8 @@ function makeGlobal() {
   });
 
   const client = new Client({
-    entrypoint: env.APP_ENTRYPOINT,
+    authEntrypoint: env.APP_AUTH_ENTRYPOINT,
+    apiEntrypoint: env.APP_API_ENTRYPOINT,
     token: token.getValueOnce(),
   });
 
