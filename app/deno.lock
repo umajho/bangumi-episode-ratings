@@ -4,6 +4,7 @@
     "specifiers": {
       "jsr:@c4spar/mock-fetch": "jsr:@c4spar/mock-fetch@1.0.0",
       "jsr:@hono/hono": "jsr:@hono/hono@4.5.10",
+      "jsr:@kitsonk/kv-toolbox": "jsr:@kitsonk/kv-toolbox@0.18.0",
       "jsr:@oak/commons@0.7": "jsr:@oak/commons@0.7.0",
       "jsr:@oak/oak@14": "jsr:@oak/oak@14.2.0",
       "jsr:@std/assert@0.218": "jsr:@std/assert@0.218.2",
@@ -11,9 +12,11 @@
       "jsr:@std/assert@^1.0.3": "jsr:@std/assert@1.0.3",
       "jsr:@std/assert@~0.225.2": "jsr:@std/assert@0.225.3",
       "jsr:@std/bytes@0.218": "jsr:@std/bytes@0.218.2",
+      "jsr:@std/bytes@0.224": "jsr:@std/bytes@0.224.0",
       "jsr:@std/bytes@^0.218.2": "jsr:@std/bytes@0.218.2",
       "jsr:@std/crypto@0.218": "jsr:@std/crypto@0.218.2",
       "jsr:@std/encoding@0.218": "jsr:@std/encoding@0.218.2",
+      "jsr:@std/encoding@0.224": "jsr:@std/encoding@0.224.3",
       "jsr:@std/encoding@^0.218.2": "jsr:@std/encoding@0.218.2",
       "jsr:@std/expect": "jsr:@std/expect@1.0.1",
       "jsr:@std/http@0.218": "jsr:@std/http@0.218.2",
@@ -43,6 +46,13 @@
       },
       "@hono/hono@4.5.10": {
         "integrity": "801fe47e233b53480322f7a17c621ceb5e9b4335e5fdc14cfc0c7696e8396c34"
+      },
+      "@kitsonk/kv-toolbox@0.18.0": {
+        "integrity": "d967643e2b946b46579c230f52aaa74a114d0f45d7ea5b29d0bd67765c570e43",
+        "dependencies": [
+          "jsr:@std/bytes@0.224",
+          "jsr:@std/encoding@0.224"
+        ]
       },
       "@oak/commons@0.7.0": {
         "integrity": "4bd889b3dc9ddac1b602034d88c137f06de7078775961b51081beb5f175c120b",
@@ -81,6 +91,9 @@
       "@std/bytes@0.218.2": {
         "integrity": "91fe54b232dcca73856b79a817247f4a651dbb60d51baafafb6408c137241670"
       },
+      "@std/bytes@0.224.0": {
+        "integrity": "a2250e1d0eb7d1c5a426f21267ab9bdeac2447fa87a3d0d1a467d3f7a6058e49"
+      },
       "@std/crypto@0.218.2": {
         "integrity": "8c5031a3a1c3ac3bed3c0d4bed2fe7e7faedcb673bbfa0edd10570c8452f5cd2",
         "dependencies": [
@@ -90,6 +103,9 @@
       },
       "@std/encoding@0.218.2": {
         "integrity": "da55a763c29bf0dbf06fd286430b358266eb99c28789d89fe9a3e28edecb8d8e"
+      },
+      "@std/encoding@0.224.3": {
+        "integrity": "5e861b6d81be5359fad4155e591acf17c0207b595112d1840998bb9f476dbdaf"
       },
       "@std/expect@1.0.1": {
         "integrity": "44075d9c2cb701ddfc4d5a260da2fb26ba3cfd94c45d3a0359f63cabbf85a058",
