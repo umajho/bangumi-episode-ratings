@@ -10,8 +10,6 @@ $(window).on("beforeunload", () => {
 });
 
 export function processCluetip() {
-  const el = $("#cluetip");
-
   let counter = 0;
 
   const revealed: { [key: string]: boolean } = {};
@@ -19,6 +17,12 @@ export function processCluetip() {
   async function update(
     opts: { subjectID: number; episodeID: number; hasUserWatched: boolean },
   ) {
+    // XXX: 也不知道什么原因，如果把获取 `el` 的地方放到 update 函数外，执行
+    // update 函数时 `el` 是有可能已经不在文档的 DOM 上的。估计是在这期间有什么
+    // 其他脚本直接动了 `innerHTML`，导致 `el` 不再是表面上的 `#cluetip`。不管怎
+    // 样，看起来只要把获取 `el` 的地方放到这里就能解决问题了。
+    const el = $("#cluetip");
+
     const popupEl = $(el).find(".prg_popup");
     if (popupEl.attr("data-bgm-ep-ratings-initialized")) return;
     popupEl.attr("data-bgm-ep-ratings-initialized", "true");
