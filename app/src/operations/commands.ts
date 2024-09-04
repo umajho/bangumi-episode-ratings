@@ -2,16 +2,16 @@ import {
   APIResponse,
   ChangeUserEpisodeRatingVisibilityResponseData,
   RateEpisodeResponseData,
-} from "../shared/dto.ts";
+} from "@/shared/dto.ts";
 import {
   EpisodeID,
   SubjectID,
   UserID,
   UserSubjectEpisodeRatingData,
-} from "../types.ts";
-import { APIErrorResponse } from "../shared/dto.ts";
-import { Repo } from "../repo/mod.ts";
-import { BangumiClient } from "../bangumi-client.ts";
+} from "@/types.ts";
+import { APIErrorResponse } from "@/shared/dto.ts";
+import { Repo } from "@/repo/mod.ts";
+import { BangumiClient } from "@/bangumi-client.ts";
 
 export async function rateEpisode(
   repo: Repo,

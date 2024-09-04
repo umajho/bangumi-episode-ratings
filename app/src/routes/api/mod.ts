@@ -1,8 +1,8 @@
 import { Hono } from "jsr:@hono/hono";
 
-import * as Middlewares from "../../middlewares/mod.ts";
-import { respondForAPI } from "../../responding.tsx";
-import config from "../../config.ts";
+import * as Middlewares from "@/middlewares/mod.ts";
+import { respondForAPI } from "@/responding.tsx";
+import config from "@/config.ts";
 
 import apiV1Router from "./v1/mod.ts";
 

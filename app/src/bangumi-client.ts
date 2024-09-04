@@ -1,5 +1,5 @@
-import config from "./config.ts";
-import { EpisodeID } from "./types.ts";
+import config from "@/config.ts";
+import { EpisodeID } from "@/types.ts";
 
 type BangumiAPIResponse<T> =
   | ["ok", T]

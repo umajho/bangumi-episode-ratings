@@ -3,10 +3,10 @@ import { createMiddleware } from "jsr:@hono/hono/factory";
 
 import * as Djwt from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
-import { UserID } from "../types.ts";
-import { respondWithError } from "../responding.tsx";
-import config from "../config.ts";
-import { Repo } from "../repo/mod.ts";
+import { UserID } from "@/types.ts";
+import { respondWithError } from "@/responding.tsx";
+import config from "@/config.ts";
+import { Repo } from "@/repo/mod.ts";
 
 export const setIsForAPI = () =>
   createMiddleware<{

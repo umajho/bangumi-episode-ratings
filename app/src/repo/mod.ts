@@ -1,6 +1,6 @@
 import { match, P } from "npm:ts-pattern";
 
-import config from "../config.ts";
+import config from "@/config.ts";
 import {
   EpisodeID,
   EpisodeInfoData,
@@ -10,7 +10,8 @@ import {
   UserData,
   UserID,
   UserSubjectEpisodeRatingData,
-} from "../types.ts";
+} from "@/types.ts";
+
 import * as KVUtils from "./utils.ts";
 
 export class Repo {

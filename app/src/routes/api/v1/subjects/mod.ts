@@ -1,11 +1,11 @@
 import { Hono } from "jsr:@hono/hono";
 
-import * as Middlewares from "../../../../middlewares/mod.ts";
-import { SubjectID } from "../../../../types.ts";
-import { tryExtractNumberFromCTXParams } from "../../utils.ts";
-import { respondForAPI } from "../../../../responding.tsx";
-import * as Queries from "../../../../operations/queries.ts";
-import * as Global from "../../../../global.ts";
+import * as Middlewares from "@/middlewares/mod.ts";
+import { SubjectID } from "@/types.ts";
+import { tryExtractNumberFromCTXParams } from "@/routes/api/utils.ts";
+import { respondForAPI } from "@/responding.tsx";
+import * as Queries from "@/operations/queries.ts";
+import * as Global from "@/global.ts";
 
 import episodesRouter from "./episodes.ts";
 

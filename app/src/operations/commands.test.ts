@@ -3,12 +3,11 @@ import { expect } from "jsr:@std/expect";
 
 import { mockFetch, resetFetch } from "jsr:@c4spar/mock-fetch";
 
-import { EpisodeID, SubjectID, UserID } from "../types.ts";
-import { Repo } from "../repo/mod.ts";
-import { BangumiClient } from "../bangumi-client.ts";
+import { EpisodeID, SubjectID, UserID } from "@/types.ts";
+import { Repo } from "@/repo/mod.ts";
+import { BangumiClient } from "@/bangumi-client.ts";
 
-import { rateEpisode } from "./commands.ts";
-import { changeUserEpisodeRatingVisibility } from "./commands.ts";
+import { changeUserEpisodeRatingVisibility, rateEpisode } from "./commands.ts";
 
 const U1 = 11 as UserID, U2 = 12 as UserID;
 const T1 = "TA", T2 = "TB";

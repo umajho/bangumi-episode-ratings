@@ -1,6 +1,6 @@
 import { Hono } from "jsr:@hono/hono";
 
-import config from "../config.ts";
+import config from "@/config.ts";
 
 import authRouter from "./auth/mod.ts";
 import apiRouter from "./api/mod.ts";

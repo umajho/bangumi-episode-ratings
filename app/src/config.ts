@@ -1,5 +1,5 @@
-import { ReverseMap } from "./type-utils.ts";
-import { EpisodeID, SubjectID, UserID } from "./types.ts";
+import { ReverseMap } from "@/type-utils.ts";
+import { EpisodeID, SubjectID, UserID } from "@/types.ts";
 
 const HARD_CODED = {
   CORS_ALLOWED_METHODS: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

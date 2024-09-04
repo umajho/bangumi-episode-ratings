@@ -3,7 +3,7 @@ import { expect } from "jsr:@std/expect";
 // @deno-types="npm:@types/sinonjs__fake-timers"
 import FakeTimers from "npm:@sinonjs/fake-timers";
 
-import { EpisodeID, SubjectID, UserID } from "../types.ts";
+import { EpisodeID, SubjectID, UserID } from "@/types.ts";
 
 import { Repo } from "./mod.ts";
 

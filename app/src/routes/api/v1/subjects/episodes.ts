@@ -1,13 +1,14 @@
 import { Hono } from "jsr:@hono/hono";
 
-import * as Middlewares from "../../../../middlewares/mod.ts";
-import { EpisodeID, SubjectID } from "../../../../types.ts";
-import { tryExtractNumberFromCTXParams } from "../../utils.ts";
-import { respondForAPI } from "../../../../responding.tsx";
-import * as Commands from "../../../../operations/commands.ts";
-import * as Queries from "../../../../operations/queries.ts";
-import { RateEpisodeRequestData__V1 } from "../../../../shared/dto.ts";
-import * as Global from "../../../../global.ts";
+import * as Middlewares from "@/middlewares/mod.ts";
+import { EpisodeID, SubjectID } from "@/types.ts";
+import { respondForAPI } from "@/responding.tsx";
+import * as Commands from "@/operations/commands.ts";
+import * as Queries from "@/operations/queries.ts";
+import { RateEpisodeRequestData__V1 } from "@/shared/dto.ts";
+import * as Global from "@/global.ts";
+
+import { tryExtractNumberFromCTXParams } from "@/routes/api/utils.ts";
 
 export const router = new Hono();
 export default router;

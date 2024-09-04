@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer";
 
-import { UserID } from "./types.ts";
+import { UserID } from "@/types.ts";
 
 export function generateToken(userID: UserID): string {
   const prefix = (() => { // see: https://stackoverflow.com/a/78574144

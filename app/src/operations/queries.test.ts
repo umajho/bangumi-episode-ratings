@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, it } from "jsr:@std/testing/bdd";
 import { expect } from "jsr:@std/expect/expect";
 
-import { EpisodeID, SubjectID, UserID } from "../types.ts";
-import { Repo } from "../repo/mod.ts";
+import { EpisodeID, SubjectID, UserID } from "@/types.ts";
+import { Repo } from "@/repo/mod.ts";
+
 import {
   queryEpisodeMyRating,
   queryEpisodePublicRatings,

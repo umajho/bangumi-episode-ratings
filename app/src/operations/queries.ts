@@ -1,13 +1,13 @@
-import { Repo } from "../repo/mod.ts";
-import { GetEpisodeRatingsResponseData__Until_0_3_0 } from "../shared/dto.ts";
+import { Repo } from "@/repo/mod.ts";
+import { GetEpisodeRatingsResponseData__Until_0_3_0 } from "@/shared/dto.ts";
 import {
   APIResponse,
   GetEpisodePublicRatingsResponseData,
   GetEpisodeRatingsResponseData,
   GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
-} from "../shared/dto.ts";
-import { EpisodeID, SubjectID, UserID } from "../types.ts";
+} from "@/shared/dto.ts";
+import { EpisodeID, SubjectID, UserID } from "@/types.ts";
 
 export async function querySubjectEpisodesRatings(
   repo: Repo,

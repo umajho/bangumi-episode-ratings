@@ -2,14 +2,14 @@ import { Hono } from "jsr:@hono/hono";
 
 import * as Djwt from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
-import ENDPOINT_PATHS from "../../shared/endpoint-paths.ts";
+import ENDPOINT_PATHS from "@/shared/endpoint-paths.ts";
 
-import * as Middlewares from "../../middlewares/mod.ts";
-import { generateToken } from "../../utils.ts";
-import { UserID } from "../../types.ts";
-import { respondForAPI, respondWithError } from "../../responding.tsx";
-import config from "../../config.ts";
-import * as Global from "../../global.ts";
+import * as Middlewares from "@/middlewares/mod.ts";
+import { generateToken } from "@/utils.ts";
+import { UserID } from "@/types.ts";
+import { respondForAPI, respondWithError } from "@/responding.tsx";
+import config from "@/config.ts";
+import * as Global from "@/global.ts";
 
 export const router = new Hono();
 export default router;
