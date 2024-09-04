@@ -1,0 +1,33 @@
+services:
+  app:
+    build: ../..
+    #image: umajho/bangumi-episode-ratings
+    container_name: bangumi-episode-ratings
+    ports:
+      - "8000:80"
+    volumes:
+      - ./data:/data
+    environment:
+      KV_PATH: /data/kv.s3db
+      AUTH_ROUTE_MODE: '["off"]'
+      API_ROUTE_MODE: '["normal"]'
+      ENTRYPOINT_URL: https://localhost:8000
+      PORT: 80
+      BGM_APP_ID: _
+      BGM_APP_SECRET: _
+      USER_AGENT_FILE: /run/secrets/USER_AGENT
+      BGM_HOMEPAGE_URL: https://bangumi.tv/
+      JWT_SIGNING_KEY_JWK_FILE: /run/secrets/JWT_SIGNING_KEY_JWK
+      JWT_VERIFYING_KEY_JWK_FILE: /run/secrets/JWT_VERIFYING_KEY_JWK
+    secrets:
+      - USER_AGENT
+      - JWT_SIGNING_KEY_JWK
+      - JWT_VERIFYING_KEY_JWK
+
+secrets:
+  USER_AGENT:
+    file: ./secrets/USER_AGENT.txt
+  JWT_SIGNING_KEY_JWK:
+    file: ./secrets/JWT_SIGNING_KEY_JWK.json
+  JWT_VERIFYING_KEY_JWK:
+    file: ./secrets/JWT_VERIFYING_KEY_JWK.json

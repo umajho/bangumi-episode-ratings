@@ -40,6 +40,8 @@ const AUTH_ROUTE_MODE = JSON
     .parse(mustGetEnv("API_ROUTE_MODE")) as APIRouteMode;
 
 const ENV = {
+  KV_PATH: Deno.env.get("KV_PATH") ?? null,
+
   AUTH_ROUTE_MODE,
   API_ROUTE_MODE,
 
@@ -65,14 +67,29 @@ const ENV = {
     .exhaustive(),
 };
 function mustGetEnv(name: string): string {
+  {
+    const value = getEnvByFile(name);
+    if (value) return value;
+  }
+
   const value = Deno.env.get(name);
   if (!value) throw new Error(`缺失环境变量 “${name}”！`);
   return value;
 }
 function getEnvAndThen<T>(name: string, mapFn: (value: string) => T): T | null {
+  {
+    const value = getEnvByFile(name);
+    if (value) return mapFn(value);
+  }
+
   const value = Deno.env.get(name);
   if (value === undefined) return null;
   return mapFn(value);
+}
+function getEnvByFile(name: string): string | null {
+  const filePath = Deno.env.get(`${name}_FILE`);
+  if (!filePath) return null;
+  return Deno.readTextFileSync(filePath);
 }
 
 class AppConfigManager {
@@ -80,6 +97,10 @@ class AppConfigManager {
     private readonly env: typeof ENV,
     private readonly hardCoded: typeof HARD_CODED,
   ) {}
+
+  get KV_PATH() {
+    return this.env.KV_PATH;
+  }
 
   get AUTH_ROUTE_MODE() {
     return this.env.AUTH_ROUTE_MODE;

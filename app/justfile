@@ -3,3 +3,9 @@ test *args:
 
 deploy * args:
 	deployctl deploy --prod --import-map=import_map.json {{args}}
+
+docker-build:
+	docker build -t umajho/bangumi-episode-ratings .
+
+docker-push:
+	docker image push umajho/bangumi-episode-ratings:latest

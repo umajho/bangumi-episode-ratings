@@ -21,8 +21,8 @@ export class Repo {
     this.#kv = kv;
   }
 
-  static async open() {
-    const kv = await Deno.openKv();
+  static async open(path?: string) {
+    const kv = await Deno.openKv(path);
     return new Repo(kv);
   }
 
