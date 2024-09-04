@@ -1,5 +1,13 @@
+import { match } from "npm:ts-pattern";
+
 import { ReverseMap } from "@/type-utils.ts";
-import { EpisodeID, SubjectID, UserID } from "@/types.ts";
+import {
+  APIRouteMode,
+  AuthRouteMode,
+  EpisodeID,
+  SubjectID,
+  UserID,
+} from "@/types.ts";
 
 const HARD_CODED = {
   CORS_ALLOWED_METHODS: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -26,7 +34,15 @@ const HARD_CODED = {
   },
 } as const;
 
+const AUTH_ROUTE_MODE = JSON
+    .parse(mustGetEnv("AUTH_ROUTE_MODE")) as AuthRouteMode,
+  API_ROUTE_MODE = JSON
+    .parse(mustGetEnv("API_ROUTE_MODE")) as APIRouteMode;
+
 const ENV = {
+  AUTH_ROUTE_MODE,
+  API_ROUTE_MODE,
+
   ENTRYPOINT_URL: new URL(mustGetEnv("ENTRYPOINT_URL")),
   PORT: getEnvAndThen("PORT", (port) => Number(port)),
 
@@ -40,9 +56,12 @@ const ENV = {
   JWT_SIGNING_KEY_JWK: getEnvAndThen("JWT_SIGNING_KEY_JWK", JSON.parse) as
     | JsonWebKey
     | null,
-  JWT_VERIFYING_KEY_JWK: JSON.parse(
-    mustGetEnv("JWT_VERIFYING_KEY_JWK"),
-  ) as JsonWebKey,
+  JWT_VERIFYING_KEY_JWK: match(API_ROUTE_MODE)
+    .with(
+      ["normal"],
+      () => JSON.parse(mustGetEnv("JWT_VERIFYING_KEY_JWK")) as JsonWebKey,
+    )
+    .otherwise(() => null),
 };
 function mustGetEnv(name: string): string {
   const value = Deno.env.get(name);
@@ -60,6 +79,13 @@ class AppConfigManager {
     private readonly env: typeof ENV,
     private readonly hardCoded: typeof HARD_CODED,
   ) {}
+
+  get AUTH_ROUTE_MODE() {
+    return this.env.AUTH_ROUTE_MODE;
+  }
+  get API_ROUTE_MODE() {
+    return this.env.API_ROUTE_MODE;
+  }
 
   get BGM_APP_ID() {
     return this.env.BGM_APP_ID;
@@ -94,9 +120,14 @@ class AppConfigManager {
   }
 
   #jwtVerifyingKeyCache: CryptoKey | Promise<CryptoKey> | null = null;
+  /**
+   * XXX: 仅应该在正常的 `/api/*` 中使用。
+   */
   getJwtVerifyingKey(): CryptoKey | Promise<CryptoKey> {
     if (this.#jwtVerifyingKeyCache) return this.#jwtVerifyingKeyCache;
     const jwk = this.env.JWT_VERIFYING_KEY_JWK;
+    // 除非写错，否则只有在 `API_ROUTE_MODE` 为 `"normal"` 时才会调用此方法。
+    if (!jwk) throw new Error("unreachable!");
     return this.#jwtVerifyingKeyCache = crypto.subtle.importKey(
       "jwk",
       jwk,

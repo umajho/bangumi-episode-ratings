@@ -3,6 +3,15 @@ export type UserID = number & { readonly __tag: unique symbol };
 export type SubjectID = number & { readonly __tag: unique symbol };
 export type EpisodeID = number & { readonly __tag: unique symbol };
 
+export type AuthRouteMode =
+  | ["normal"]
+  | ["off"];
+
+export type APIRouteMode =
+  | ["normal"]
+  | [type: "maintenance", message: string]
+  | [type: "forward", newEntrypoint: URL];
+
 export interface UserData {
   tokens: string[];
 }
