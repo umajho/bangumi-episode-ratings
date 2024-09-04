@@ -1,4 +1,4 @@
-import { match } from "npm:ts-pattern";
+import { match, P } from "npm:ts-pattern";
 
 import { ReverseMap } from "@/type-utils.ts";
 import {
@@ -61,7 +61,8 @@ const ENV = {
       ["normal"],
       () => JSON.parse(mustGetEnv("JWT_VERIFYING_KEY_JWK")) as JsonWebKey,
     )
-    .otherwise(() => null),
+    .with(P.union(["maintenance", P._], ["forward", P._]), () => null)
+    .exhaustive(),
 };
 function mustGetEnv(name: string): string {
   const value = Deno.env.get(name);
