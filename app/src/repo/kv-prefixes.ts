@@ -55,7 +55,7 @@ export default {
     ] as const;
   },
   buildPrefixUserSubjectEpisodeRating(
-    subKey: [userID: UserID, subjectID: SubjectID],
+    subKey: [] | [userID: UserID, subjectID: SubjectID],
   ) {
     return [KV_PREFIXES["ratings/:u/:s/:e"], ...subKey] as const;
   },
@@ -99,5 +99,15 @@ export default {
       KV_PREFIXES["public-voter-marks/:s/:e/:sc/:u"],
       ...subKey,
     ] as const;
+  },
+  buildKeyUserTimelineItem(userID: UserID, timestampMs: number) {
+    return [
+      KV_PREFIXES["user-timeline-items/:u/:ts"],
+      userID,
+      timestampMs,
+    ] as const;
+  },
+  buildPrefixUserTimelineItem(subKey: [userID: UserID]) {
+    return [KV_PREFIXES["user-timeline-items/:u/:ts"], ...subKey] as const;
   },
 };

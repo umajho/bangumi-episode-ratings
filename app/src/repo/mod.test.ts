@@ -215,7 +215,6 @@ describe("class Repo", () => {
         tx.setUserEpisodeRating(U, S, E, {
           score,
           submittedAtMs,
-          history: [],
         }, oldResult);
       });
       expect(result.ok).toBe(true);
@@ -250,7 +249,6 @@ describe("class Repo", () => {
         expect(oldResult.value).toEqual({
           score: 7,
           submittedAtMs: firstSubmittedAtMs,
-          history: [],
         });
 
         const secondSubmittedAtMs = firstSubmittedAtMs + 1000;
@@ -258,7 +256,6 @@ describe("class Repo", () => {
           tx.setUserEpisodeRating(U1, S1, S1E1, {
             score: null,
             submittedAtMs: secondSubmittedAtMs,
-            history: [{ score: 7, submittedAtMs: firstSubmittedAtMs }],
           }, oldResult);
         });
         expect(result.ok).toBe(true);
@@ -268,7 +265,6 @@ describe("class Repo", () => {
         ).toEqual({
           score: null,
           submittedAtMs: secondSubmittedAtMs,
-          history: [{ score: 7, submittedAtMs: firstSubmittedAtMs }],
         });
       }
 
@@ -391,6 +387,64 @@ describe("class Repo", () => {
         expect(result.ok).toBe(true);
         expect(await repo.getAllEpisodePublicVotersGroupedByScore(S1, S1E1))
           .toEqual({ 7: [U2] });
+      }
+    });
+  });
+
+  describe("UserTimelineItem", () => {
+    const TS1 = Date.now(),
+      TS2 = TS1 + 1000,
+      TS3 = TS2 + 1000,
+      TS4 = TS3 + 1000;
+
+    it("works", async () => {
+      const result = await repo.tx((tx) => {
+        tx.insertUserTimelineItem(U1, TS1, ["rate-episode", {
+          episodeID: S1E1,
+          score: 7,
+        }]);
+        tx.insertUserTimelineItem(U1, TS2, ["rate-episode", {
+          episodeID: S1E2,
+          score: 8,
+        }]);
+        tx.insertUserTimelineItem(U2, TS3, ["rate-episode", {
+          episodeID: S1E1,
+          score: 6,
+        }]);
+        tx.insertUserTimelineItem(U1, TS4, ["rate-episode", {
+          episodeID: S1E1,
+          score: null,
+        }]);
+      });
+      expect(result.ok).toBe(true);
+      expect(await repo.getAllUserTimelineItems(U1)).toEqual([
+        [TS1, "rate-episode", { episodeID: S1E1, score: 7 }],
+        [TS2, "rate-episode", { episodeID: S1E2, score: 8 }],
+        [TS4, "rate-episode", { episodeID: S1E1, score: null }],
+      ]);
+      expect(await repo.getAllUserTimelineItems(U2)).toEqual([
+        [TS3, "rate-episode", { episodeID: S1E1, score: 6 }],
+      ]);
+    });
+
+    it("在用户、时间都相同时失败", async () => {
+      {
+        const result = await repo.tx((tx) => {
+          tx.insertUserTimelineItem(U1, TS1, ["rate-episode", {
+            episodeID: S1E1,
+            score: 7,
+          }]);
+        });
+        expect(result.ok).toBe(true);
+      }
+      {
+        const result = await repo.tx((tx) => {
+          tx.insertUserTimelineItem(U1, TS1, ["rate-episode", {
+            episodeID: S1E1,
+            score: null,
+          }]);
+        });
+        expect(result.ok).toBe(false);
       }
     });
   });

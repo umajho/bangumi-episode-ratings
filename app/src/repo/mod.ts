@@ -9,6 +9,7 @@ import {
   UserData,
   UserID,
   UserSubjectEpisodeRatingData,
+  UserTimelineItem,
 } from "@/types.ts";
 
 import * as KVUtils from "./utils.ts";
@@ -249,6 +250,22 @@ export class Repo {
 
     return votersByScore;
   }
+
+  /**
+   * 获取指定用户的时间线 items。
+   */
+  async getAllUserTimelineItems(userID: UserID) {
+    const items: [timestampMs: number, ...rest: UserTimelineItem][] = [];
+    for await (
+      const result of this.#kv.list<UserTimelineItem>(
+        { prefix: kvPrefixes.buildPrefixUserTimelineItem([userID]) },
+      )
+    ) {
+      items.push([result.key.at(-1) as number, ...result.value]);
+    }
+
+    return items;
+  }
 }
 
 export class RepoTransaction {
@@ -358,5 +375,21 @@ export class RepoTransaction {
     const key = kvPrefixes.buildKeySubjectEpisodeScorePublicVoters //
     (subjectID, episodeID, score, voterUserID);
     this.#tx = this.#tx.delete(key);
+  }
+
+  /**
+   * 插入一项用户时间线 item。
+   *
+   * 只有在 key 对应的位置原先不存在值时成功。
+   */
+  insertUserTimelineItem(
+    userID: UserID,
+    timestampMs: number,
+    item: UserTimelineItem,
+  ) {
+    const key = kvPrefixes.buildKeyUserTimelineItem(userID, timestampMs);
+    this.#tx = this.#tx
+      .check({ key, versionstamp: null })
+      .set(key, item);
   }
 }

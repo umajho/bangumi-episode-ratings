@@ -63,12 +63,19 @@ describe("function rateEpisode", () => {
         // 槽数为 0，则视为尚未设置可见性？
         visibility: null,
       }]);
+
       expect(await repo.getEpisodeInfo(S1E1)).toEqual({ subjectID: S1 });
+
       const rating = (await repo.getUserEpisodeRatingResult(U1, S1, S1E1))
         .value;
       expect(rating?.score).toBe(7);
       expect(rating?.isVisible).toBe(false);
-      expect(rating?.history).toEqual([]);
+
+      const tlItems = await repo.getAllUserTimelineItems(U1);
+      expect(tlItems.length).toBe(1);
+      expect(tlItems[0].slice(1))
+        .toEqual(["rate-episode", { episodeID: S1E1, score: 7 }]);
+
       expect(await repo.getAllEpisodeVotesGroupedByScore(S1, S1E1))
         .toEqual({ 7: 1 });
     } finally {
@@ -85,12 +92,19 @@ describe("function rateEpisode", () => {
         score: null,
         visibility: { is_visible: false },
       }]);
+
       const rating = (await repo.getUserEpisodeRatingResult(U1, S1, S1E1))
         .value;
       expect(rating?.score).toBe(null);
       expect(rating?.isVisible).toBe(false);
-      expect(rating?.history.length).toBe(1);
-      expect(rating?.history[0].score).toBe(7);
+
+      const tlItems = await repo.getAllUserTimelineItems(U1);
+      expect(tlItems.length).toBe(2);
+      expect(tlItems[0].slice(1))
+        .toEqual(["rate-episode", { episodeID: S1E1, score: 7 }]);
+      expect(tlItems[1].slice(1))
+        .toEqual(["rate-episode", { episodeID: S1E1, score: null }]);
+
       expect(await repo.getAllEpisodeVotesGroupedByScore(S1, S1E1))
         .toEqual({});
     }

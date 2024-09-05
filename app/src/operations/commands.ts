@@ -63,18 +63,15 @@ export async function rateEpisode(
       }];
     }
 
+    const nowMs = Date.now();
+
     const userRatingData: UserSubjectEpisodeRatingData = {
       score: opts.score,
       isVisible: oldRating?.isVisible ?? false,
-      submittedAtMs: Date.now(),
-      history: oldRating?.history || [],
+      submittedAtMs: nowMs,
     };
     if (oldRating) {
       scoreDelta -= oldRating.score ?? 0;
-      userRatingData.history.push({
-        score: oldRating.score,
-        submittedAtMs: oldRating.submittedAtMs,
-      });
     }
 
     const result = await repo.tx((tx) => {
@@ -93,6 +90,10 @@ export async function rateEpisode(
 
       tx.setUserEpisodeRating //
       (userID, subjectID, opts.episodeID, userRatingData, oldRatingResult);
+      tx.insertUserTimelineItem(userID, nowMs, ["rate-episode", {
+        episodeID: opts.episodeID,
+        score: userRatingData.score,
+      }]);
     });
     isOk = result.ok;
   }

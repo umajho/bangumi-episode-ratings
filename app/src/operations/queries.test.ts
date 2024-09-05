@@ -110,7 +110,6 @@ describe("function queryEpisodeMyRating", () => {
           score: 7,
           submittedAtMs: Date.now(),
           isVisible: false,
-          history: [],
         }, oldRatingResult);
       });
       expect(result.ok).toBe(true);
@@ -125,7 +124,6 @@ describe("function queryEpisodeMyRating", () => {
           score: 8,
           submittedAtMs: Date.now(),
           isVisible: true,
-          history: [],
         }, oldRatingResult);
       });
       expect(result.ok).toBe(true);
@@ -205,7 +203,6 @@ async function mustSetRatingRelatedForTest(
         score,
         submittedAtMs: Date.now(),
         isVisible,
-        history: [],
       }, oldRatingResult);
       tx.increaseSubjectEpisodeScoreVotes(s, e, score);
       if (isVisible) {

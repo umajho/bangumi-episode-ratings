@@ -33,8 +33,8 @@ export interface UserSubjectEpisodeRatingData {
   score: number | null;
   isVisible?: boolean;
   submittedAtMs: number;
-  history: {
-    score: number | null;
-    submittedAtMs: number;
-  }[];
 }
+
+export type UserTimelineItem =
+  | ["rate-episode", { episodeID: EpisodeID; score: number | null }]
+  | never; // 此项只是确保让 formatter 将 `|` 放在一行开头用的占位符。
