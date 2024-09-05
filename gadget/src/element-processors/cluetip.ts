@@ -3,6 +3,7 @@ import { renderRateInfo } from "../components/RateInfo";
 import { VotesData } from "../models/VotesData";
 import { Watched } from "../utils";
 import { Score } from "../definitions";
+import { renderErrorWithRetry } from "../components/ErrorWithRetry";
 
 let isNavigatingAway = false;
 $(window).on("beforeunload", () => {
@@ -50,13 +51,40 @@ export function processCluetip() {
       $(popupEl).find(".tip .board:first"),
     );
 
-    const epsRatings = await Global.client.mustGetSubjectEpisodesRatings({
+    updateInternal({ ...opts, currentCounter, loadingEl, popupEl });
+  }
+
+  async function updateInternal(
+    opts: {
+      subjectID: number;
+      episodeID: number;
+      hasUserWatched: boolean;
+
+      currentCounter: number;
+
+      loadingEl: JQuery<HTMLElement>;
+      popupEl: JQuery<HTMLElement>;
+    },
+  ) {
+    const resp = await Global.client.getSubjectEpisodesRatings({
       subjectID: opts.subjectID,
     });
+    if (resp[0] === "error") {
+      const [_, _name, message] = resp;
+      const { el } = renderErrorWithRetry(opts.loadingEl, {
+        message,
+        onRetry: () => updateInternal(opts),
+      });
+      opts.loadingEl = el;
+      return;
+    }
 
-    loadingEl.remove();
+    resp[0] satisfies "ok";
+    const [_, epsRatings] = resp;
 
-    if (currentCounter !== counter) return;
+    opts.loadingEl.remove();
+
+    if (opts.currentCounter !== counter) return;
 
     const votesData = new Watched(
       new VotesData(
@@ -79,7 +107,7 @@ export function processCluetip() {
 
     const rateInfoEl = $("<div />").insertBefore(
       // `:first` 用于兼容 https://bangumi.tv/dev/app/3265。
-      $(popupEl).find(".tip .board:first"),
+      $(opts.popupEl).find(".tip .board:first"),
     );
     renderRateInfo(rateInfoEl, {
       votesData,
@@ -89,11 +117,13 @@ export function processCluetip() {
       },
     });
 
-    $(popupEl).find(".epStatusTool > a.ep_status").each((_, epStatusEl) => {
-      if (epStatusEl.id.startsWith("Watched")) {
-        $(epStatusEl).on("click", () => revealScore());
-      }
-    });
+    $(opts.popupEl).find(".epStatusTool > a.ep_status").each(
+      (_, epStatusEl) => {
+        if (epStatusEl.id.startsWith("Watched")) {
+          $(epStatusEl).on("click", () => revealScore());
+        }
+      },
+    );
   }
 
   return { update };

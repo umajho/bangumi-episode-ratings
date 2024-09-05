@@ -1,3 +1,4 @@
+import { renderErrorWithRetry } from "../components/ErrorWithRetry";
 import { renderMyRating } from "../components/MyRating";
 import { renderRateInfo } from "../components/RateInfo";
 import { Score } from "../definitions";
@@ -8,7 +9,7 @@ import { Watched } from "../utils";
 export async function processSubjectEpListPage() {
   const editEpBatchEl = $('[name="edit_ep_batch"]');
 
-  let loadingEl: JQuery<HTMLElement> | undefined;
+  let loadingEl: JQuery<HTMLElement> | null = null;
   $(editEpBatchEl).find("li").each((_, li) => {
     if (!$(li).find('[name="ep_mod[]"]').length) return;
 
@@ -23,11 +24,35 @@ export async function processSubjectEpListPage() {
     return false;
   });
 
-  const epsRatings = await Global.client.mustGetSubjectEpisodesRatings({
+  if (loadingEl) {
+    processSubjectEpListPageInternal({ loadingEl, editEpBatchEl });
+  }
+}
+
+async function processSubjectEpListPageInternal(
+  opts: {
+    loadingEl: JQuery<HTMLElement>;
+    editEpBatchEl: JQuery<HTMLElement>;
+  },
+) {
+  const resp = await Global.client.getSubjectEpisodesRatings({
     subjectID: Global.subjectID!,
   });
-  if (loadingEl) {
-    loadingEl.remove();
+  if (resp[0] === "error") {
+    const [_, _name, message] = resp;
+    const { el } = renderErrorWithRetry(opts.loadingEl, {
+      message,
+      onRetry: () => processSubjectEpListPageInternal(opts),
+    });
+    opts.loadingEl = el;
+    return;
+  }
+
+  resp[0] satisfies "ok";
+  const [_, epsRatings] = resp;
+
+  if (opts.loadingEl) {
+    opts.loadingEl.remove();
   }
 
   if (!epsRatings.my_ratings) {
@@ -35,7 +60,7 @@ export async function processSubjectEpListPage() {
   }
 
   let isFirst_ = true;
-  $(editEpBatchEl).find("li").each((_, li) => {
+  $(opts.editEpBatchEl).find("li").each((_, li) => {
     if (!$(li).find('[name="ep_mod[]"]').length) return;
 
     const isFirst = isFirst_;

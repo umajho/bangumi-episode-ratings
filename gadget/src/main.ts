@@ -50,9 +50,14 @@ async function main() {
     }
     window.history.replaceState(null, "", newURL);
 
-    Global.token.setValue(
-      await Global.client.mustRedeemTokenCoupon(tokenCoupon),
-    );
+    const resp = await Global.client.redeemTokenCoupon(tokenCoupon);
+    if (resp[0] === "ok") {
+      Global.token.setValue(resp[1]);
+    } else if (resp[0] === "error") {
+      window.alert(`获取 token 失败：${resp[2]} (${resp[1]})`);
+    } else {
+      resp satisfies never;
+    }
 
     window.close();
   }

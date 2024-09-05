@@ -2,8 +2,6 @@ import { Score } from "./definitions";
 import env from "./env";
 import Global from "./global";
 import {
-  APIErrorResponse,
-  APIOkResponse,
   APIResponse,
   ChangeUserEpisodeRatingVisibilityResponseData,
   GetEpisodeRatingsResponseData,
@@ -40,8 +38,10 @@ export class Client {
     return url.toString();
   }
 
-  async mustRedeemTokenCoupon(tokenCoupon: string): Promise<string | null> {
-    const data = await this.fetch(
+  async redeemTokenCoupon(
+    tokenCoupon: string,
+  ): Promise<APIResponse<string | null>> {
+    const resp: APIResponseEx<string> = await this.fetch(
       "auth",
       ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON,
       {
@@ -51,7 +51,10 @@ export class Client {
         body: JSON.stringify({ tokenCoupon }),
       },
     );
-    return unwrap(data);
+
+    if (resp[0] === "auth_required") throw new Error("unreachable!");
+
+    return resp;
   }
 
   async rateEpisode(
@@ -88,21 +91,28 @@ export class Client {
   private subjectEpisodesRatingsCache: {
     [subjectID: number]:
       | GetSubjectEpisodesResponseData
-      | Promise<GetSubjectEpisodesResponseData>;
+      | Promise<APIResponse<GetSubjectEpisodesResponseData>>;
   } = {};
 
   hasCachedSubjectEpisodesRatings(subjectID: number): boolean {
     return (!!this.subjectEpisodesRatingsCache[subjectID]);
   }
 
-  async mustGetSubjectEpisodesRatings(opts: { subjectID: number }): Promise<
-    GetSubjectEpisodesResponseData
+  async getSubjectEpisodesRatings(opts: { subjectID: number }): Promise<
+    APIResponse<GetSubjectEpisodesResponseData>
   > {
     if (this.subjectEpisodesRatingsCache[opts.subjectID]) {
-      return this.subjectEpisodesRatingsCache[opts.subjectID];
+      const cached = this.subjectEpisodesRatingsCache[opts.subjectID];
+      if (cached instanceof Promise) {
+        return await cached;
+      } else {
+        return ["ok", cached];
+      }
     }
 
-    return this.subjectEpisodesRatingsCache[opts.subjectID] = this.fetch(
+    return this.subjectEpisodesRatingsCache[opts.subjectID] = this.fetch<
+      GetSubjectEpisodesResponseData
+    >(
       "api/v1",
       `subjects/${opts.subjectID}/episodes/ratings`,
       {
@@ -110,13 +120,26 @@ export class Client {
 
         method: "GET",
       },
-    ).then((resp) =>
-      this.subjectEpisodesRatingsCache[opts.subjectID] = unwrap(resp)
-    );
+    ).then((resp) => {
+      if (resp[0] === "auth_required") {
+        throw new Error("unreachable!");
+      } else if (resp[0] === "error") {
+        delete this.subjectEpisodesRatingsCache[opts.subjectID];
+        return resp;
+      } else if (resp[0] === "ok") {
+        const [_, data] = resp;
+        return ["ok", this.subjectEpisodesRatingsCache[opts.subjectID] = data];
+      } else {
+        resp satisfies never;
+        throw new Error("unreachable!");
+      }
+    });
   }
 
-  async mustGetEpisodeRatings(): Promise<GetEpisodeRatingsResponseData> {
-    const resp = await this.fetch(
+  async getEpisodeRatings(): Promise<
+    APIResponseEx<GetEpisodeRatingsResponseData>
+  > {
+    return await this.fetch(
       "api/v1",
       `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings`,
       {
@@ -125,8 +148,6 @@ export class Client {
         method: "GET",
       },
     );
-
-    return unwrap(resp);
   }
 
   async getMyEpisodeRating(): Promise<
@@ -292,16 +313,6 @@ export class Client {
 
 function join(base: string, url: string): string {
   return (new URL(url, base)).href;
-}
-
-function unwrap<T>(resp: APIOkResponse<T> | APIErrorResponse | unknown): T {
-  if (!Array.isArray(resp) || (resp[0] !== "ok" && resp[0] !== "error")) {
-    console.error("Unsupported response", resp);
-    throw new Error(`Unsupported response: ${JSON.stringify(resp)}`);
-  }
-
-  if (resp[0] === "error") throw new Error(resp[2]);
-  return resp[1];
 }
 
 function checkJWTExpiry(jwt: string): "expired" | "valid" {

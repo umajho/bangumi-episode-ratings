@@ -8,16 +8,37 @@ import { Watched } from "../utils";
 import { renderSmallStars } from "../components/SmallStars";
 import { renderReplyFormVisibilityControl } from "../components/ReplyFormVisibilityControl";
 import { renderMyRatingInComment } from "../components/MyRatingInComment";
+import { renderErrorWithRetry } from "../components/ErrorWithRetry";
 
 export async function processEpPage() {
-  const scoreboardEl = $(/*html*/ `
+  const el = $(/*html*/ `
     <div style="color: grey; float: right;">
       单集评分加载中…
     </div>
   `);
-  $("#columnEpA").prepend(scoreboardEl);
+  $("#columnEpA").prepend(el);
 
-  const ratingsData = await Global.client.mustGetEpisodeRatings();
+  processEpPageInternal({ el });
+}
+
+async function processEpPageInternal(
+  opts: { el: JQuery<HTMLElement> },
+) {
+  const resp = await Global.client.getEpisodeRatings();
+  if (resp[0] === "auth_required") throw new Error("unreachable");
+  if (resp[0] === "error") {
+    const [_, _name, message] = resp;
+    const { el } = renderErrorWithRetry(opts.el, {
+      message,
+      onRetry: () => processEpPageInternal(opts),
+    });
+    opts.el = el;
+    return;
+  }
+
+  resp[0] satisfies "ok";
+  const [_, ratingsData] = resp;
+
   const votesData = new Watched(
     new VotesData(
       ratingsData.votes as { [_ in Score]?: number },
@@ -27,7 +48,7 @@ export async function processEpPage() {
     ratingsData.my_rating?.visibility,
   );
 
-  renderScoreboard(scoreboardEl, { votesData });
+  renderScoreboard(opts.el, { votesData });
 
   const scoreChartEl = $("<div />").insertBefore("#columnEpA > .epDesc");
   renderScoreChart(scoreChartEl, { votesData });
