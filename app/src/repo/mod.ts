@@ -1,6 +1,5 @@
 import { match, P } from "npm:ts-pattern";
 
-import config from "@/config.ts";
 import {
   EpisodeID,
   EpisodeInfoData,
@@ -13,6 +12,7 @@ import {
 } from "@/types.ts";
 
 import * as KVUtils from "./utils.ts";
+import kvPrefixes from "./kv-prefixes.ts";
 
 export class Repo {
   #kv: Deno.Kv;
@@ -44,14 +44,14 @@ export class Repo {
   }
 
   async getUserResult(userID: UserID): Promise<Deno.KvEntryMaybe<UserData>> {
-    const key = config.kv.buildKeyUser(userID);
+    const key = kvPrefixes.buildKeyUser(userID);
     return await this.#kv.get<UserData>(key);
   }
 
   async getTokenEntryResult(
     token: string,
   ): Promise<Deno.KvEntryMaybe<TokenEntryData>> {
-    const key = config.kv.buildKeyToken(token);
+    const key = kvPrefixes.buildKeyToken(token);
     return await this.#kv.get<TokenEntryData>(key);
   }
   async getTokenEntry(token: string): Promise<TokenEntryData | null> {
@@ -84,7 +84,7 @@ export class Repo {
   async __getTokenCouponEntryResult(
     tokenCoupon: string,
   ): Promise<Deno.KvEntryMaybe<TokenCouponEntryData>> {
-    const key = config.kv.buildKeyTokenCoupon(tokenCoupon);
+    const key = kvPrefixes.buildKeyTokenCoupon(tokenCoupon);
     return await this.#kv.get<TokenCouponEntryData>(key);
   }
   async popTokenCouponEntryToken(tokenCoupon: string): Promise<string | null> {
@@ -112,14 +112,14 @@ export class Repo {
   async getEpisodeInfoResult(
     episodeID: EpisodeID,
   ): Promise<Deno.KvEntryMaybe<EpisodeInfoData>> {
-    const key = config.kv.buildKeyEpisodeInfo(episodeID);
+    const key = kvPrefixes.buildKeyEpisodeInfo(episodeID);
     return await this.#kv.get<EpisodeInfoData>(key);
   }
   async getEpisodeInfo(episodeID: EpisodeID): Promise<EpisodeInfoData | null> {
     return (await this.getEpisodeInfoResult(episodeID)).value;
   }
   async setEpisodeInfo(episodeID: EpisodeID, episodeInfo: EpisodeInfoData) {
-    const key = config.kv.buildKeyEpisodeInfo(episodeID);
+    const key = kvPrefixes.buildKeyEpisodeInfo(episodeID);
     let isOk = false;
     while (!isOk) {
       const result = await this.#kv.set(key, episodeInfo);
@@ -133,12 +133,12 @@ export class Repo {
     episodeID: EpisodeID,
   ): Promise<Deno.KvEntryMaybe<UserSubjectEpisodeRatingData>> {
     const key = //
-      config.kv.buildKeyUserSubjectEpisodeRating(userID, subjectID, episodeID);
+      kvPrefixes.buildKeyUserSubjectEpisodeRating(userID, subjectID, episodeID);
     return (await this.#kv.get<UserSubjectEpisodeRatingData>(key));
   }
 
   async getAllUserSubjectEpisodesRatings(userID: UserID, subjectID: SubjectID) {
-    const prefix = config.kv
+    const prefix = kvPrefixes
       .buildPrefixUserSubjectEpisodeRating([userID, subjectID]);
 
     const ratings: { [episodeID: number]: number } = {};
@@ -161,7 +161,7 @@ export class Repo {
     subjectID: SubjectID,
     episodeID: EpisodeID,
   ) {
-    const prefix = config.kv.buildPrefixSubjectEpisodeScoreVotes //
+    const prefix = kvPrefixes.buildPrefixSubjectEpisodeScoreVotes //
     ([subjectID, episodeID]);
 
     const votes: { [score: number]: number } = {};
@@ -186,7 +186,7 @@ export class Repo {
   ) {
     const limit = opts?.limit ?? 1000;
 
-    const prefix = config.kv.buildPrefixSubjectEpisodeScoreVotes([subjectID]);
+    const prefix = kvPrefixes.buildPrefixSubjectEpisodeScoreVotes([subjectID]);
 
     const votesByScoreBySubject: {
       [episodeID: EpisodeID]: { [score: number]: number } | null;
@@ -235,7 +235,7 @@ export class Repo {
     const votersByScore: { [score: number]: UserID[] } = {};
     for await (
       const result of this.#kv.list({
-        prefix: config.kv.buildPrefixSubjectEpisodeScorePublicVoters(
+        prefix: kvPrefixes.buildPrefixSubjectEpisodeScorePublicVoters(
           [subjectID, episodeID],
         ),
       })
@@ -267,18 +267,18 @@ export class RepoTransaction {
   }
 
   setUser(userID: UserID, user: UserData, check: Deno.KvEntryMaybe<UserData>) {
-    const key = config.kv.buildKeyUser(userID);
+    const key = kvPrefixes.buildKeyUser(userID);
     this.#tx = this.#tx
       .check(check)
       .set(key, user);
   }
 
   setTokenEntry(token: string, tokenEntry: TokenEntryData) {
-    const key = config.kv.buildKeyToken(token);
+    const key = kvPrefixes.buildKeyToken(token);
     this.#tx = this.#tx.set(key, tokenEntry);
   }
   deleteTokenEntry(token: string) {
-    const key = config.kv.buildKeyToken(token);
+    const key = kvPrefixes.buildKeyToken(token);
     this.#tx = this.#tx.delete(key);
   }
 
@@ -288,7 +288,7 @@ export class RepoTransaction {
   }) {
     opts.expiresInMs ??= 1000 * 10; // 10 秒。
 
-    const key = config.kv.buildKeyTokenCoupon(tokenCoupon);
+    const key = kvPrefixes.buildKeyTokenCoupon(tokenCoupon);
 
     const data: TokenCouponEntryData = {
       token: opts.token,
@@ -300,7 +300,7 @@ export class RepoTransaction {
     tokenCoupon: string,
     check: Deno.KvEntryMaybe<TokenCouponEntryData>,
   ) {
-    const key = config.kv.buildKeyTokenCoupon(tokenCoupon);
+    const key = kvPrefixes.buildKeyTokenCoupon(tokenCoupon);
     this.#tx = this.#tx
       .check(check)
       .delete(key);
@@ -314,7 +314,7 @@ export class RepoTransaction {
     check: Deno.KvEntryMaybe<UserSubjectEpisodeRatingData>,
   ) {
     const key = //
-      config.kv.buildKeyUserSubjectEpisodeRating(userID, subjectID, episodeID);
+      kvPrefixes.buildKeyUserSubjectEpisodeRating(userID, subjectID, episodeID);
     this.#tx = this.#tx
       .check(check)
       .set(key, rating);
@@ -325,7 +325,7 @@ export class RepoTransaction {
     episodeID: EpisodeID,
     score: number,
   ) {
-    const key = config.kv.buildKeySubjectEpisodeScoreVotes //
+    const key = kvPrefixes.buildKeySubjectEpisodeScoreVotes //
     (subjectID, episodeID, score);
     this.#tx = this.#tx.sum(key, 1n);
   }
@@ -334,7 +334,7 @@ export class RepoTransaction {
     episodeID: EpisodeID,
     score: number,
   ) {
-    const key = config.kv.buildKeySubjectEpisodeScoreVotes //
+    const key = kvPrefixes.buildKeySubjectEpisodeScoreVotes //
     (subjectID, episodeID, score);
     this.#tx = KVUtils.sumFreely(this.#tx, key, -1n);
   }
@@ -345,7 +345,7 @@ export class RepoTransaction {
     score: number,
     voterUserID: UserID,
   ) {
-    const key = config.kv.buildKeySubjectEpisodeScorePublicVoters //
+    const key = kvPrefixes.buildKeySubjectEpisodeScorePublicVoters //
     (subjectID, episodeID, score, voterUserID);
     this.#tx = this.#tx.set(key, 1);
   }
@@ -355,7 +355,7 @@ export class RepoTransaction {
     score: number,
     voterUserID: UserID,
   ) {
-    const key = config.kv.buildKeySubjectEpisodeScorePublicVoters //
+    const key = kvPrefixes.buildKeySubjectEpisodeScorePublicVoters //
     (subjectID, episodeID, score, voterUserID);
     this.#tx = this.#tx.delete(key);
   }
