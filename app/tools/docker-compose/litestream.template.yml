@@ -1,0 +1,12 @@
+dbs:
+  - path: /data/kv.s3db
+    replicas:
+      - type: s3
+        endpoint: # TODO
+        name: kv.s3db
+        bucket: bangumi-episode-ratings-backup
+        path: kv.s3db
+        retention: 168h # 7 days
+        sync-interval: 1s
+        access-key-id: # TODO
+        secret-access-key: # TODO

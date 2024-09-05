@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - ./data:/data
+      - data:/data
     environment:
       KV_PATH: /data/kv.s3db
       AUTH_ROUTE_MODE: '["off"]'
@@ -23,6 +23,26 @@ services:
       - USER_AGENT
       - JWT_SIGNING_KEY_JWK
       - JWT_VERIFYING_KEY_JWK
+  
+  # see: https://github.com/mattn/litestream-sidecar-example/blob/main/docker-compose.yaml
+  litestream:
+    image: litestream/litestream:0.3.13
+    container_name: bangumi-episode-ratings-litestream
+    depends_on:
+      - app
+    volumes:
+      - data:/data
+      - ./litestream.yml:/opt/litestream/litestream.yml
+    entrypoint: /bin/sh
+    command: -c "/usr/local/bin/litestream replicate --config /opt/litestream/litestream.yml"
+
+volumes:
+  data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data
 
 secrets:
   USER_AGENT:
