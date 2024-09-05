@@ -259,14 +259,25 @@ class SiteConfigManager {
 }
 
 const KV_PREFIXES = (() => {
+  /**
+   * 含义：
+   * - `:u` -> User ID
+   * - `:t` -> Token
+   * - `:tc` -> Token Coupon
+   * - `:s` -> Subject ID
+   * - `:e` -> Episode ID
+   * - `:sc` -> Score
+   */
   const reversedKVPrefixes = {
-    1: "users",
-    2: "tokens",
-    3: "token-coupons",
-    4: "episode-infos",
-    5: "user-subject-episode-rating-map",
-    6: "subject-episode-score-votes",
-    7: "subject-episode-score-public-voters",
+    1: "users/:u", // 用户信息。
+    2: "tokens/:t", // token 信息（对应于哪个用户）。
+    3: "token-coupons/:tc", // token 兑换券信息（对应于哪个 token）。
+    4: "episode-infos/:e", // 剧集信息（其属于哪个条目）。
+    5: "ratings/:u/:s/:e", // 用户对剧集的评分信息。
+    6: "vote-counts/:s/:e/:sc", // 剧集对应分数的评分数。
+    // 剧集对应评分下评分公开者的标记。（若某名用户公开了对某个剧集的评分，其在此
+    // 处对应值为 1。）
+    7: "public-voter-marks/:s/:e/:sc/:u",
   } as const;
   return Object.fromEntries(
     Object.entries(reversedKVPrefixes).map(([k, v]) => [v, Number(k)]),
@@ -274,16 +285,16 @@ const KV_PREFIXES = (() => {
 })();
 const kvConfigManager = {
   buildKeyUser(userID: UserID) {
-    return [KV_PREFIXES["users"], userID] as const;
+    return [KV_PREFIXES["users/:u"], userID] as const;
   },
   buildKeyToken(token: string) {
-    return [KV_PREFIXES["tokens"], token] as const;
+    return [KV_PREFIXES["tokens/:t"], token] as const;
   },
   buildKeyTokenCoupon(tokenCoupon: string) {
-    return [KV_PREFIXES["token-coupons"], tokenCoupon] as const;
+    return [KV_PREFIXES["token-coupons/:tc"], tokenCoupon] as const;
   },
   buildKeyEpisodeInfo(episodeID: EpisodeID) {
-    return [KV_PREFIXES["episode-infos"], episodeID] as const;
+    return [KV_PREFIXES["episode-infos/:e"], episodeID] as const;
   },
   buildKeyUserSubjectEpisodeRating(
     userID: UserID,
@@ -291,7 +302,7 @@ const kvConfigManager = {
     episodeID: EpisodeID,
   ) {
     return [
-      KV_PREFIXES["user-subject-episode-rating-map"],
+      KV_PREFIXES["ratings/:u/:s/:e"],
       userID,
       subjectID,
       episodeID,
@@ -300,7 +311,7 @@ const kvConfigManager = {
   buildPrefixUserSubjectEpisodeRating(
     subKey: [userID: UserID, subjectID: SubjectID],
   ) {
-    return [KV_PREFIXES["user-subject-episode-rating-map"], ...subKey] as const;
+    return [KV_PREFIXES["ratings/:u/:s/:e"], ...subKey] as const;
   },
   buildKeySubjectEpisodeScoreVotes(
     subjectID: SubjectID,
@@ -308,7 +319,7 @@ const kvConfigManager = {
     score: number,
   ) {
     return [
-      KV_PREFIXES["subject-episode-score-votes"],
+      KV_PREFIXES["vote-counts/:s/:e/:sc"],
       subjectID,
       episodeID,
       score,
@@ -319,7 +330,7 @@ const kvConfigManager = {
       | [subjectID: SubjectID]
       | [subjectID: SubjectID, episodeID: EpisodeID],
   ) {
-    return [KV_PREFIXES["subject-episode-score-votes"], ...subKey] as const;
+    return [KV_PREFIXES["vote-counts/:s/:e/:sc"], ...subKey] as const;
   },
   buildKeySubjectEpisodeScorePublicVoters(
     subjectID: SubjectID,
@@ -328,7 +339,7 @@ const kvConfigManager = {
     userID: UserID,
   ) {
     return [
-      KV_PREFIXES["subject-episode-score-public-voters"],
+      KV_PREFIXES["public-voter-marks/:s/:e/:sc/:u"],
       subjectID,
       episodeID,
       score,
@@ -339,7 +350,7 @@ const kvConfigManager = {
     subKey: [subjectID: SubjectID, episodeID: EpisodeID],
   ) {
     return [
-      KV_PREFIXES["subject-episode-score-public-voters"],
+      KV_PREFIXES["public-voter-marks/:s/:e/:sc/:u"],
       ...subKey,
     ] as const;
   },
