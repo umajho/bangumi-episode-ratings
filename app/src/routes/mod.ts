@@ -10,10 +10,10 @@ import { respondForAPI } from "@/responding.tsx";
 export const router = new Hono();
 export default router;
 
-// deno-lint-ignore require-await
-router.get("/", async (ctx) => {
-  ctx.redirect(config.bangumi.URL_HOMEPAGE.toString());
-});
+router.get(
+  "/",
+  (ctx) => ctx.redirect(config.bangumi.URL_HOMEPAGE.toString()),
+);
 
 match(config.app.AUTH_ROUTE_MODE)
   .with(["normal"], () => router.route("/auth", authRouter))
