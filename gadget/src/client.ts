@@ -14,6 +14,8 @@ import {
 } from "./shared/dto";
 import ENDPOINT_PATHS from "./shared/endpoint-paths";
 
+export type APIResponseEx<T> = APIResponse<T> | [tag: "auth_required"];
+
 export class Client {
   public readonly authEntrypoint: string;
   public readonly apiEntrypoint: string;
@@ -54,7 +56,7 @@ export class Client {
 
   async rateEpisode(
     opts: { subjectID: number; episodeID: number; score: Score | null },
-  ): Promise<APIResponse<RateEpisodeResponseData>> {
+  ): Promise<APIResponseEx<RateEpisodeResponseData>> {
     if (!this.token) return ["auth_required"];
 
     if (opts.score !== null) {
@@ -128,7 +130,7 @@ export class Client {
   }
 
   async getMyEpisodeRating(): Promise<
-    APIResponse<GetMyEpisodeRatingResponseData>
+    APIResponseEx<GetMyEpisodeRatingResponseData>
   > {
     return await this.fetch(
       "api/v1",
@@ -143,7 +145,7 @@ export class Client {
 
   async changeUserEpisodeRatingVisibility(
     opts: { isVisible: boolean },
-  ): Promise<APIResponse<ChangeUserEpisodeRatingVisibilityResponseData>> {
+  ): Promise<APIResponseEx<ChangeUserEpisodeRatingVisibilityResponseData>> {
     return await this.fetch(
       "api/v1",
       `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings/mine/is-visible`,
@@ -166,7 +168,7 @@ export class Client {
       searchParams?: URLSearchParams;
       body?: string;
     },
-  ): Promise<APIResponse<T>> {
+  ): Promise<APIResponseEx<T>> {
     const url = new URL(this.buildFullEndpoint(group, endpointPath));
     if (opts.searchParams) {
       url.search = opts.searchParams.toString();
@@ -251,14 +253,14 @@ export class Client {
     return join(entrypoint, endpointPath);
   }
 
-  private async fetchJWT(): Promise<APIResponse<string>> {
-    const fn = async (): Promise<APIResponse<string>> => {
+  private async fetchJWT(): Promise<APIResponseEx<string>> {
+    const fn = async (): Promise<APIResponseEx<string>> => {
       const localToken = localStorage.getItem(env.LOCAL_STORAGE_KEY_JWT);
       if (localToken && checkJWTExpiry(localToken) === "valid") {
         return ["ok", localToken];
       }
 
-      const resp: APIResponse<string> = await this.fetch(
+      const resp: APIResponseEx<string> = await this.fetch(
         "auth",
         ENDPOINT_PATHS.AUTH.REFRESH_JWT,
         {

@@ -8,6 +8,7 @@ import {
   GetSubjectEpisodesResponseData,
 } from "@/shared/dto.ts";
 import { EpisodeID, SubjectID, UserID } from "@/types.ts";
+import { makeErrorAuthRequiredResponse } from "@/responding.tsx";
 
 export async function querySubjectEpisodesRatings(
   repo: Repo,
@@ -87,7 +88,7 @@ export async function queryEpisodeMyRating(
     episodeID: EpisodeID;
   },
 ): Promise<APIResponse<GetMyEpisodeRatingResponseData>> {
-  if (userID === null) return ["auth_required"];
+  if (userID === null) return makeErrorAuthRequiredResponse();
 
   const ratingResult = await repo.getUserEpisodeRatingResult //
   (userID, opts.subjectID, opts.episodeID);

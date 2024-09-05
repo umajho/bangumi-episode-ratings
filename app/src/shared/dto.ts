@@ -16,10 +16,7 @@ export type ErrorName =
 
 export type APIOkResponse<T> = [tag: "ok", data: T];
 export type APIErrorResponse = [tag: "error", name: ErrorName, msg: string];
-export type APIResponse<T> =
-  | APIOkResponse<T>
-  | APIErrorResponse
-  | [tag: "auth_required"];
+export type APIResponse<T> = APIOkResponse<T> | APIErrorResponse;
 
 export interface RateEpisodeRequestData__V0 {
   claimed_user_id: number;

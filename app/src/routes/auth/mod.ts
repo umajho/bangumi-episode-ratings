@@ -7,7 +7,11 @@ import ENDPOINT_PATHS from "@/shared/endpoint-paths.ts";
 import * as Middlewares from "@/middlewares/mod.ts";
 import { generateToken } from "@/utils.ts";
 import { UserID } from "@/types.ts";
-import { respondForAPI, respondWithError } from "@/responding.tsx";
+import {
+  makeErrorAuthRequiredResponse,
+  respondForAPI,
+  respondWithError,
+} from "@/responding.tsx";
 import config from "@/config.ts";
 import * as Global from "@/global.ts";
 
@@ -144,7 +148,7 @@ router.post(
     }
 
     const userID = await ctx.var.authenticate(Global.repo);
-    if (!userID) return respondForAPI(ctx, ["auth_required"]);
+    if (!userID) return respondForAPI(ctx, makeErrorAuthRequiredResponse());
 
     const token = await Djwt.create(
       { ...config.app.JWT_KEY_ALGORITHM_FOR_DJWT, typ: "JWT" },

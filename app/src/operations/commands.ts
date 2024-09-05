@@ -12,6 +12,7 @@ import {
 import { APIErrorResponse } from "@/shared/dto.ts";
 import { Repo } from "@/repo/mod.ts";
 import { BangumiClient } from "@/bangumi-client.ts";
+import { makeErrorAuthRequiredResponse } from "@/responding.tsx";
 
 export async function rateEpisode(
   repo: Repo,
@@ -33,7 +34,7 @@ export async function rateEpisode(
     }
   }
 
-  if (userID === null) return ["auth_required"];
+  if (userID === null) return makeErrorAuthRequiredResponse();
 
   const checkSubjectIDResult = checkSubjectID({
     subjectID: await fetchSubjectID(repo, bangumiClient, opts),
@@ -129,7 +130,7 @@ export async function changeUserEpisodeRatingVisibility(
     isVisible: boolean;
   },
 ): Promise<APIResponse<ChangeUserEpisodeRatingVisibilityResponseData>> {
-  if (userID === null) return ["auth_required"];
+  if (userID === null) return makeErrorAuthRequiredResponse();
 
   const checkSubjectIDResult = checkSubjectID({
     subjectID: await fetchSubjectID(repo, bangumiClient, opts),

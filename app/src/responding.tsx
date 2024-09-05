@@ -54,17 +54,15 @@ function respondWithOkForAPI<T>(ctx: Context, data: T) {
   return ctx.json(["ok", data] satisfies APIOkResponse<T>);
 }
 
+export function makeErrorAuthRequiredResponse(): APIErrorResponse {
+  return ["error", "AUTH_REQUIRED", "尚未将账号关联至应用。"];
+}
+
 export function respondForAPI<T>(ctx: Context, resp: APIResponse<T>) {
   if (resp[0] === "ok") {
     return respondWithOkForAPI(ctx, resp[1]);
   } else if (resp[0] === "error") {
     return respondWithErrorForAPI(ctx, resp[1], resp[2]);
-  } else if (resp[0] === "auth_required") {
-    return respondWithErrorForAPI(
-      ctx,
-      "AUTH_REQUIRED",
-      "尚未将账号关联至应用。",
-    );
   }
   resp satisfies never;
   throw new Error("unreachable");
