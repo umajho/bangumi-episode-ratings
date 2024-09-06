@@ -33,6 +33,8 @@ const AUTH_ROUTE_MODE = JSON
     .parse(mustGetEnv("API_ROUTE_MODE")) as APIRouteMode;
 
 const ENV = {
+  LOG_FILE_PATH: Deno.env.get("LOG_FILE_PATH") ?? null,
+
   KV_PATH: Deno.env.get("KV_PATH") ?? null,
 
   AUTH_ROUTE_MODE,
@@ -90,6 +92,10 @@ class AppConfigManager {
     private readonly env: typeof ENV,
     private readonly hardCoded: typeof HARD_CODED,
   ) {}
+
+  get LOG_FILE_PATH() {
+    return this.env.LOG_FILE_PATH;
+  }
 
   get KV_PATH() {
     return this.env.KV_PATH;

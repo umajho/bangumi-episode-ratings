@@ -1,3 +1,5 @@
+import * as log from "jsr:@std/log";
+
 import { Context } from "jsr:@hono/hono";
 import { createMiddleware } from "jsr:@hono/hono/factory";
 
@@ -114,7 +116,7 @@ export const auth = (opts?: {
               .verify(token, await config.app.getJwtVerifyingKey());
             return payload.userID as UserID;
           } catch (e) {
-            console.error(e);
+            log.error(e);
             return null;
           }
         };

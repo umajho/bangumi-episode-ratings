@@ -1,3 +1,5 @@
+import * as log from "jsr:@std/log";
+
 import config from "@/config.ts";
 import { EpisodeID } from "@/types.ts";
 
@@ -76,7 +78,7 @@ export class BangumiClient {
     });
 
     if (!resp.ok) {
-      console.warn("调用 bangumi API 失败", await resp.text());
+      log.warn("调用 bangumi API 失败", await resp.text());
       return ["error"];
     }
 
