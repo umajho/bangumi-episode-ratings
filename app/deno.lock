@@ -10,6 +10,7 @@
       "jsr:@std/internal@^1.0.3": "jsr:@std/internal@1.0.3",
       "jsr:@std/testing": "jsr:@std/testing@1.0.2",
       "npm:@sinonjs/fake-timers": "npm:@sinonjs/fake-timers@13.0.1",
+      "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:@types/sinonjs__fake-timers": "npm:@types/sinonjs__fake-timers@8.1.5",
       "npm:hono": "npm:hono@4.5.10",
       "npm:ts-pattern": "npm:ts-pattern@5.3.1"
@@ -59,6 +60,10 @@
         "dependencies": {
           "@sinonjs/commons": "@sinonjs/commons@3.0.1"
         }
+      },
+      "@types/node@18.16.19": {
+        "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
+        "dependencies": {}
       },
       "@types/sinonjs__fake-timers@8.1.5": {
         "integrity": "sha512-mQkU2jY8jJEF7YHjHvsQO8+3ughTL1mcnn96igfhONmR+fUPSKIkefQYpSe8bsly2Ep7oQbn/6VG5/9/0qcArQ==",
