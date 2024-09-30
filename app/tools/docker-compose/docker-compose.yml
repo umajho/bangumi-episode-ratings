@@ -3,6 +3,7 @@ services:
     build: ../..
     #image: umajho/bangumi-episode-ratings
     container_name: bangumi-episode-ratings
+    restart: always
     ports:
       - "8000:80"
     volumes:
@@ -12,7 +13,7 @@ services:
       KV_PATH: /data/kv.s3db
       AUTH_ROUTE_MODE: '["off"]'
       API_ROUTE_MODE: '["normal"]'
-      ENTRYPOINT_URL: https://localhost:8000
+      ENTRYPOINT_URL: https://localhost
       PORT: 80
       BGM_APP_ID: _
       BGM_APP_SECRET: _
@@ -29,6 +30,7 @@ services:
   litestream:
     image: litestream/litestream:0.3.13
     container_name: bangumi-episode-ratings-litestream
+    restart: always
     depends_on:
       - app
     volumes:
