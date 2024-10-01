@@ -2,15 +2,19 @@
   "name": "@bangumi-episode-ratings/gadget",
   "version": "0.4.2",
   "description": "Bangumi 单集评分的超合金组件",
+  "license": "MIT",
+  "homepage": "https://github.com/umajho/bangumi-episode-ratings",
   "type": "module",
   "scripts": {
-    "build": "vite build"
+    "lint": "tsc --noEmit",
+    "build": "rolldown -c"
   },
   "devDependencies": {
     "@types/jquery": "^3.5.30",
     "@types/node": "^22.5.0",
-    "typescript": "^5.5.3",
-    "vite": "^5.4.1",
-    "vite-userscript-plugin": "^1.10.0"
+    "rolldown": "^0.13.2",
+    "rollup-plugin-dotenv": "^0.5.1",
+    "rollup-plugin-userscript-metablock": "^0.4.2",
+    "typescript": "^5.5.3"
   }
 }
