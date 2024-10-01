@@ -4,7 +4,7 @@
   "description": "Bangumi 单集评分的超合金组件",
   "type": "module",
   "scripts": {
-    "build": "tsc -b && vite build"
+    "build": "vite build"
   },
   "devDependencies": {
     "@types/jquery": "^3.5.30",
