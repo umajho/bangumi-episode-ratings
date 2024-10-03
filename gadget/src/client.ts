@@ -35,6 +35,7 @@ export class Client {
     const url = //
       new URL(this.buildFullEndpoint("auth", ENDPOINT_PATHS.AUTH.BANGUMI_PAGE));
     url.searchParams.set("gadget_version", Global.version);
+    url.searchParams.set("referrer", window.location.origin);
     return url.toString();
   }
 
