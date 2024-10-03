@@ -15,6 +15,7 @@ const HARD_CODED = {
   VALID_HOSTNAMES: ["bgm.tv", "bangumi.tv", "chii.in"],
 
   BGM_PATH_GADGET_CONFIRMATION: "/group/topic/404326",
+  BGM_PATH_GADGET_PAGE: "/dev/app/3263",
 
   BGM_PATH_OAUTH_AUTHORIZE: "/oauth/authorize",
   BGM_PATH_OAUTH_ACCESS_TOKEN: "/oauth/access_token",
@@ -49,6 +50,7 @@ const ENV = {
   USER_AGENT: mustGetEnv("USER_AGENT"),
 
   BGM_HOMEPAGE_URL: new URL(mustGetEnv("BGM_HOMEPAGE_URL")),
+  BGM_PAGE_GADGET_PAGE: new URL(mustGetEnv("BGM_GADGET_PAGE_PATH")),
 
   JWT_SIGNING_KEY_JWK: getEnvAndThen("JWT_SIGNING_KEY_JWK", JSON.parse) as
     | JsonWebKey
@@ -191,6 +193,10 @@ class BangumiConfigManager {
 
   get URL_HOMEPAGE() {
     return this.env.BGM_HOMEPAGE_URL;
+  }
+
+  get PATH_GADGET_PAGE() {
+    return this.hardCoded.BGM_PATH_GADGET_PAGE;
   }
 
   get PATH_GADGET_CONFIRMATION() {

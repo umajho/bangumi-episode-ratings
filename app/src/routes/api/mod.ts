@@ -19,7 +19,7 @@ router.all(
   // deno-lint-ignore require-await
   async (ctx) => {
     const gadgetURL = new URL(
-      "/dev/app/3263",
+      config.bangumi.PATH_GADGET_PAGE,
       ctx.var.referrerHostname
         ? `https://${ctx.var.referrerHostname}`
         : `https://${config.bangumi.VALID_HOSTNAMES[0]}`,

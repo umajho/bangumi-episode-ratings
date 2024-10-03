@@ -12,7 +12,11 @@ export default router;
 
 router.get(
   "/",
-  (ctx) => ctx.redirect(config.bangumi.URL_HOMEPAGE.toString()),
+  (ctx) =>
+    ctx.redirect(
+      (new URL(config.bangumi.PATH_GADGET_PAGE, config.bangumi.URL_HOMEPAGE))
+        .toString(),
+    ),
 );
 
 match(config.app.AUTH_ROUTE_MODE)
