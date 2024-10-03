@@ -20,16 +20,25 @@ export default router;
 
 router.get(
   `/${ENDPOINT_PATHS.AUTH.BANGUMI_PAGE}`,
-  Middlewares.referrers(),
+  Middlewares.referrers({
+    shouldUseSearchParameterIfPresent: true,
+  }),
   // deno-lint-ignore require-await
   async (ctx) => {
-    if (!ctx.var.referrerHostname) {
-      throw new Error("TODO: handle this! (no referrer)");
+    const referrerHostname = ctx.var.referrerHostname;
+    if (!referrerHostname) {
+      return respondWithError(
+        ctx,
+        "MISSING_REFERRER",
+        "无法确定来源 bangumi 站点",
+        { isForAPI: false },
+      );
     }
+    const bgmBaseURL = `https://${referrerHostname}`;
 
     const gadgetVersion = ctx.req.query("gadget_version");
 
-    const url = config.bangumi.buildURLOauthAuthorize(ctx.var.referrerHostname);
+    const url = config.bangumi.buildURLOauthAuthorize(bgmBaseURL);
     url.searchParams.set("client_id", config.app.BGM_APP_ID);
     url.searchParams.set("response_type", "code");
     url.searchParams.set(
@@ -39,7 +48,7 @@ router.get(
     );
     url.searchParams.set(
       "state",
-      JSON.stringify({ gadgetVersion }),
+      JSON.stringify({ gadgetVersion, referrerHostname }),
     );
 
     return ctx.redirect(url.toString());
@@ -48,15 +57,24 @@ router.get(
 
 router.get(
   `/${ENDPOINT_PATHS.AUTH.CALLBACK}`,
-  Middlewares.referrers(),
   Middlewares.gadgetVersion(),
   async (ctx) => {
-    if (!ctx.var.referrerHostname) {
-      throw new Error("TODO: handle this! (no referrer)");
-    }
-
     const state = JSON.parse(ctx.req.query("state")!);
     ctx.set("gadgetVersion", state.gadgetVersion);
+
+    const referrerHostname = state.referrerHostname;
+    if (
+      !referrerHostname ||
+      !(config.bangumi.validateHostname(referrerHostname))
+    ) {
+      return respondWithError(
+        ctx,
+        "UNSUPPORTED_REFERRER",
+        "CSRF?",
+        { isForAPI: false },
+      );
+    }
+    const bgmBaseURL = `https://${referrerHostname}`;
 
     const code = ctx.req.query("code")!;
 
@@ -108,10 +126,7 @@ router.get(
       isOk = result.ok;
     }
 
-    const url = new URL(
-      config.bangumi.PATH_GADGET_CONFIRMATION,
-      ctx.var.referrerHostname,
-    );
+    const url = new URL(config.bangumi.PATH_GADGET_CONFIRMATION, bgmBaseURL);
     url.searchParams.set("bgm_ep_ratings_token_coupon", userTokenCoupon);
     if (!ctx.var.gadgetVersion) { // 兼容可能在旧版本组件中存在的错误。
       url.searchParams.set("bgm_test_app_token_coupon", userTokenCoupon);

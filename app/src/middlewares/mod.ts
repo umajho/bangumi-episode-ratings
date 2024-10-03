@@ -54,19 +54,30 @@ function parseGadgetVersion(raw: string | undefined): GadgetVersion | null {
   ) as GadgetVersion;
 }
 
-export const referrers = () =>
+export const referrers = (opts?: {
+  // shouldAcceptSearchParameterAsSecondPlan?: true;
+  shouldUseSearchParameterIfPresent?: true;
+}) =>
   createMiddleware<{
     Variables: {
       referrerHostname:
-        | `https://${(typeof config.bangumi.VALID_HOSTNAMES)[number]}`
+        | (typeof config.bangumi.VALID_HOSTNAMES)[number]
         | null;
     };
   }>(async (ctx, next) => {
     const isForAPI = checkIsForAPI(ctx);
 
-    const referrer = ctx.req.header("Referer");
-    if (referrer) {
-      const hostname = (new URL(referrer)).hostname;
+    const hostname = ((): string | undefined => {
+      let referrer: string | undefined;
+      if (opts?.shouldUseSearchParameterIfPresent) {
+        referrer = ctx.req.param("referrer");
+      }
+      if (!referrer) {
+        referrer = ctx.req.header("Referer");
+      }
+      return referrer && (new URL(referrer)).hostname;
+    })();
+    if (hostname) {
       const validHostname = config.bangumi.validateHostname(hostname);
       if (!validHostname) {
         return respondWithError(
@@ -76,7 +87,7 @@ export const referrers = () =>
           { isForAPI },
         );
       }
-      ctx.set("referrerHostname", `https://${validHostname}`);
+      ctx.set("referrerHostname", validHostname);
     } else {
       ctx.set("referrerHostname", null);
     }

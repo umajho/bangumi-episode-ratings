@@ -20,8 +20,9 @@ router.all(
   async (ctx) => {
     const gadgetURL = new URL(
       "/dev/app/3263",
-      ctx.var.referrerHostname ??
-        `https://${config.bangumi.VALID_HOSTNAMES[0]}`,
+      ctx.var.referrerHostname
+        ? `https://${ctx.var.referrerHostname}`
+        : `https://${config.bangumi.VALID_HOSTNAMES[0]}`,
     );
 
     return respondForAPI(ctx, [
