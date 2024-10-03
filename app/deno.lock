@@ -7,7 +7,11 @@
       "jsr:@std/assert@^1.0.4": "jsr:@std/assert@1.0.4",
       "jsr:@std/assert@~0.225.2": "jsr:@std/assert@0.225.3",
       "jsr:@std/expect": "jsr:@std/expect@1.0.2",
+      "jsr:@std/fmt@^1.0.2": "jsr:@std/fmt@1.0.2",
+      "jsr:@std/fs@^1.0.3": "jsr:@std/fs@1.0.3",
       "jsr:@std/internal@^1.0.3": "jsr:@std/internal@1.0.3",
+      "jsr:@std/io@^0.224.7": "jsr:@std/io@0.224.7",
+      "jsr:@std/log": "jsr:@std/log@0.224.7",
       "jsr:@std/testing": "jsr:@std/testing@1.0.2",
       "npm:@sinonjs/fake-timers": "npm:@sinonjs/fake-timers@13.0.1",
       "npm:@types/node": "npm:@types/node@18.16.19",
@@ -41,8 +45,25 @@
           "jsr:@std/internal@^1.0.3"
         ]
       },
+      "@std/fmt@1.0.2": {
+        "integrity": "87e9dfcdd3ca7c066e0c3c657c1f987c82888eb8103a3a3baa62684ffeb0f7a7"
+      },
+      "@std/fs@1.0.3": {
+        "integrity": "3cb839b1360b0a42d8b367c3093bfe4071798e6694fa44cf1963e04a8edba4fe"
+      },
       "@std/internal@1.0.3": {
         "integrity": "208e9b94a3d5649bd880e9ca38b885ab7651ab5b5303a56ed25de4755fb7b11e"
+      },
+      "@std/io@0.224.7": {
+        "integrity": "a70848793c44a7c100926571a8c9be68ba85487bfcd4d0540d86deabe1123dc9"
+      },
+      "@std/log@0.224.7": {
+        "integrity": "021941e5cd16de60cb11599c9b36f892aea95987fe66c753922808da27909e18",
+        "dependencies": [
+          "jsr:@std/fmt@^1.0.2",
+          "jsr:@std/fs@^1.0.3",
+          "jsr:@std/io@^0.224.7"
+        ]
       },
       "@std/testing@1.0.2": {
         "integrity": "9e8a7f4e26c219addabe7942d09c3450fa0a74e9662341961bc0ef502274dec3"
