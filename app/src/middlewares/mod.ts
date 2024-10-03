@@ -70,7 +70,7 @@ export const referrers = (opts?: {
     const hostname = ((): string | undefined => {
       let referrer: string | undefined;
       if (opts?.shouldUseSearchParameterIfPresent) {
-        referrer = ctx.req.param("referrer");
+        referrer = ctx.req.query("referrer");
       }
       if (!referrer) {
         referrer = ctx.req.header("Referer");
