@@ -55,7 +55,6 @@ function parseGadgetVersion(raw: string | undefined): GadgetVersion | null {
 }
 
 export const referrers = (opts?: {
-  // shouldAcceptSearchParameterAsSecondPlan?: true;
   shouldUseSearchParameterIfPresent?: true;
 }) =>
   createMiddleware<{
