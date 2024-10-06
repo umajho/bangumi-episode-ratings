@@ -1,9 +1,9 @@
 import { Repo } from "@/repo/mod.ts";
-import { GetEpisodeRatingsResponseData__Until_0_3_0 } from "@/shared/dto.ts";
 import {
   APIResponse,
   GetEpisodePublicRatingsResponseData,
   GetEpisodeRatingsResponseData,
+  GetEpisodeRatingsResponseData__Until_0_3_0,
   GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
 } from "@/shared/dto.ts";
