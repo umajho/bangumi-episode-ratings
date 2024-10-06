@@ -5,11 +5,6 @@ import { Watched } from "../utils";
 import { Score } from "../definitions";
 import { renderErrorWithRetry } from "../components/ErrorWithRetry";
 
-let isNavigatingAway = false;
-$(window).on("beforeunload", () => {
-  isNavigatingAway = true;
-});
-
 export function processCluetip() {
   let counter = 0;
 
@@ -34,12 +29,7 @@ export function processCluetip() {
     if (!Global.client.hasCachedSubjectEpisodesRatings(opts.subjectID)) {
       // 确保用户不是只是无意划过。
       await new Promise((resolve) => setTimeout(resolve, 250));
-      if (
-        isNavigatingAway || currentCounter !== counter ||
-        !popupEl.is(":visible")
-      ) {
-        return;
-      }
+      if (currentCounter !== counter || !popupEl.is(":visible")) return;
     }
 
     const loadingEl = $(/*html*/ `
