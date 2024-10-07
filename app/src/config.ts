@@ -50,7 +50,6 @@ const ENV = {
   USER_AGENT: mustGetEnv("USER_AGENT"),
 
   BGM_HOMEPAGE_URL: new URL(mustGetEnv("BGM_HOMEPAGE_URL")),
-  BGM_PAGE_GADGET_PAGE: new URL(mustGetEnv("BGM_GADGET_PAGE_PATH")),
 
   JWT_SIGNING_KEY_JWK: getEnvAndThen("JWT_SIGNING_KEY_JWK", JSON.parse) as
     | JsonWebKey
