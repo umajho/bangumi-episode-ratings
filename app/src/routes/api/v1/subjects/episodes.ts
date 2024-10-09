@@ -8,7 +8,7 @@ import * as Queries from "@/operations/queries.ts";
 import { RateEpisodeRequestData__V1 } from "@/shared/dto.ts";
 import * as Global from "@/global.ts";
 
-import { tryExtractNumberFromCTXParams } from "@/routes/api/utils.ts";
+import { tryExtractIntegerFromCTXParams } from "@/routes/api/utils.ts";
 
 export const router = new Hono();
 export default router;
@@ -19,9 +19,9 @@ router.get(
   Middlewares.gadgetVersion(),
   async (ctx) => {
     const subjectID = //
-      tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
-      tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
+      tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
 
     if (subjectID === null || episodeID === null) {
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
@@ -48,9 +48,9 @@ router.get(
   Middlewares.auth(),
   async (ctx) => {
     const subjectID = //
-      tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
-      tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
+      tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
 
     if (subjectID === null || episodeID === null) {
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
@@ -71,9 +71,9 @@ router.put(
   Middlewares.auth(),
   async (ctx) => {
     const subjectID = //
-      tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
-      tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
+      tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
 
     const data = await ctx.req.json() as RateEpisodeRequestData__V1;
 
@@ -101,9 +101,9 @@ router.delete(
   Middlewares.auth(),
   async (ctx) => {
     const subjectID = //
-      tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
-      tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
+      tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
 
     if (subjectID === null || episodeID === null) {
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
@@ -125,9 +125,9 @@ router.put(
   Middlewares.auth(),
   async (ctx) => {
     const subjectID = //
-      tryExtractNumberFromCTXParams(ctx, "subjectID") as SubjectID;
+      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
-      tryExtractNumberFromCTXParams(ctx, "episodeID") as EpisodeID;
+      tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
 
     const data = await ctx.req.json() as boolean;
 

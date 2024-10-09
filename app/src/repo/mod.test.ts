@@ -193,6 +193,24 @@ describe("class Repo", () => {
       expect(await repo.getEpisodeInfo(S1E2)).toEqual({ subjectID: S1 });
       expect(await repo.getEpisodeInfo(S2E1)).toEqual({ subjectID: S2 });
     });
+
+    it("works for get many", async () => {
+      expect(await repo.getManyEpisodeInfos(new Set())).toEqual({});
+
+      await repo.setEpisodeInfo(S1E1, { subjectID: S1 });
+      await repo.setEpisodeInfo(S1E2, { subjectID: S1 });
+      await repo.setEpisodeInfo(S2E1, { subjectID: S2 });
+
+      expect(await repo.getManyEpisodeInfos(new Set([S1E1]))).toEqual({
+        [S1E1]: { subjectID: S1 },
+      });
+      expect(await repo.getManyEpisodeInfos(new Set([S1E1, S1E2, S2E1])))
+        .toEqual({
+          [S1E1]: { subjectID: S1 },
+          [S1E2]: { subjectID: S1 },
+          [S2E1]: { subjectID: S2 },
+        });
+    });
   });
 
   describe("UserSubjectEpisodeRating", () => {
@@ -417,14 +435,28 @@ describe("class Repo", () => {
         }]);
       });
       expect(result.ok).toBe(true);
-      expect(await repo.getAllUserTimelineItems(U1)).toEqual([
-        [TS1, "rate-episode", { episodeID: S1E1, score: 7 }],
-        [TS2, "rate-episode", { episodeID: S1E2, score: 8 }],
+      expect(await repo.getUserTimelineItems(U1)).toEqual([
         [TS4, "rate-episode", { episodeID: S1E1, score: null }],
+        [TS2, "rate-episode", { episodeID: S1E2, score: 8 }],
+        [TS1, "rate-episode", { episodeID: S1E1, score: 7 }],
       ]);
-      expect(await repo.getAllUserTimelineItems(U2)).toEqual([
-        [TS3, "rate-episode", { episodeID: S1E1, score: 6 }],
+      expect(await repo.getUserTimelineItems(U2))
+        .toEqual([[TS3, "rate-episode", { episodeID: S1E1, score: 6 }]]);
+
+      expect(await repo.getUserTimelineItems(U1, { limit: 2 })).toEqual([
+        [TS4, "rate-episode", { episodeID: S1E1, score: null }],
+        [TS2, "rate-episode", { episodeID: S1E2, score: 8 }],
       ]);
+      expect(await repo.getUserTimelineItems(U2, { limit: 3 }))
+        .toEqual([[TS3, "rate-episode", { episodeID: S1E1, score: 6 }]]);
+
+      expect(await repo.getUserTimelineItems(U1, { offset: 1, limit: 1 }))
+        .toEqual([[TS2, "rate-episode", { episodeID: S1E2, score: 8 }]]);
+      expect(await repo.getUserTimelineItems(U1, { offset: 1, limit: 2 }))
+        .toEqual([
+          [TS2, "rate-episode", { episodeID: S1E2, score: 8 }],
+          [TS1, "rate-episode", { episodeID: S1E1, score: 7 }],
+        ]);
     });
 
     it("在用户、时间都相同时失败", async () => {

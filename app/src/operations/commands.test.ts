@@ -71,7 +71,7 @@ describe("function rateEpisode", () => {
       expect(rating?.score).toBe(7);
       expect(rating?.isVisible).toBe(false);
 
-      const tlItems = await repo.getAllUserTimelineItems(U1);
+      const tlItems = await repo.getUserTimelineItems(U1);
       expect(tlItems.length).toBe(1);
       expect(tlItems[0].slice(1))
         .toEqual(["rate-episode", { episodeID: S1E1, score: 7 }]);
@@ -98,12 +98,12 @@ describe("function rateEpisode", () => {
       expect(rating?.score).toBe(null);
       expect(rating?.isVisible).toBe(false);
 
-      const tlItems = await repo.getAllUserTimelineItems(U1);
+      const tlItems = await repo.getUserTimelineItems(U1);
       expect(tlItems.length).toBe(2);
       expect(tlItems[0].slice(1))
-        .toEqual(["rate-episode", { episodeID: S1E1, score: 7 }]);
-      expect(tlItems[1].slice(1))
         .toEqual(["rate-episode", { episodeID: S1E1, score: null }]);
+      expect(tlItems[1].slice(1))
+        .toEqual(["rate-episode", { episodeID: S1E1, score: 7 }]);
 
       expect(await repo.getAllEpisodeVotesGroupedByScore(S1, S1E1))
         .toEqual({});

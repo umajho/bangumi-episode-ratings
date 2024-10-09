@@ -7,6 +7,7 @@ import {
   GetEpisodeRatingsResponseData,
   GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
+  GetUserTimeLineItemsResponseData,
   RateEpisodeRequestData__V1,
   RateEpisodeResponseData,
 } from "./shared/dto";
@@ -176,6 +177,29 @@ export class Client {
 
         method: "PUT",
         body: JSON.stringify(opts.isVisible),
+      },
+    );
+  }
+
+  get TIMELINE_ITEMS_PER_PAGE(): number {
+    return 10;
+  }
+
+  async getMyTimelineItems(opts: { pageNumber: number }): Promise<
+    APIResponseEx<GetUserTimeLineItemsResponseData>
+  > {
+    const searchParams = new URLSearchParams();
+    searchParams.set("offset", "" + ((opts.pageNumber - 1) * 10));
+    searchParams.set("limit", "" + this.TIMELINE_ITEMS_PER_PAGE);
+
+    return await this.fetch(
+      "api/v1",
+      `users/me/timeline/items`,
+      {
+        tokenType: "jwt",
+
+        method: "GET",
+        searchParams,
       },
     );
   }

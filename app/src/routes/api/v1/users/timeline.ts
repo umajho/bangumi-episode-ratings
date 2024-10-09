@@ -1,34 +1,35 @@
 import { Hono } from "jsr:@hono/hono";
 
 import * as Middlewares from "@/middlewares/mod.ts";
-import { SubjectID } from "@/types.ts";
-import { tryExtractIntegerFromCTXParams } from "@/routes/api/utils.ts";
+import {
+  tryExtractIntegerFromCTXSearchParams,
+  tryExtractUserIDOrMeFromCTXParams,
+} from "@/routes/api/utils.ts";
 import { respondForAPI } from "@/responding.tsx";
 import * as Queries from "@/operations/queries.ts";
 import * as Global from "@/global.ts";
 
-import episodesRouter from "./episodes.ts";
-
 export const router = new Hono();
 export default router;
 
-router.route("/episodes/:episodeID", episodesRouter);
-
 router.get(
-  "/episodes/ratings",
+  "items",
   Middlewares.auth(),
   async (ctx) => {
-    const subjectID = //
-      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
+    const userIDOrMe = tryExtractUserIDOrMeFromCTXParams(ctx, "userIDOrMe");
+    const offset = tryExtractIntegerFromCTXSearchParams(ctx, "offset") ?? 0;
+    const limit = tryExtractIntegerFromCTXSearchParams(ctx, "limit");
 
-    if (subjectID === null) {
+    if (
+      userIDOrMe !== "me" || limit !== 10 || (offset % 10 !== 0) || offset > 90
+    ) {
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
     }
 
-    const result = await Queries.querySubjectEpisodesRatings(
+    const result = await Queries.queryUserTimeLineItems(
       Global.repo,
       await ctx.var.authenticate(Global.repo),
-      { subjectID },
+      { offset, limit },
     );
 
     return respondForAPI(ctx, result);

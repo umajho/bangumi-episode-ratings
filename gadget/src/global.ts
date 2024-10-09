@@ -1,4 +1,5 @@
 import { version } from "../package.json";
+import { BangumiClient } from "./bangumi-client";
 
 import { Client } from "./client";
 import env from "./env";
@@ -44,6 +45,10 @@ function makeGlobal() {
     localStorage.removeItem(env.LOCAL_STORAGE_KEY_TOKEN);
   }
 
+  const meAEl = $("#dock .content .first > a");
+  const claimedUserTextID = meAEl.attr("href")?.split("/")?.at(-1) ?? null;
+  const claimedUserName = meAEl.text().trim() ?? null;
+
   const token = new Watched<string | null>(
     localStorage.getItem(env.LOCAL_STORAGE_KEY_TOKEN),
   );
@@ -60,6 +65,8 @@ function makeGlobal() {
     apiEntrypoint: env.APP_API_ENTRYPOINT,
     token: token.getValueOnce(),
   });
+
+  const bangumiClient = new BangumiClient();
 
   token.watchDeferred((newToken) => {
     if (newToken) {
@@ -96,8 +103,11 @@ function makeGlobal() {
     subjectID,
     episodeID,
     claimedUserID,
+    claimedUserTextID,
+    claimedUserName,
     token,
     client,
+    bangumiClient,
 
     currentEpisodeVisibilityFromServer,
     updateCurrentEpisodeVisibilityFromServerRaw,

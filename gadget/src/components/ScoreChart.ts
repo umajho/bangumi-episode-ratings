@@ -1,6 +1,7 @@
 import { Score, scores } from "../definitions";
 import { VotesData } from "../models/VotesData";
 import { Watched } from "../utils";
+import { renderTooltip } from "./Tooltip";
 
 export function renderScoreChart(
   el: JQuery<HTMLElement>,
@@ -10,13 +11,14 @@ export function renderScoreChart(
     <div id="ChartWarpper" class="chartWrapper" style="float: right; width: 218px;">
       <div class="chart_desc"><small class="grey"><span class="votes"></span> votes</small></div>
       <ul class="horizontalChart">
-        <div class="tooltip fade top in" role="tooltip" style="top: -34px; transform: translateX(-50%);">
-          <div class="tooltip-arrow" style="left: 50%;"></div>
-          <div class="tooltip-inner"></div>
-        </div>
+        <div data-sel="tooltip"></div>
       </ul>
     </div>
   `).replaceAll(el);
+
+  const tooltip = renderTooltip(el.find("[data-sel='tooltip']"), {
+    initialStyle: "top: -34px; transform: translateX(-50%);",
+  });
 
   const chartEl = el.find(".horizontalChart");
   const barEls = scores.map(() => $("<div />").appendTo(chartEl));
@@ -42,26 +44,22 @@ export function renderScoreChart(
   });
 
   function updateTooltip(opts: { score: Score | null }) {
-    let tooltipEl = $(chartEl).find(".tooltip");
-
     if (opts.score === null) {
-      tooltipEl.css("display", "none");
+      tooltip.updateVisibility(false);
       return;
     }
 
-    tooltipEl.css("display", "block");
+    tooltip.updateVisibility(true);
     const barEl = $(chartEl).find(`li`).eq(10 - opts.score);
     const barElRelativeOffsetLeft = barEl.offset()!.left - el.offset()!.left;
-    tooltipEl.css("left", `${barElRelativeOffsetLeft + barEl.width()! / 2}px`);
+    tooltip.updateLeft(barElRelativeOffsetLeft + barEl.width()! / 2);
 
     const votesData = props.votesData.getValueOnce();
     let scoreVotes = votesData.getScoreVotes(opts.score);
     const percentage = votesData.totalVotes
       ? (scoreVotes / votesData.totalVotes * 100)
       : 0;
-    $(tooltipEl).find(".tooltip-inner").text(
-      `${percentage.toFixed(2)}% (${scoreVotes}人)`,
-    );
+    tooltip.updateContent(`${percentage.toFixed(2)}% (${scoreVotes}人)`);
   }
   updateTooltip({ score: null });
 

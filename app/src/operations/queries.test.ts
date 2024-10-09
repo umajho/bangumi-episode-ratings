@@ -9,6 +9,7 @@ import {
   queryEpisodePublicRatings,
   queryEpisodeRatings,
   querySubjectEpisodesRatings,
+  queryUserTimeLineItems,
 } from "./queries.ts";
 
 const U1 = 11 as UserID, U2 = 12 as UserID;
@@ -181,6 +182,76 @@ describe("function queryEpisodePublicRatings", () => {
         public_voters_by_score: { 8: [U1, U2] },
       }]);
     }
+  });
+});
+
+describe("function queryUserTimeLineItems", () => {
+  let TS1: number;
+  beforeEach(async () => {
+    TS1 = Date.now();
+
+    await repo.setEpisodeInfo(S1E1, { subjectID: S1 });
+    await repo.setEpisodeInfo(S1E2, { subjectID: S1 });
+    await repo.setEpisodeInfo(S2E1, { subjectID: S2 });
+    const result = await repo.tx((tx) => {
+      const fixtureList: [UserID, EpisodeID, number | null][] = [
+        [U1, S1E1, 7],
+        [U1, S2E1, 6],
+        [U1, S1E1, 8],
+        [U1, S1E2, 6],
+        [U2, S1E2, 5],
+        [U1, S2E1, null],
+      ];
+      for (const [i, [userID, episodeID, score]] of fixtureList.entries()) {
+        tx.insertUserTimelineItem(
+          userID,
+          TS1 + i * 100,
+          ["rate-episode", { episodeID, score }],
+        );
+      }
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("works with `limit` >= length", async () => {
+    expect(await queryUserTimeLineItems(repo, U1, { offset: 0, limit: 10 }))
+      .toEqual(["ok", {
+        items: [
+          [TS1 + 500, "rate-episode", { episode_id: S2E1, score: null }],
+          [TS1 + 300, "rate-episode", { episode_id: S1E2, score: 6 }],
+          [TS1 + 200, "rate-episode", { episode_id: S1E1, score: 8 }],
+          [TS1 + 100, "rate-episode", { episode_id: S2E1, score: 6 }],
+          [TS1, "rate-episode", { episode_id: S1E1, score: 7 }],
+        ],
+        subjects: {
+          [S1]: { episode_ids: [S1E1, S1E2] },
+          [S2]: { episode_ids: [S2E1] },
+        },
+      }]);
+    expect(await queryUserTimeLineItems(repo, U2, { offset: 0, limit: 10 }))
+      .toEqual(["ok", {
+        items: [[TS1 + 400, "rate-episode", { episode_id: S1E2, score: 5 }]],
+        subjects: { [S1]: { episode_ids: [S1E2] } },
+      }]);
+  });
+
+  it("works with `limit` < length", async () => {
+    expect(await queryUserTimeLineItems(repo, U1, { offset: 0, limit: 1 }))
+      .toEqual(["ok", {
+        items: [[TS1 + 500, "rate-episode", { episode_id: S2E1, score: null }]],
+        subjects: { [S2]: { episode_ids: [S2E1] } },
+      }]);
+  });
+
+  it("works with `offset` > 0", async () => {
+    expect(await queryUserTimeLineItems(repo, U1, { offset: 1, limit: 2 }))
+      .toEqual(["ok", {
+        items: [
+          [TS1 + 300, "rate-episode", { episode_id: S1E2, score: 6 }],
+          [TS1 + 200, "rate-episode", { episode_id: S1E1, score: 8 }],
+        ],
+        subjects: { [S1]: { episode_ids: [S1E1, S1E2] } },
+      }]);
   });
 });
 

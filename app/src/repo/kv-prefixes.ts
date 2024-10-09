@@ -29,85 +29,88 @@ const KV_PREFIXES = (() => {
   ) as ReverseMap<typeof reversedKVPrefixes>;
 })();
 
-export default {
-  buildKeyUser(userID: UserID) {
-    return [KV_PREFIXES["users/:u"], userID] as const;
-  },
-  buildKeyToken(token: string) {
-    return [KV_PREFIXES["tokens/:t"], token] as const;
-  },
-  buildKeyTokenCoupon(tokenCoupon: string) {
-    return [KV_PREFIXES["token-coupons/:tc"], tokenCoupon] as const;
-  },
-  buildKeyEpisodeInfo(episodeID: EpisodeID) {
-    return [KV_PREFIXES["episode-infos/:e"], episodeID] as const;
-  },
-  buildKeyUserSubjectEpisodeRating(
-    userID: UserID,
-    subjectID: SubjectID,
-    episodeID: EpisodeID,
-  ) {
-    return [
-      KV_PREFIXES["ratings/:u/:s/:e"],
-      userID,
-      subjectID,
-      episodeID,
-    ] as const;
-  },
-  buildPrefixUserSubjectEpisodeRating(
-    subKey: [] | [userID: UserID, subjectID: SubjectID],
-  ) {
-    return [KV_PREFIXES["ratings/:u/:s/:e"], ...subKey] as const;
-  },
-  buildKeySubjectEpisodeScoreVotes(
-    subjectID: SubjectID,
-    episodeID: EpisodeID,
-    score: number,
-  ) {
-    return [
-      KV_PREFIXES["vote-counts/:s/:e/:sc"],
-      subjectID,
-      episodeID,
-      score,
-    ] as const;
-  },
-  buildPrefixSubjectEpisodeScoreVotes(
-    subKey:
-      | [subjectID: SubjectID]
-      | [subjectID: SubjectID, episodeID: EpisodeID],
-  ) {
-    return [KV_PREFIXES["vote-counts/:s/:e/:sc"], ...subKey] as const;
-  },
-  buildKeySubjectEpisodeScorePublicVoters(
-    subjectID: SubjectID,
-    episodeID: EpisodeID,
-    score: number,
-    userID: UserID,
-  ) {
-    return [
-      KV_PREFIXES["public-voter-marks/:s/:e/:sc/:u"],
-      subjectID,
-      episodeID,
-      score,
-      userID,
-    ] as const;
-  },
-  buildPrefixSubjectEpisodeScorePublicVoters(
-    subKey: [subjectID: SubjectID, episodeID: EpisodeID],
-  ) {
-    return [
-      KV_PREFIXES["public-voter-marks/:s/:e/:sc/:u"],
-      ...subKey,
-    ] as const;
-  },
-  buildKeyUserTimelineItem(userID: UserID, timestampMs: number) {
-    return [
-      KV_PREFIXES["user-timeline-items/:u/:ts"],
-      userID,
-      timestampMs,
-    ] as const;
-  },
-  buildPrefixUserTimelineItem(subKey: [userID: UserID]) {
-    return [KV_PREFIXES["user-timeline-items/:u/:ts"], ...subKey] as const;
-  },
-};
+export function buildKeyUser(userID: UserID) {
+  return [KV_PREFIXES["users/:u"], userID] as const;
+}
+export function buildKeyToken(token: string) {
+  return [KV_PREFIXES["tokens/:t"], token] as const;
+}
+export function buildKeyTokenCoupon(tokenCoupon: string) {
+  return [KV_PREFIXES["token-coupons/:tc"], tokenCoupon] as const;
+}
+export function buildKeyEpisodeInfo(episodeID: EpisodeID) {
+  return [KV_PREFIXES["episode-infos/:e"], episodeID] as const;
+}
+export function extractEpisodeIDFromKeyEpisodeInfo(
+  key: ReturnType<typeof buildKeyEpisodeInfo>,
+) {
+  return key[1] as EpisodeID;
+}
+export function buildKeyUserSubjectEpisodeRating(
+  userID: UserID,
+  subjectID: SubjectID,
+  episodeID: EpisodeID,
+) {
+  return [
+    KV_PREFIXES["ratings/:u/:s/:e"],
+    userID,
+    subjectID,
+    episodeID,
+  ] as const;
+}
+export function buildPrefixUserSubjectEpisodeRating(
+  subKey: [] | [userID: UserID, subjectID: SubjectID],
+) {
+  return [KV_PREFIXES["ratings/:u/:s/:e"], ...subKey] as const;
+}
+export function buildKeySubjectEpisodeScoreVotes(
+  subjectID: SubjectID,
+  episodeID: EpisodeID,
+  score: number,
+) {
+  return [
+    KV_PREFIXES["vote-counts/:s/:e/:sc"],
+    subjectID,
+    episodeID,
+    score,
+  ] as const;
+}
+export function buildPrefixSubjectEpisodeScoreVotes(
+  subKey:
+    | [subjectID: SubjectID]
+    | [subjectID: SubjectID, episodeID: EpisodeID],
+) {
+  return [KV_PREFIXES["vote-counts/:s/:e/:sc"], ...subKey] as const;
+}
+export function buildKeySubjectEpisodeScorePublicVoters(
+  subjectID: SubjectID,
+  episodeID: EpisodeID,
+  score: number,
+  userID: UserID,
+) {
+  return [
+    KV_PREFIXES["public-voter-marks/:s/:e/:sc/:u"],
+    subjectID,
+    episodeID,
+    score,
+    userID,
+  ] as const;
+}
+export function buildPrefixSubjectEpisodeScorePublicVoters(
+  subKey: [subjectID: SubjectID, episodeID: EpisodeID],
+) {
+  return [
+    KV_PREFIXES["public-voter-marks/:s/:e/:sc/:u"],
+    ...subKey,
+  ] as const;
+}
+export function buildKeyUserTimelineItem(userID: UserID, timestampMs: number) {
+  return [
+    KV_PREFIXES["user-timeline-items/:u/:ts"],
+    userID,
+    timestampMs,
+  ] as const;
+}
+export function buildPrefixUserTimelineItem(subKey: [userID: UserID]) {
+  return [KV_PREFIXES["user-timeline-items/:u/:ts"], ...subKey] as const;
+}

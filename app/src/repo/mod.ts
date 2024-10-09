@@ -13,7 +13,7 @@ import {
 } from "@/types.ts";
 
 import * as KVUtils from "./utils.ts";
-import kvPrefixes from "./kv-prefixes.ts";
+import * as kvPrefixes from "./kv-prefixes.ts";
 
 export class Repo {
   #kv: Deno.Kv;
@@ -126,6 +126,32 @@ export class Repo {
       const result = await this.#kv.set(key, episodeInfo);
       isOk = result.ok;
     }
+  }
+
+  /**
+   * XXX: 由于 Deno KV 的限制，`limit` 不应大于 10。
+   */
+  async getManyEpisodeInfos(
+    episodeIDs: Set<EpisodeID>,
+  ): Promise<Record<EpisodeID, EpisodeInfoData>> {
+    const keys: (ReturnType<typeof kvPrefixes.buildKeyEpisodeInfo>)[] = [];
+    for (const episodeID of episodeIDs) {
+      keys.push(kvPrefixes.buildKeyEpisodeInfo(episodeID));
+    }
+
+    const ret: Record<EpisodeID, EpisodeInfoData> = {};
+    for (
+      const result of await this.#kv.getMany(keys, { consistency: "eventual" })
+    ) {
+      const episodeID = kvPrefixes
+        // deno-lint-ignore no-explicit-any
+        .extractEpisodeIDFromKeyEpisodeInfo(result.key as any);
+      if (result.value) {
+        ret[episodeID] = result.value as EpisodeInfoData;
+      }
+    }
+
+    return ret;
   }
 
   async getUserEpisodeRatingResult(
@@ -252,15 +278,28 @@ export class Repo {
   }
 
   /**
-   * 获取指定用户的时间线 items。
+   * 获取指定用户的时间线 items。顺序从新到旧。
+   *
+   * XXX: `offset` 的效率很差。
    */
-  async getAllUserTimelineItems(userID: UserID) {
+  async getUserTimelineItems(
+    userID: UserID,
+    opts?: { offset?: number; limit?: number },
+  ) {
+    let i = -1;
     const items: [timestampMs: number, ...rest: UserTimelineItem][] = [];
     for await (
       const result of this.#kv.list<UserTimelineItem>(
         { prefix: kvPrefixes.buildPrefixUserTimelineItem([userID]) },
+        {
+          reverse: true,
+          ...(opts?.limit && { limit: opts.limit + (opts.offset ?? 0) }),
+        },
       )
     ) {
+      i++;
+      if (opts?.offset && i < opts.offset) continue;
+
       items.push([result.key.at(-1) as number, ...result.value]);
     }
 

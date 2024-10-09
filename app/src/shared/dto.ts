@@ -78,3 +78,16 @@ export interface GetEpisodePublicRatingsResponseData {
    */
   public_voters_by_score: { [score: number]: number[] };
 }
+
+export interface GetUserTimeLineItemsResponseData {
+  items: UserTimelineItemResponseData[];
+  subjects: Record<number, { episode_ids: number[] }>;
+}
+
+export type UserTimelineItemResponseData =
+  | [
+    timestamp_ms: number,
+    type: "rate-episode",
+    payload: { episode_id: number; score: number | null },
+  ]
+  | never;
