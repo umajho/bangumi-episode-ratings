@@ -10,5 +10,8 @@ docker-build:
 		-t umajho/bangumi-episode-ratings:$(cat deno.json | jq -r .version) \
 		.
 
+docker-build-tmp:
+	docker build -t umajho/bangumi-episode-ratings:tmp .
+
 docker-push:
 	docker image push --all-tags umajho/bangumi-episode-ratings
