@@ -6,6 +6,7 @@ import {
   GetEpisodeRatingsResponseData__Until_0_3_0,
   GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
+  GetSubjectEpisodesResponseData_Until_0_5_0,
   GetUserTimeLineItemsResponseData,
   UserTimelineItemResponseData,
 } from "@/shared/dto.ts";
@@ -15,18 +16,30 @@ import { makeErrorAuthRequiredResponse } from "@/responding.tsx";
 export async function querySubjectEpisodesRatings(
   repo: Repo,
   userID: UserID | null,
-  opts: { subjectID: SubjectID },
-): Promise<APIResponse<GetSubjectEpisodesResponseData>> {
-  const { votesByScoreBySubject, isCertainThatEpisodesVotesAreIntegral } = //
+  opts: {
+    subjectID: SubjectID;
+
+    compatibility: {
+      withIntegralityBoolean: boolean;
+    };
+  },
+): Promise<
+  APIResponse<
+    GetSubjectEpisodesResponseData | GetSubjectEpisodesResponseData_Until_0_5_0
+  >
+> {
+  const { votesByScoreBySubject } = //
     await repo.getAllEpisodesVotesInSubjectGroupedByScoreAndEpisodeEx(
       opts.subjectID,
     );
 
   const data: GetSubjectEpisodesResponseData = {
     episodes_votes: votesByScoreBySubject,
-    is_certain_that_episodes_votes_are_integral:
-      isCertainThatEpisodesVotesAreIntegral,
   };
+  if (opts.compatibility.withIntegralityBoolean) {
+    (data as GetSubjectEpisodesResponseData_Until_0_5_0)
+      .is_certain_that_episodes_votes_are_integral = true;
+  }
 
   if (userID !== null) {
     data.my_ratings = await repo.getAllUserSubjectEpisodesRatings(

@@ -17,6 +17,7 @@ router.route("/episodes/:episodeID", episodesRouter);
 router.get(
   "/episodes/ratings",
   Middlewares.auth(),
+  Middlewares.gadgetVersion(),
   async (ctx) => {
     const subjectID = //
       tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
@@ -28,7 +29,13 @@ router.get(
     const result = await Queries.querySubjectEpisodesRatings(
       Global.repo,
       await ctx.var.authenticate(Global.repo),
-      { subjectID },
+      {
+        subjectID,
+
+        compatibility: {
+          withIntegralityBoolean: (ctx.var.gadgetVersion ?? 0) < 5_000, // < 0.5.0
+        },
+      },
     );
 
     return respondForAPI(ctx, result);

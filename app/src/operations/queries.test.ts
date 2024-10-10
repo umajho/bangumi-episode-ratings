@@ -32,7 +32,7 @@ beforeEach(async () => {
 afterEach(() => repo.__closeForTest());
 
 describe("function querySubjectEpisodesRatings", () => {
-  it("works", async () => {
+  beforeEach(async () => {
     await mustSetRatingRelatedForTest(repo, [
       [U1, S1, S1E1, 7, false],
       [U2, S1, S1E1, 7, true],
@@ -40,19 +40,37 @@ describe("function querySubjectEpisodesRatings", () => {
       [U2, S1, S1E2, 6, true],
       [U1, S2, S2E1, 8, true],
     ]);
+  });
 
+  it("works", async () => {
     expect(
-      await querySubjectEpisodesRatings(repo, null, { subjectID: S1 }),
+      await querySubjectEpisodesRatings(repo, null, {
+        subjectID: S1,
+        compatibility: { withIntegralityBoolean: false },
+      }),
     ).toEqual(["ok", {
       episodes_votes: { [S1E1]: { 7: 2 }, [S1E2]: { 6: 1, 8: 1 } },
-      is_certain_that_episodes_votes_are_integral: true,
     }]);
     expect(
-      await querySubjectEpisodesRatings(repo, U1, { subjectID: S1 }),
+      await querySubjectEpisodesRatings(repo, U1, {
+        subjectID: S1,
+        compatibility: { withIntegralityBoolean: false },
+      }),
+    ).toEqual(["ok", {
+      episodes_votes: { [S1E1]: { 7: 2 }, [S1E2]: { 6: 1, 8: 1 } },
+      my_ratings: { [S1E1]: 7, [S1E2]: 8 },
+    }]);
+  });
+
+  it("works with compatibility options", async () => {
+    expect(
+      await querySubjectEpisodesRatings(repo, null, {
+        subjectID: S1,
+        compatibility: { withIntegralityBoolean: true },
+      }),
     ).toEqual(["ok", {
       episodes_votes: { [S1E1]: { 7: 2 }, [S1E2]: { 6: 1, 8: 1 } },
       is_certain_that_episodes_votes_are_integral: true,
-      my_ratings: { [S1E1]: 7, [S1E2]: 8 },
     }]);
   });
 });

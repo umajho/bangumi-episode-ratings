@@ -209,23 +209,17 @@ export class Repo {
    */
   async getAllEpisodesVotesInSubjectGroupedByScoreAndEpisodeEx(
     subjectID: SubjectID,
-    opts?: { limit?: number },
   ) {
-    const limit = opts?.limit ?? 1000;
-
     const prefix = kvPrefixes.buildPrefixSubjectEpisodeScoreVotes([subjectID]);
 
     const votesByScoreBySubject: {
       [episodeID: EpisodeID]: { [score: number]: number } | null;
     } = {};
-    let lastEpisodeID: EpisodeID | null = null;
     let count = 0;
-    for await (const result of this.#kv.list({ prefix }, { limit })) {
+    for await (const result of this.#kv.list({ prefix }, { batchSize: 1000 })) {
       count++;
 
       const episodeID = result.key.at(-2) as EpisodeID;
-      lastEpisodeID = episodeID;
-
       const score = result.key.at(-1) as number;
 
       const scoreVotes = result.value as Deno.KvU64;
@@ -238,18 +232,7 @@ export class Repo {
       }
     }
 
-    const isCertainThatEpisodesVotesAreIntegral = count < limit;
-    if (
-      !isCertainThatEpisodesVotesAreIntegral &&
-      votesByScoreBySubject[lastEpisodeID!] &&
-      !(10 in votesByScoreBySubject[lastEpisodeID!]!)
-    ) {
-      // `list` 返回的结果可能被截取了，靠最后的那一集的评分投票数据可能因此而不
-      // 完整，故而删去。
-      delete votesByScoreBySubject[lastEpisodeID!];
-    }
-
-    return { votesByScoreBySubject, isCertainThatEpisodesVotesAreIntegral };
+    return { votesByScoreBySubject };
   }
 
   /**

@@ -13,7 +13,7 @@ const S1 = 21 as SubjectID, S2 = 22 as SubjectID;
 const S1E1 = 31 as EpisodeID,
   S1E2 = 32 as EpisodeID,
   S2E1 = 33 as EpisodeID,
-  S2E2 = 34 as EpisodeID;
+  _S2E2 = 34 as EpisodeID;
 
 describe("class Repo", () => {
   let repo!: Repo;
@@ -301,10 +301,7 @@ describe("class Repo", () => {
         .toEqual({});
       expect(
         await repo.getAllEpisodesVotesInSubjectGroupedByScoreAndEpisodeEx(S1),
-      ).toEqual({
-        votesByScoreBySubject: {},
-        isCertainThatEpisodesVotesAreIntegral: true,
-      });
+      ).toEqual({ votesByScoreBySubject: {} });
 
       {
         const result = await repo.tx((tx) => {
@@ -318,16 +315,10 @@ describe("class Repo", () => {
           .toEqual({ 10: 1 });
         expect(
           await repo.getAllEpisodesVotesInSubjectGroupedByScoreAndEpisodeEx(S1),
-        ).toEqual({
-          votesByScoreBySubject: { [S1E1]: { 7: 1 } },
-          isCertainThatEpisodesVotesAreIntegral: true,
-        });
+        ).toEqual({ votesByScoreBySubject: { [S1E1]: { 7: 1 } } });
         expect(
           await repo.getAllEpisodesVotesInSubjectGroupedByScoreAndEpisodeEx(S2),
-        ).toEqual({
-          votesByScoreBySubject: { [S2E1]: { 10: 1 } },
-          isCertainThatEpisodesVotesAreIntegral: true,
-        });
+        ).toEqual({ votesByScoreBySubject: { [S2E1]: { 10: 1 } } });
       }
 
       {
@@ -347,25 +338,6 @@ describe("class Repo", () => {
           await repo.getAllEpisodesVotesInSubjectGroupedByScoreAndEpisodeEx(S1),
         ).toEqual({
           votesByScoreBySubject: { [S1E1]: null, [S1E2]: { 6: 10, 8: 1 } },
-          isCertainThatEpisodesVotesAreIntegral: true,
-        });
-      }
-
-      {
-        const result = await repo.tx((tx) => {
-          for (let score = 0; score < 4; score++) {
-            tx.increaseSubjectEpisodeScoreVotes(S2, S2E2, score);
-          }
-        });
-        expect(result.ok).toBe(true);
-        expect(
-          await repo.getAllEpisodesVotesInSubjectGroupedByScoreAndEpisodeEx(
-            S2,
-            { limit: 5 },
-          ),
-        ).toEqual({
-          votesByScoreBySubject: { [S2E1]: { 10: 1 } },
-          isCertainThatEpisodesVotesAreIntegral: false,
         });
       }
     });
