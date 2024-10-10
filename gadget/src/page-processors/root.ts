@@ -6,6 +6,8 @@ import { renderTimelineContent } from "../components/TimelineContent";
 const TIMELINE_CONTENT_DATA_ATTRIBUTE_NAME =
   "data-bgm-ep-ratings-timeline-content";
 
+const TIMELINE_TOP_BAR_ID = "__bgm_ep_ratings__tl_top_bar";
+
 export async function processRootPage() {
   $(".load-epinfo").each((_, el) => {
     const href = $(el).attr("href");
@@ -70,7 +72,21 @@ export async function processRootPage() {
       </li>`)
       .appendTo("ul#timelineTabs > li:has(a.top) > ul")
       .on("click", async () => {
-        await processMyTimelineContent($("#tmlContent"), { pageNumber: 1 });
+        $("#timelineTabs > li > a.focus").removeClass("focus");
+
+        const containerEl = $("#tmlContent");
+
+        $(/*html*/ `
+          <div id="${TIMELINE_TOP_BAR_ID}">
+            <button>导出我的单集评分数据</button>
+          </div>
+        `)
+          .prependTo(containerEl)
+          .on("click", () => {
+            Global.client.downloadMyEpisodeRatingsData();
+          });
+
+        await processMyTimelineContent(containerEl, { pageNumber: 1 });
       });
   });
 }
@@ -79,8 +95,6 @@ async function processMyTimelineContent(
   containerEl: JQuery<HTMLElement>,
   opts: { pageNumber: number },
 ) {
-  $("#timelineTabs > li > a.focus").removeClass("focus");
-
   renderLoading(clearContainerAndGetNewChildElement(containerEl), {
     attributeName: TIMELINE_CONTENT_DATA_ATTRIBUTE_NAME,
   });
@@ -141,6 +155,8 @@ function backToMainTimelineTab() {
 }
 
 function clearContainerAndGetNewChildElement(containerEl: JQuery<HTMLElement>) {
-  containerEl.empty();
+  containerEl.children()
+    .filter((_, el) => el.id !== TIMELINE_TOP_BAR_ID)
+    .remove();
   return $("<div />").appendTo(containerEl);
 }

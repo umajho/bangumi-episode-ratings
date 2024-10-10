@@ -59,7 +59,7 @@ export function buildKeyUserSubjectEpisodeRating(
   ] as const;
 }
 export function buildPrefixUserSubjectEpisodeRating(
-  subKey: [] | [userID: UserID, subjectID: SubjectID],
+  subKey: [] | [userID: UserID] | [userID: UserID, subjectID: SubjectID],
 ) {
   return [KV_PREFIXES["ratings/:u/:s/:e"], ...subKey] as const;
 }

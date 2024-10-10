@@ -164,13 +164,36 @@ export class Repo {
     return (await this.#kv.get<UserSubjectEpisodeRatingData>(key));
   }
 
-  async getAllUserSubjectEpisodesRatings(userID: UserID, subjectID: SubjectID) {
+  async getUserEpisodesRatingsUnderSubject(
+    userID: UserID,
+    subjectID: SubjectID,
+  ) {
     const prefix = kvPrefixes
       .buildPrefixUserSubjectEpisodeRating([userID, subjectID]);
 
     const ratings: { [episodeID: number]: number } = {};
     for await (
-      const result of this.#kv.list<UserSubjectEpisodeRatingData>({ prefix })
+      const result of this.#kv.list<UserSubjectEpisodeRatingData>({ prefix }, {
+        batchSize: 1000,
+      })
+    ) {
+      const episodeID = result.key.at(-1) as number;
+      if (result.value.score !== null) {
+        ratings[episodeID] = result.value.score;
+      }
+    }
+
+    return ratings;
+  }
+
+  async getUserAllEpisodesRatings(userID: UserID) {
+    const prefix = kvPrefixes.buildPrefixUserSubjectEpisodeRating([userID]);
+
+    const ratings: { [episodeID: number]: number } = {};
+    for await (
+      const result of this.#kv.list<UserSubjectEpisodeRatingData>({ prefix }, {
+        batchSize: 1000,
+      })
     ) {
       const episodeID = result.key.at(-1) as number;
       if (result.value.score !== null) {

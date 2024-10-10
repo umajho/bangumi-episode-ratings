@@ -7,6 +7,7 @@ import {
   GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
   GetSubjectEpisodesResponseData_Until_0_5_0,
+  GetUserEpisodeRatingsResponseData,
   GetUserTimeLineItemsResponseData,
   UserTimelineItemResponseData,
 } from "@/shared/dto.ts";
@@ -42,7 +43,7 @@ export async function querySubjectEpisodesRatings(
   }
 
   if (userID !== null) {
-    data.my_ratings = await repo.getAllUserSubjectEpisodesRatings(
+    data.my_ratings = await repo.getUserEpisodesRatingsUnderSubject(
       userID,
       opts.subjectID,
     );
@@ -175,4 +176,14 @@ export async function queryUserTimeLineItems(
   };
 
   return ["ok", data];
+}
+
+export async function queryUserEpisodeRatings(
+  repo: Repo,
+  userID: UserID | null,
+): Promise<APIResponse<GetUserEpisodeRatingsResponseData>> {
+  if (userID === null) return makeErrorAuthRequiredResponse();
+
+  const ratings = await repo.getUserAllEpisodesRatings(userID);
+  return ["ok", { episode_to_score_map: ratings }];
 }

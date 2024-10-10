@@ -204,6 +204,24 @@ export class Client {
     );
   }
 
+  async downloadMyEpisodeRatingsData(): Promise<APIResponseEx<void>> {
+    const resp = await this.fetch<any>( // TODO!!!: remove `any`.
+      "api/v1",
+      "users/me/episode-ratings-data-file",
+      {
+        tokenType: "jwt",
+
+        method: "GET",
+      },
+    );
+
+    if (resp[0] !== "ok") return resp;
+    const [_, data] = resp;
+    this.saveFile(data.content, { fileName: data.fileName });
+
+    return ["ok", undefined];
+  }
+
   private async fetch<T>(
     group: "auth" | "api/v1",
     endpointPath: string,
@@ -329,6 +347,15 @@ export class Client {
     } else {
       return fn();
     }
+  }
+
+  private saveFile(data: string, opts: { fileName: string }) {
+    const blob = new Blob([data], { type: "text/plain; charset=utf-8" });
+    const aEl = document.createElement("a");
+    aEl.href = URL.createObjectURL(blob);
+    aEl.download = opts.fileName;
+    aEl.click();
+    URL.revokeObjectURL(aEl.href);
   }
 
   clearCache(): void {

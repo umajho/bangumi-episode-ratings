@@ -96,3 +96,7 @@ export type UserTimelineItemResponseData =
     payload: { episode_id: number; score: number | null },
   ]
   | never;
+
+export interface GetUserEpisodeRatingsResponseData {
+  episode_to_score_map: Record<number, number>;
+}

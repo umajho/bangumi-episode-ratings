@@ -259,7 +259,7 @@ describe("class Repo", () => {
         (await repo.getUserEpisodeRatingResult(U1, S2, S1E1)).value,
       ).toBe(null);
 
-      expect(await repo.getAllUserSubjectEpisodesRatings(U1, S1))
+      expect(await repo.getUserEpisodesRatingsUnderSubject(U1, S1))
         .toEqual({ [S1E1]: 7 });
 
       {
@@ -288,9 +288,9 @@ describe("class Repo", () => {
 
       await setNewUserEpisodeRating(U1, S1, S1E2, { score: 8 });
       await setNewUserEpisodeRating(U1, S2, S2E1, { score: 6 });
-      expect(await repo.getAllUserSubjectEpisodesRatings(U1, S1))
+      expect(await repo.getUserEpisodesRatingsUnderSubject(U1, S1))
         .toEqual({ [S1E2]: 8 });
-      expect(await repo.getAllUserSubjectEpisodesRatings(U1, S2))
+      expect(await repo.getUserEpisodesRatingsUnderSubject(U1, S2))
         .toEqual({ [S2E1]: 6 });
     });
   });
