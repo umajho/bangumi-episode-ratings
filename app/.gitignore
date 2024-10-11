@@ -1,1 +1,4 @@
 .env.prod.*
+
+coverage/
+coverage.lcov

@@ -23,4 +23,10 @@ jobs:
         uses: extractions/setup-just@v1
       - name: Run tests
         run: |
-          cd app && just test
+          cd app && just test-cov
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./app/coverage.lcov
+          flags: app
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,6 +1,10 @@
 test *args:
 	deno test --allow-env --env=.env.test --unstable-kv {{args}}
 
+test-cov:
+	deno test --allow-env --env=.env.test --unstable-kv --coverage=coverage
+	deno coverage ./coverage --lcov > coverage.lcov
+
 deploy * args:
 	deployctl deploy --prod --import-map=import_map.json {{args}}
 
