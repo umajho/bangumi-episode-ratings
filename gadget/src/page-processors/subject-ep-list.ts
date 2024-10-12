@@ -77,13 +77,6 @@ async function processSubjectEpListPageInternal(
     })();
 
     const ratings = epsRatings.episodes_votes[episodeID];
-    if (
-      !epsRatings.is_certain_that_episodes_votes_are_integral &&
-      ratings === undefined
-    ) {
-      // TODO: 在此种情况时，允许用户主动获取。
-      return;
-    }
     const votesData = new Watched(
       new VotesData(ratings ?? {} as { [_ in Score]?: number }),
     );
