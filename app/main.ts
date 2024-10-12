@@ -60,7 +60,7 @@ app.use(logger((str, ...rest) => {
   const now = new Date();
   const nowDate = {
     year: now.getFullYear(),
-    month: now.getMonth(),
+    month: now.getMonth() + 1,
     day: now.getDate(),
   };
   if (
