@@ -3,7 +3,7 @@ import { BangumiClient } from "./bangumi-client";
 
 import { Client } from "./client";
 import env from "./env";
-import { Watched } from "./utils";
+import { Watched } from "./utils/watched";
 
 const global: ReturnType<typeof makeGlobal> = {} as any;
 export default global;

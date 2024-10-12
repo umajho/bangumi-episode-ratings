@@ -1,5 +1,5 @@
 import { describeScoreEx, Score } from "../definitions";
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 import Global from "../global";
 import { renderStars } from "./Stars";
 import { VotesData } from "../models/VotesData";

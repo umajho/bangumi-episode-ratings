@@ -1,6 +1,6 @@
 import { describeScore } from "../definitions";
 import { VotesData } from "../models/VotesData";
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 
 export function renderScoreboard(
   el: JQuery<HTMLElement>,

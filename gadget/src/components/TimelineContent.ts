@@ -1,6 +1,6 @@
 import Global from "../global";
 import { GetUserTimeLineItemsResponseData } from "../shared/dto";
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 import {
   formatDate,
   formatDatesDifferences,

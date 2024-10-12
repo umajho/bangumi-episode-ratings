@@ -1,4 +1,4 @@
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 
 export function renderSmallStars(
   el: JQuery<HTMLElement>,

@@ -4,7 +4,7 @@ import { renderRateInfo } from "../components/RateInfo";
 import { Score } from "../definitions";
 import Global from "../global";
 import { VotesData } from "../models/VotesData";
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 
 export async function processSubjectEpListPage() {
   const editEpBatchEl = $('[name="edit_ep_batch"]');

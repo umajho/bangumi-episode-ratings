@@ -1,4 +1,4 @@
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 import { renderVisibilityButton } from "./VisibilityButton";
 
 export function renderReplyFormVisibilityControl(

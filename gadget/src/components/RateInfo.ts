@@ -1,5 +1,5 @@
 import { VotesData } from "../models/VotesData";
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 import { renderSmallStars } from "./SmallStars";
 
 export function renderRateInfo(

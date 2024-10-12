@@ -1,6 +1,6 @@
 import { Score, scores } from "../definitions";
 import { VotesData } from "../models/VotesData";
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 import { renderTooltip } from "./Tooltip";
 
 export function renderScoreChart(

@@ -4,7 +4,7 @@ import { renderScoreboard } from "../components/Scoreboard";
 import { renderScoreChart } from "../components/ScoreChart";
 import { VotesData } from "../models/VotesData";
 import { Score } from "../definitions";
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 import { renderSmallStars } from "../components/SmallStars";
 import { renderReplyFormVisibilityControl } from "../components/ReplyFormVisibilityControl";
 import { renderMyRatingInComment } from "../components/MyRatingInComment";

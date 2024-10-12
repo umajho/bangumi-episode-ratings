@@ -1,4 +1,4 @@
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 import { renderSmallStars } from "./SmallStars";
 import { renderVisibilityButton } from "./VisibilityButton";
 

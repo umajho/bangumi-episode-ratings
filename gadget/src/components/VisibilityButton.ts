@@ -1,5 +1,5 @@
 import Global from "../global";
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 
 export function renderVisibilityButton(
   el: JQuery<HTMLElement>,

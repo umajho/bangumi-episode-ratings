@@ -1,5 +1,5 @@
 import { describeScoreEx, Score, scores } from "../definitions";
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 
 export function renderStars(
   el: JQuery<HTMLElement>,

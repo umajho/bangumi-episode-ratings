@@ -1,7 +1,7 @@
 import Global from "../global";
 import { renderRateInfo } from "../components/RateInfo";
 import { VotesData } from "../models/VotesData";
-import { Watched } from "../utils";
+import { Watched } from "../utils/watched";
 import { Score } from "../definitions";
 import { renderErrorWithRetry } from "../components/ErrorWithRetry";
 
