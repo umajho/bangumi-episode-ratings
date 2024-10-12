@@ -105,7 +105,9 @@ export class Client {
   > {
     if (this.subjectEpisodesRatingsCache[opts.subjectID]) {
       const cached = this.subjectEpisodesRatingsCache[opts.subjectID];
-      if (cached instanceof Promise) {
+      // XXX: 不能用 `cached instanceof Promise` 来判断。这么做在 Tampermonkey
+      // 的环境下有效，但在 Bangumi 超合金组件的环境下总是为 false。
+      if ("then" in cached) {
         return await cached;
       } else {
         return ["ok", cached];
