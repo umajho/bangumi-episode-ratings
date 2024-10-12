@@ -55,7 +55,29 @@ log.setup((() => {
 
 const app = new Hono();
 
-app.use(logger(log.info));
+let lastLogDate: { year: number; month: number; day: number } | null = null;
+app.use(logger((str, ...rest) => {
+  const now = new Date();
+  const nowDate = {
+    year: now.getFullYear(),
+    month: now.getMonth(),
+    day: now.getDate(),
+  };
+  if (
+    nowDate.day !== lastLogDate?.day ||
+    nowDate.month !== lastLogDate?.month ||
+    nowDate.year !== lastLogDate?.year
+  ) {
+    log.info(`TODAY: ${nowDate.year}-${nowDate.month}-${nowDate.day}`);
+  }
+  const nowHourText = ("" + now.getHours()).padStart(2, "0");
+  const nowMinuteText = ("" + now.getMinutes()).padStart(2, "0");
+  const nowSecondText = ("" + now.getSeconds()).padStart(2, "0");
+  const nowTimeText = `${nowHourText}:${nowMinuteText}:${nowSecondText}`;
+
+  log.info(`${nowTimeText} ${str}`, rest);
+  lastLogDate = nowDate;
+}));
 app.use(cors({
   origin: config.site.CORS_ORIGINS,
   allowHeaders: config.site.cloneCorsAllowedHeaders(),
