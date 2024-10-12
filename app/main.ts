@@ -68,12 +68,12 @@ app.use(logger((str, ...rest) => {
     nowDate.month !== lastLogDate?.month ||
     nowDate.year !== lastLogDate?.year
   ) {
-    log.info(`TODAY: ${nowDate.year}-${nowDate.month}-${nowDate.day}`);
+    log.info(`TODAY: ${nowDate.year}-${nowDate.month}-${nowDate.day}Z`);
   }
   const nowHourText = ("" + now.getHours()).padStart(2, "0");
   const nowMinuteText = ("" + now.getMinutes()).padStart(2, "0");
   const nowSecondText = ("" + now.getSeconds()).padStart(2, "0");
-  const nowTimeText = `${nowHourText}:${nowMinuteText}:${nowSecondText}`;
+  const nowTimeText = `${nowHourText}:${nowMinuteText}:${nowSecondText}Z`;
 
   log.info(`${nowTimeText} ${str}`, rest);
   lastLogDate = nowDate;
