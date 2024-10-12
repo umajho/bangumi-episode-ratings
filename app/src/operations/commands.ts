@@ -37,7 +37,7 @@ export async function rateEpisode(
   if (userID === null) return makeErrorAuthRequiredResponse();
 
   const checkSubjectIDResult = checkSubjectID({
-    subjectID: await fetchSubjectID(repo, bangumiClient, opts),
+    subjectIDResult: await fetchSubjectID(repo, bangumiClient, opts),
     claimedSubjectID: opts.claimedSubjectID,
     episodeID: opts.episodeID,
   });
@@ -133,7 +133,7 @@ export async function changeUserEpisodeRatingVisibility(
   if (userID === null) return makeErrorAuthRequiredResponse();
 
   const checkSubjectIDResult = checkSubjectID({
-    subjectID: await fetchSubjectID(repo, bangumiClient, opts),
+    subjectIDResult: await fetchSubjectID(repo, bangumiClient, opts),
     claimedSubjectID: opts.claimedSubjectID,
     episodeID: opts.episodeID,
   });
@@ -182,38 +182,52 @@ async function fetchSubjectID(
   repo: Repo,
   bangumiClient: BangumiClient,
   opts: { episodeID: EpisodeID },
-): Promise<SubjectID | null> {
+): Promise<["ok", SubjectID] | ["error", { userFacingMessage?: string }]> {
   const episodeInfo = await repo.getEpisodeInfo(opts.episodeID);
-  if (episodeInfo) return episodeInfo.subjectID;
+  if (episodeInfo) return ["ok", episodeInfo.subjectID];
 
-  const episodeData = await bangumiClient.getEpisode(opts.episodeID);
-  if (!episodeData) return null;
+  const episodeResp = await bangumiClient.getEpisode(opts.episodeID);
+  if (episodeResp[0] === "error") return episodeResp;
+
+  episodeResp[0] satisfies "ok";
+  const [_, episodeData] = episodeResp;
 
   const subjectID = episodeData.subject_id as SubjectID;
   await repo.setEpisodeInfo(opts.episodeID, { subjectID });
 
-  return subjectID;
+  return ["ok", subjectID];
 }
 
 function checkSubjectID(opts: {
-  subjectID: SubjectID | null;
+  subjectIDResult:
+    | ["ok", SubjectID]
+    | ["error", { userFacingMessage?: string }];
   claimedSubjectID: SubjectID;
 
   episodeID: EpisodeID;
 }): ["ok", SubjectID] | APIErrorResponse {
-  if (opts.subjectID === null) {
-    return [
-      "error",
-      "UNABLE_TO_VERIFY_THAT_EPISODE_IS_IN_SUBJECT",
-      "服务器无法验证当前剧集是否属于当前条目…（可能是因为当前条目属于受限内容）",
-    ];
-  } else if (opts.subjectID !== opts.claimedSubjectID) {
+  if (opts.subjectIDResult[0] === "error") {
+    const [_, details] = opts.subjectIDResult;
+
+    let message = "服务器无法验证当前剧集是否属于当前条目";
+    if (details.userFacingMessage) {
+      message += `：${details.userFacingMessage}`;
+    } else {
+      message += "…（可能是因为当前条目属于受限内容）";
+    }
+    return ["error", "UNABLE_TO_VERIFY_THAT_EPISODE_IS_IN_SUBJECT", message];
+  }
+
+  opts.subjectIDResult[0] satisfies "ok";
+  const [_, subjectID] = opts.subjectIDResult;
+
+  if (subjectID !== opts.claimedSubjectID) {
     return [
       "error",
       "EPISODE_NOT_IN_SUBJECT",
-      `剧集 ${opts.episodeID} 并不属于 ${opts.claimedSubjectID}，而是属于 ${opts.subjectID}。为啥会出现这种情况…？`,
+      `剧集 ${opts.episodeID} 并不属于 ${opts.claimedSubjectID}，而是属于 ${subjectID}。为啥会出现这种情况…？`,
     ];
   }
 
-  return ["ok", opts.subjectID];
+  return ["ok", subjectID];
 }
