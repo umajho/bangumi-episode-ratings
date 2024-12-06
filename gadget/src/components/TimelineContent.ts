@@ -60,6 +60,7 @@ export function renderTimelineContent(el: JQuery<HTMLElement>, props: {
               <span data-sel="action"></span>
             </span>
           </span>
+          <a title="删除这条时间线" class="tml_del" style="display: none; cursor: pointer;">del</a>
         </li>
       `).appendTo(ulEl);
 
@@ -73,6 +74,29 @@ export function renderTimelineContent(el: JQuery<HTMLElement>, props: {
       } else {
         actionEl.html("取消评分");
       }
+
+      const delEl = itemEl.find(".tml_del");
+      itemEl.on("mouseenter", () => delEl.css("display", "block"));
+      itemEl.on("mouseleave", () => delEl.css("display", "none"));
+      delEl.on("click", async () => {
+        const result = await Global.client.deleteMyTimelineItem({
+          timestampMs,
+        });
+        switch (result[0]) {
+          case "ok":
+            itemEl!.remove();
+            break;
+          case "error":
+            // TODO: 也许应该以更好的方式呈现错误？
+            alert("删除单集评分时间线项目失败：" + result[2]);
+            break;
+          case "auth_required":
+            // TODO: 同上。
+            alert("认证失败。");
+            Global.token.setValue(null);
+            break;
+        }
+      });
 
       subjectID = episodeToSubjectMap[episodeID];
     }

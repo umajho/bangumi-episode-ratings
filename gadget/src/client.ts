@@ -206,6 +206,20 @@ export class Client {
     );
   }
 
+  async deleteMyTimelineItem(
+    opts: { timestampMs: number },
+  ): Promise<APIResponseEx<null>> {
+    return await this.fetch(
+      "api/v1",
+      `users/me/timeline/items/${opts.timestampMs}`,
+      {
+        tokenType: "jwt",
+
+        method: "DELETE",
+      },
+    );
+  }
+
   async downloadMyEpisodeRatingsData(): Promise<APIResponseEx<void>> {
     const resp = await this.fetch<any>( // TODO!!!: remove `any`.
       "api/v1",
