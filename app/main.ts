@@ -2,7 +2,6 @@ import * as log from "jsr:@std/log";
 import * as path from "jsr:@std/path";
 
 import { Hono } from "jsr:@hono/hono";
-import { logger } from "jsr:@hono/hono/logger";
 import { cors } from "jsr:@hono/hono/cors";
 import { compress } from "jsr:@hono/hono/compress";
 
@@ -31,12 +30,9 @@ log.setup((() => {
   if (config.app.LOG_FILE_PATH) {
     Deno.mkdirSync(path.dirname(config.app.LOG_FILE_PATH), { recursive: true });
 
-    const fileHandler = new log.RotatingFileHandler("INFO", {
+    const fileHandler = new log.FileHandler("INFO", {
       formatter: log.formatters.jsonFormatter,
-
       filename: config.app.LOG_FILE_PATH,
-      maxBytes: 1024 * 1024 * 10, // 10 MB
-      maxBackupCount: Infinity,
     });
 
     globalThis.addEventListener("unload", fileHandler.flush);
@@ -55,29 +51,6 @@ log.setup((() => {
 
 const app = new Hono();
 
-let lastLogDate: { year: number; month: number; day: number } | null = null;
-app.use(logger((str, ...rest) => {
-  const now = new Date();
-  const nowDate = {
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
-    day: now.getDate(),
-  };
-  if (
-    nowDate.day !== lastLogDate?.day ||
-    nowDate.month !== lastLogDate?.month ||
-    nowDate.year !== lastLogDate?.year
-  ) {
-    log.info(`TODAY: ${nowDate.year}-${nowDate.month}-${nowDate.day}Z`);
-  }
-  const nowHourText = ("" + now.getHours()).padStart(2, "0");
-  const nowMinuteText = ("" + now.getMinutes()).padStart(2, "0");
-  const nowSecondText = ("" + now.getSeconds()).padStart(2, "0");
-  const nowTimeText = `${nowHourText}:${nowMinuteText}:${nowSecondText}Z`;
-
-  log.info(`${nowTimeText} ${str}`, rest);
-  lastLogDate = nowDate;
-}));
 app.use(cors({
   origin: config.site.CORS_ORIGINS,
   allowHeaders: config.site.cloneCorsAllowedHeaders(),
