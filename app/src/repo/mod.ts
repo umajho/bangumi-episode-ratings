@@ -311,6 +311,14 @@ export class Repo {
 
     return items;
   }
+
+  async deleteUserTimelineItem(
+    userID: UserID,
+    timestampMs: number,
+  ): Promise<void> {
+    const key = kvPrefixes.buildKeyUserTimelineItem(userID, timestampMs);
+    return await this.#kv.delete(key);
+  }
 }
 
 export class RepoTransaction {

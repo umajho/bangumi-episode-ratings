@@ -178,6 +178,23 @@ export async function changeUserEpisodeRatingVisibility(
   return ["ok", { is_visible: opts.isVisible }];
 }
 
+/**
+ * TODO: 也许原本就不存在时可以返回错误？
+ */
+export async function deleteUserTimeLineItem(
+  repo: Repo,
+  userID: UserID | null,
+  opts: {
+    timestampMs: number;
+  },
+): Promise<APIResponse<null>> {
+  if (userID === null) return makeErrorAuthRequiredResponse();
+
+  await repo.deleteUserTimelineItem(userID, opts.timestampMs);
+
+  return ["ok", null];
+}
+
 async function fetchSubjectID(
   repo: Repo,
   bangumiClient: BangumiClient,

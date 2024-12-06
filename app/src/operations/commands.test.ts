@@ -226,3 +226,32 @@ describe("function changeUserEpisodeRatingVisibility", () => {
     }
   });
 });
+
+describe("function deleteUserTimeLineItem", () => {
+  it("works", async () => {
+    try {
+      mockFetch(`https://api.bgm.tv/v0/episodes/${S1E1}`, {
+        body: JSON.stringify({ subject_id: S1 }),
+      });
+
+      const resp = await rateEpisode(repo, bangumiClient, U1, {
+        claimedSubjectID: S1,
+        episodeID: S1E1,
+        score: 7,
+      });
+      expect(resp[0]).toBe("ok");
+    } finally {
+      resetFetch();
+    }
+
+    const tlItemsBefore = await repo.getUserTimelineItems(U1);
+    expect(tlItemsBefore.length).toBe(1);
+
+    const itemTsMs = tlItemsBefore[0][0];
+
+    await repo.deleteUserTimelineItem(U1, itemTsMs);
+
+    const tlItemsAfter = await repo.getUserTimelineItems(U1);
+    expect(tlItemsAfter.length).toBe(0);
+  });
+});
