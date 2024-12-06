@@ -76,15 +76,17 @@ export async function processRootPage() {
 
         const containerEl = $("#tmlContent");
 
-        $(/*html*/ `
-          <div id="${TIMELINE_TOP_BAR_ID}">
-            <button>导出我的单集评分数据</button>
-          </div>
-        `)
-          .prependTo(containerEl)
-          .on("click", () => {
-            Global.client.downloadMyEpisodeRatingsData();
-          });
+        if (!containerEl.find(`#${TIMELINE_TOP_BAR_ID}`).length) {
+          $(/*html*/ `
+            <div id="${TIMELINE_TOP_BAR_ID}">
+              <button>导出我的单集评分数据</button>
+            </div>
+          `)
+            .prependTo(containerEl)
+            .on("click", () => {
+              Global.client.downloadMyEpisodeRatingsData();
+            });
+        }
 
         await processMyTimelineContent(containerEl, { pageNumber: 1 });
       });
