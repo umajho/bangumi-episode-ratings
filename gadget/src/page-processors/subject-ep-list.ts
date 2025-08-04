@@ -82,10 +82,20 @@ async function processSubjectEpListPageInternal(
     );
 
     const myRating = epsRatings.my_ratings?.[episodeID];
-    const hasUserWatched = $(li).find(".statusWatched").length ||
+    const hasUserWatched = (() => {
+      if ($(li).find(".statusWatched").length) return true;
+
       // 在 “看过” 之类不能修改章节观看状态的情况下，没法确认用户是否看过，但至
       // 少可以假设用户在给了某集评分的时候是看过那一集的。
-      myRating !== undefined;
+      if (myRating !== undefined) return true;
+
+      // 在某次更新后，bangumi 会记录看过的剧集的标记时间，某集存在这个时间表明
+      // 那一集有标记为看过。（但是没有这个时间不代表剧集一定没看过，也有可能是
+      // 在标记时 bangumi 还没去记录标记时间。因此，这不是万能解。）
+      if ($(li).find(".rr").text().trim()) return true;
+
+      return false;
+    })();
 
     const myRatingEl = $("<div />");
     $(li).append(myRatingEl);
