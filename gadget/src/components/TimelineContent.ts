@@ -137,8 +137,8 @@ export function renderTimelineContent(el: JQuery<HTMLElement>, props: {
             · <small class="grey"><a target="_blank">单集评分</a></small>
           </div>
         `).appendTo(infoEl);
-        if (process.env.GADGET_PAGE_PATH) {
-          extraEl.find("a").attr("href", process.env.GADGET_PAGE_PATH);
+        if (import.meta.env.GADGET_PAGE_PATH) {
+          extraEl.find("a").attr("href", import.meta.env.GADGET_PAGE_PATH);
         }
 
         const titleTipEl = extraEl.find(".titleTip");

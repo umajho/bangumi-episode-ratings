@@ -7,14 +7,15 @@
   "type": "module",
   "scripts": {
     "lint": "tsc --noEmit",
-    "build": "rolldown -c"
+    "build": "vite build"
   },
   "devDependencies": {
+    "@oxc-project/types": "^0.80.0",
     "@types/jquery": "^3.5.30",
     "@types/node": "^22.5.0",
-    "rolldown": "^1.0.0-beta.31",
-    "rollup-plugin-dotenv": "^0.5.1",
-    "rollup-plugin-userscript-metablock": "^0.4.2",
-    "typescript": "^5.5.3"
+    "astring": "^1.9.0",
+    "oxc-walker": "^0.4.0",
+    "typescript": "^5.5.3",
+    "vite": "npm:rolldown-vite@^7.0.12"
   }
 }
