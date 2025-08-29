@@ -1,5 +1,5 @@
-import { match, P } from "npm:ts-pattern";
-import { Context, Hono } from "jsr:@hono/hono";
+import { match, P } from "ts-pattern";
+import { Context, Hono } from "hono";
 
 import config from "@/config.ts";
 

@@ -1,5 +1,5 @@
-import { Context } from "jsr:@hono/hono";
-import type { FC } from "jsr:@hono/hono/jsx";
+import { Context } from "hono";
+import type { FC } from "hono/jsx";
 
 import {
   APIErrorResponse,

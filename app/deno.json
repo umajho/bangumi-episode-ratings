@@ -12,5 +12,17 @@
     "jsx": "precompile",
     "jsxImportSource": "npm:hono/jsx"
   },
-  "importMap": "import_map.json"
+  "imports": {
+    "@/": "./src/",
+    "@c4spar/mock-fetch": "jsr:@c4spar/mock-fetch@^1.0.0",
+    "@deno/kv-utils": "jsr:@deno/kv-utils@^0.1.4",
+    "@sinonjs/fake-timers": "npm:@sinonjs/fake-timers@^14.0.0",
+    "@std/expect": "jsr:@std/expect@^1.0.17",
+    "@std/log": "jsr:@std/log@^0.224.14",
+    "@std/path": "jsr:@std/path@^1.1.2",
+    "@std/testing": "jsr:@std/testing@^1.0.15",
+    "@types/sinonjs__fake-timers": "npm:@types/sinonjs__fake-timers@^8.1.5",
+    "hono": "npm:hono@^4.9.5",
+    "ts-pattern": "npm:ts-pattern@^5.8.0"
+  }
 }

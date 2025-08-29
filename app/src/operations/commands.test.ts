@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, it } from "jsr:@std/testing/bdd";
-import { expect } from "jsr:@std/expect";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
+import { expect } from "@std/expect";
 
-import { mockFetch, resetFetch } from "jsr:@c4spar/mock-fetch";
+import { mockFetch, resetFetch } from "@c4spar/mock-fetch";
 
 import { EpisodeID, SubjectID, UserID } from "@/types.ts";
 import { Repo } from "@/repo/mod.ts";

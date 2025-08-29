@@ -1,6 +1,6 @@
 #!/usr/bin/env -S <PATH_TO_DENO> --unstable-kv --allow-env --env=.env --allow-net
 
-import { exportEntries } from "jsr:@kitsonk/kv-toolbox/ndjson";
+import { exportEntries } from "@deno/kv-utils";
 
 const kv = await Deno.openKv();
 

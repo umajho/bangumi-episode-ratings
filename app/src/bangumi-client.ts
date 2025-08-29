@@ -1,4 +1,4 @@
-import * as log from "jsr:@std/log";
+import * as log from "@std/log";
 
 import config from "@/config.ts";
 import { EpisodeID } from "@/types.ts";

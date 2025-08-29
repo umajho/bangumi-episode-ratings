@@ -1,7 +1,7 @@
-import * as log from "jsr:@std/log";
+import * as log from "@std/log";
 
-import { Context } from "jsr:@hono/hono";
-import { createMiddleware } from "jsr:@hono/hono/factory";
+import { Context } from "hono";
+import { createMiddleware } from "hono/factory";
 
 import * as Djwt from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 

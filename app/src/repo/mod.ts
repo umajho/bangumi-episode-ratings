@@ -1,4 +1,4 @@
-import { match, P } from "npm:ts-pattern";
+import { match, P } from "ts-pattern";
 
 import {
   EpisodeID,

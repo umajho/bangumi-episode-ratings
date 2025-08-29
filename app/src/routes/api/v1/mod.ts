@@ -1,4 +1,4 @@
-import { Hono } from "jsr:@hono/hono";
+import { Hono } from "hono";
 
 import subjectsRouter from "./subjects/mod.ts";
 import usersRouter from "./users/mod.ts";

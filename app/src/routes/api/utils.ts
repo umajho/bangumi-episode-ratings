@@ -1,4 +1,4 @@
-import { Context } from "jsr:@hono/hono";
+import { Context } from "hono";
 
 import { UserID } from "@/types.ts";
 

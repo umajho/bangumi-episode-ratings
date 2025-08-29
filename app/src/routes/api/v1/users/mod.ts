@@ -1,4 +1,4 @@
-import { Hono } from "jsr:@hono/hono";
+import { Hono } from "hono";
 
 import * as Middlewares from "@/middlewares/mod.ts";
 import * as Queries from "@/operations/queries.ts";

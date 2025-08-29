@@ -1,9 +1,9 @@
-import * as log from "jsr:@std/log";
-import * as path from "jsr:@std/path";
+import * as log from "@std/log";
+import * as path from "@std/path";
 
-import { Hono } from "jsr:@hono/hono";
-import { cors } from "jsr:@hono/hono/cors";
-import { compress } from "jsr:@hono/hono/compress";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { compress } from "hono/compress";
 
 import config from "./src/config.ts";
 import router from "./src/routes/mod.ts";

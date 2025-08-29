@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, it } from "jsr:@std/testing/bdd";
-import { expect } from "jsr:@std/expect";
-// @deno-types="npm:@types/sinonjs__fake-timers"
-import FakeTimers from "npm:@sinonjs/fake-timers";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+// @deno-types="@types/sinonjs__fake-timers"
+import FakeTimers from "@sinonjs/fake-timers";
 
 import { EpisodeID, SubjectID, UserID } from "@/types.ts";
 

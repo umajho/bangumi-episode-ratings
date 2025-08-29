@@ -1,4 +1,4 @@
-import { importEntries } from "jsr:@kitsonk/kv-toolbox/ndjson";
+import { importEntries } from "@deno/kv-utils";
 
 const kv = await Deno.openKv(Deno.args[0]);
 

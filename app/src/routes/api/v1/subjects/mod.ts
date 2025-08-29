@@ -1,4 +1,4 @@
-import { Hono } from "jsr:@hono/hono";
+import { Hono } from "hono";
 
 import * as Middlewares from "@/middlewares/mod.ts";
 import { SubjectID } from "@/types.ts";

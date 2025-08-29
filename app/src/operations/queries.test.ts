@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, it } from "jsr:@std/testing/bdd";
-import { expect } from "jsr:@std/expect/expect";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
+import { expect } from "@std/expect/expect";
 
 import { EpisodeID, SubjectID, UserID } from "@/types.ts";
 import { Repo } from "@/repo/mod.ts";
