@@ -110,22 +110,28 @@ export function renderMyRating(
           `);
           $(messageEl).find("button").on("click", async () => {
             updateMessage(["loading"]);
-            const resp = await Global.client.getMyEpisodeRating();
+            const resp = await Global.client.getEpisodeRatings();
             if (resp[0] === "auth_required") {
-              Global.token.setValue(null);
+              throw new Error("unreachable");
             } else if (resp[0] === "error") {
               const [_, _name, message] = resp;
               updateMessage(["error", message]);
             } else if (resp[0] === "ok") {
               const [_, data] = resp;
+              const myRating = data.my_rating;
+              if (!myRating) {
+                Global.token.setValue(null);
+                return;
+              }
               updateMessage(["none"]);
               updateVotesData(props.votesData, {
                 oldScore: props.ratedScore.getValueOnce(),
-                newScore: data.score as Score | null,
+                newScore: myRating.score as Score | null,
               });
-              props.ratedScore.setValue(data.score as Score | null);
-              Global
-                .updateCurrentEpisodeVisibilityFromServerRaw(data.visibility);
+              props.ratedScore.setValue(myRating.score as Score | null);
+              Global.updateCurrentEpisodeVisibilityFromServerRaw(
+                myRating.visibility,
+              );
             } else {
               resp satisfies never;
             }

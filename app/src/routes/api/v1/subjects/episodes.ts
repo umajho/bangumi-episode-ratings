@@ -5,7 +5,7 @@ import { EpisodeID, SubjectID } from "@/types.ts";
 import { respondForAPI } from "@/responding.tsx";
 import * as Commands from "@/operations/commands.ts";
 import * as Queries from "@/operations/queries.ts";
-import { RateEpisodeRequestData__V1 } from "@/shared/dto.ts";
+import { RateEpisodeRequestData } from "@/shared/dto.ts";
 import * as Global from "@/global.ts";
 
 import { tryExtractIntegerFromCTXParams } from "@/routes/api/utils.ts";
@@ -43,6 +43,9 @@ router.get(
   },
 );
 
+/**
+ * @deprecated since gadget 0.7.0.
+ */
 router.get(
   "/ratings/mine",
   Middlewares.auth(),
@@ -75,7 +78,7 @@ router.put(
     const episodeID = //
       tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
 
-    const data = await ctx.req.json() as RateEpisodeRequestData__V1;
+    const data = await ctx.req.json() as RateEpisodeRequestData;
 
     if (
       subjectID === null || episodeID === null ||

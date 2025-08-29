@@ -18,16 +18,7 @@ export type APIOkResponse<T> = [tag: "ok", data: T];
 export type APIErrorResponse = [tag: "error", name: ErrorName, msg: string];
 export type APIResponse<T> = APIOkResponse<T> | APIErrorResponse;
 
-export interface RateEpisodeRequestData__V0 {
-  claimed_user_id: number;
-
-  subject_id: number;
-  episode_id: number;
-
-  score: number | null;
-}
-
-export interface RateEpisodeRequestData__V1 {
+export interface RateEpisodeRequestData {
   score: number;
 }
 
@@ -38,11 +29,19 @@ export interface RateEpisodeResponseData {
   } | null;
 }
 
-export interface GetEpisodeRatingsResponseData__Until_0_1_13 {
+/**
+ * @deprecated since gadget 0.1.4.
+ *
+ * NOTE: `Until_` 之后对应的是 Gadget 的版本，而非 App 的版本。
+ */
+export interface GetEpisodeRatingsResponseData__Until_0_1_3 {
   votes: { [score: number]: number };
   userScore?: number | null;
 }
 
+/**
+ * @deprecated since gadget 0.3.1.
+ */
 export interface GetEpisodeRatingsResponseData__Until_0_3_0 {
   votes: { [score: number]: number };
   my_rating?: GetMyEpisodeRatingResponseData;
@@ -54,6 +53,9 @@ export interface GetEpisodeRatingsResponseData {
   my_rating?: GetMyEpisodeRatingResponseData;
 }
 
+/**
+ * @deprecated since gadget 0.7.0.
+ */
 export interface GetMyEpisodeRatingResponseData {
   score: number | null;
   visibility: {

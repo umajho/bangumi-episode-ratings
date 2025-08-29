@@ -96,6 +96,9 @@ export async function queryEpisodeRatings(
   return ["ok", data];
 }
 
+/**
+ * @deprecated since gadget 0.7.0.
+ */
 export async function queryEpisodeMyRating(
   repo: Repo,
   userID: UserID | null,

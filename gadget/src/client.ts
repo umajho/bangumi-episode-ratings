@@ -5,10 +5,9 @@ import {
   APIResponse,
   ChangeUserEpisodeRatingVisibilityResponseData,
   GetEpisodeRatingsResponseData,
-  GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
   GetUserTimeLineItemsResponseData,
-  RateEpisodeRequestData__V1,
+  RateEpisodeRequestData,
   RateEpisodeResponseData,
 } from "./shared/dto";
 import ENDPOINT_PATHS from "./shared/endpoint-paths";
@@ -65,7 +64,7 @@ export class Client {
     if (!this.token) return ["auth_required"];
 
     if (opts.score !== null) {
-      const bodyData: RateEpisodeRequestData__V1 = { score: opts.score };
+      const bodyData: RateEpisodeRequestData = { score: opts.score };
 
       return await this.fetch(
         "api/v1",
@@ -146,20 +145,6 @@ export class Client {
     return await this.fetch(
       "api/v1",
       `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings`,
-      {
-        tokenType: "jwt",
-
-        method: "GET",
-      },
-    );
-  }
-
-  async getMyEpisodeRating(): Promise<
-    APIResponseEx<GetMyEpisodeRatingResponseData>
-  > {
-    return await this.fetch(
-      "api/v1",
-      `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings/mine`,
       {
         tokenType: "jwt",
 
