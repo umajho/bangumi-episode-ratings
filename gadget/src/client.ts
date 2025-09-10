@@ -260,7 +260,7 @@ export class Client {
         method: opts.method,
         headers,
         body: opts.body,
-      }, { shouldBypassCORSPreflight: group === "api/v1" }));
+      }));
 
       const respJSON = await resp.json() as APIResponse<unknown>;
       if (respJSON[0] === "error" && respJSON[1] === "AUTH_REQUIRED") {
@@ -282,21 +282,8 @@ export class Client {
     method: "GET" | "POST" | "PUT" | "DELETE";
     headers: Headers;
     body?: string;
-  }, opts: { shouldBypassCORSPreflight: boolean }): Request {
-    if (opts.shouldBypassCORSPreflight) {
-      url.pathname =
-        `/${ENDPOINT_PATHS.CORS_PREFLIGHT_BYPASS}/${init.method}${url.pathname}`;
-      const body = [
-        Object.fromEntries(init.headers.entries()),
-        init.body ?? null,
-      ];
-      return new Request(url, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-    } else {
-      return new Request(url, init);
-    }
+  }): Request {
+    return new Request(url, init);
   }
 
   private buildFullEndpoint(

@@ -1,6 +1,4 @@
 export default {
-  CORS_PREFLIGHT_BYPASS: "cors-preflight-bypass",
-
   AUTH: {
     BANGUMI_PAGE: "bangumi-page",
     CALLBACK: "callback",
