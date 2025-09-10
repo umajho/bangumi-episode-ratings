@@ -29,46 +29,16 @@ export interface RateEpisodeResponseData {
   } | null;
 }
 
-/**
- * @deprecated since gadget 0.1.4.
- *
- * NOTE: `Until_` 之后对应的是 Gadget 的版本，而非 App 的版本。
- */
-export interface GetEpisodeRatingsResponseData__Until_0_1_3 {
-  votes: { [score: number]: number };
-  userScore?: number | null;
-}
-
-/**
- * @deprecated since gadget 0.3.1.
- */
-export interface GetEpisodeRatingsResponseData__Until_0_3_0 {
-  votes: { [score: number]: number };
-  my_rating?: GetMyEpisodeRatingResponseData;
-}
-
 export interface GetEpisodeRatingsResponseData {
   votes: { [score: number]: number };
   public_ratings: GetEpisodePublicRatingsResponseData;
-  my_rating?: GetMyEpisodeRatingResponseData;
-}
-
-/**
- * @deprecated since gadget 0.7.0.
- */
-export interface GetMyEpisodeRatingResponseData {
-  score: number | null;
-  visibility: {
-    is_visible: boolean;
-  } | null;
-}
-
-export type GetSubjectEpisodesResponseData_Until_0_5_0 =
-  & GetSubjectEpisodesResponseData
-  & {
-    /** 是否确定所有剧集的评分得票数据都在 `episodes_votes` 中。 */
-    is_certain_that_episodes_votes_are_integral: true;
+  my_rating?: {
+    score: number | null;
+    visibility: {
+      is_visible: boolean;
+    } | null;
   };
+}
 
 export interface GetSubjectEpisodesResponseData {
   episodes_votes: { [episode_id: number]: { [score: number]: number } | null };

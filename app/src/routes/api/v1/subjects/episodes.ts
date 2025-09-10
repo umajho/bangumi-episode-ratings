@@ -2,7 +2,10 @@ import { Hono } from "hono";
 
 import * as Middlewares from "@/middlewares/mod.ts";
 import { EpisodeID, SubjectID } from "@/types.ts";
-import { respondForAPI } from "@/responding.tsx";
+import {
+  makeErrorVersionTooOldResponse,
+  respondForAPI,
+} from "@/responding.tsx";
 import * as Commands from "@/operations/commands.ts";
 import * as Queries from "@/operations/queries.ts";
 import { RateEpisodeRequestData } from "@/shared/dto.ts";
@@ -15,9 +18,17 @@ export default router;
 
 router.get(
   "/ratings",
+  Middlewares.referrers(),
   Middlewares.auth(),
   Middlewares.gadgetVersion(),
   async (ctx) => {
+    if ((ctx.var.gadgetVersion ?? 0) < 3_000) { // < 0.3.0
+      return respondForAPI(
+        ctx,
+        makeErrorVersionTooOldResponse(ctx.var.referrerHostname),
+      );
+    }
+
     const subjectID = //
       tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
     const episodeID = //
@@ -28,38 +39,6 @@ router.get(
     }
 
     const result = await Queries.queryEpisodeRatings(
-      Global.repo,
-      await ctx.var.authenticate(Global.repo),
-      {
-        subjectID,
-        episodeID,
-        compatibility: {
-          noPublicRatings: (ctx.var.gadgetVersion ?? 0) < 3_000, // < 0.3.0
-        },
-      },
-    );
-
-    return respondForAPI(ctx, result);
-  },
-);
-
-/**
- * @deprecated since gadget 0.7.0.
- */
-router.get(
-  "/ratings/mine",
-  Middlewares.auth(),
-  async (ctx) => {
-    const subjectID = //
-      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
-    const episodeID = //
-      tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
-
-    if (subjectID === null || episodeID === null) {
-      return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
-    }
-
-    const result = await Queries.queryEpisodeMyRating(
       Global.repo,
       await ctx.var.authenticate(Global.repo),
       { subjectID, episodeID },

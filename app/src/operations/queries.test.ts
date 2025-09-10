@@ -5,7 +5,6 @@ import { EpisodeID, SubjectID, UserID } from "@/types.ts";
 import { Repo } from "@/repo/mod.ts";
 
 import {
-  queryEpisodeMyRating,
   queryEpisodePublicRatings,
   queryEpisodeRatings,
   querySubjectEpisodesRatings,
@@ -44,33 +43,15 @@ describe("function querySubjectEpisodesRatings", () => {
 
   it("works", async () => {
     expect(
-      await querySubjectEpisodesRatings(repo, null, {
-        subjectID: S1,
-        compatibility: { withIntegralityBoolean: false },
-      }),
+      await querySubjectEpisodesRatings(repo, null, { subjectID: S1 }),
     ).toEqual(["ok", {
       episodes_votes: { [S1E1]: { 7: 2 }, [S1E2]: { 6: 1, 8: 1 } },
     }]);
     expect(
-      await querySubjectEpisodesRatings(repo, U1, {
-        subjectID: S1,
-        compatibility: { withIntegralityBoolean: false },
-      }),
+      await querySubjectEpisodesRatings(repo, U1, { subjectID: S1 }),
     ).toEqual(["ok", {
       episodes_votes: { [S1E1]: { 7: 2 }, [S1E2]: { 6: 1, 8: 1 } },
       my_ratings: { [S1E1]: 7, [S1E2]: 8 },
-    }]);
-  });
-
-  it("works with compatibility options", async () => {
-    expect(
-      await querySubjectEpisodesRatings(repo, null, {
-        subjectID: S1,
-        compatibility: { withIntegralityBoolean: true },
-      }),
-    ).toEqual(["ok", {
-      episodes_votes: { [S1E1]: { 7: 2 }, [S1E2]: { 6: 1, 8: 1 } },
-      is_certain_that_episodes_votes_are_integral: true,
     }]);
   });
 });
@@ -85,32 +66,20 @@ describe("function queryEpisodeRatings", () => {
     ]);
 
     expect(
-      await queryEpisodeRatings(repo, null, {
-        subjectID: S1,
-        episodeID: S1E1,
-        compatibility: { noPublicRatings: false },
-      }),
+      await queryEpisodeRatings(repo, null, { subjectID: S1, episodeID: S1E1 }),
     ).toEqual(["ok", {
       votes: { 7: 2 },
       public_ratings: { public_voters_by_score: { 7: [U2] } },
     }]);
     expect(
-      await queryEpisodeRatings(repo, U1, {
-        subjectID: S1,
-        episodeID: S1E1,
-        compatibility: { noPublicRatings: false },
-      }),
+      await queryEpisodeRatings(repo, U1, { subjectID: S1, episodeID: S1E1 }),
     ).toEqual(["ok", {
       votes: { 7: 2 },
       public_ratings: { public_voters_by_score: { 7: [U2] } },
       my_rating: { score: 7, visibility: { is_visible: false } },
     }]);
     expect(
-      await queryEpisodeRatings(repo, null, {
-        subjectID: S1,
-        episodeID: S1E2,
-        compatibility: { noPublicRatings: false },
-      }),
+      await queryEpisodeRatings(repo, null, { subjectID: S1, episodeID: S1E2 }),
     ).toEqual(["ok", {
       votes: { 6: 1, 8: 1 },
       public_ratings: { public_voters_by_score: { 6: [U2], 8: [U1] } },
@@ -147,25 +116,6 @@ describe("function queryEpisodeMyRating", () => {
       });
       expect(result.ok).toBe(true);
     }
-
-    expect(
-      await queryEpisodeMyRating(repo, U1, {
-        subjectID: S1,
-        episodeID: S1E1,
-      }),
-    ).toEqual(["ok", {
-      score: 7,
-      visibility: { is_visible: false },
-    }]);
-    expect(
-      await queryEpisodeMyRating(repo, U1, {
-        subjectID: S1,
-        episodeID: S1E2,
-      }),
-    ).toEqual(["ok", {
-      score: 8,
-      visibility: { is_visible: true },
-    }]);
   });
 });
 

@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 
 import * as Middlewares from "@/middlewares/mod.ts";
-import { respondForAPI } from "@/responding.tsx";
-import config from "@/config.ts";
+import {
+  makeErrorVersionTooOldResponse,
+  respondForAPI,
+} from "@/responding.tsx";
 
 import apiV1Router from "./v1/mod.ts";
 
@@ -18,17 +20,9 @@ router.all(
   Middlewares.referrers(),
   // deno-lint-ignore require-await
   async (ctx) => {
-    const gadgetURL = new URL(
-      config.bangumi.PATH_GADGET_PAGE,
-      ctx.var.referrerHostname
-        ? `https://${ctx.var.referrerHostname}`
-        : `https://${config.bangumi.VALID_HOSTNAMES[0]}`,
+    return respondForAPI(
+      ctx,
+      makeErrorVersionTooOldResponse(ctx.var.referrerHostname),
     );
-
-    return respondForAPI(ctx, [
-      "error",
-      "VERSION_TOO_OLD",
-      `版本过旧，需要更新。（现已上架为超合金组件：<${gadgetURL}>）`,
-    ]);
   },
 );

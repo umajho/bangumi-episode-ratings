@@ -1,10 +1,10 @@
-FROM denoland/deno:alpine-2.0.0
+FROM denoland/deno:debian-2.5.0
 
 EXPOSE 80
 
 WORKDIR /app
 
-COPY deno.json deno.lock import_map.json /app/
+COPY deno.json deno.lock /app/
 
 RUN deno install
 

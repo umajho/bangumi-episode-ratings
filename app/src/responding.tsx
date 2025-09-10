@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import type { FC } from "hono/jsx";
 
+import config from "./config.ts";
 import {
   APIErrorResponse,
   APIOkResponse,
@@ -66,4 +67,23 @@ export function respondForAPI<T>(ctx: Context, resp: APIResponse<T>) {
   }
   resp satisfies never;
   throw new Error("unreachable");
+}
+
+export function makeErrorVersionTooOldResponse(
+  referrerHostname:
+    | (typeof config.bangumi.VALID_HOSTNAMES)[number]
+    | null,
+): APIErrorResponse {
+  const gadgetURL = new URL(
+    config.bangumi.PATH_GADGET_PAGE,
+    referrerHostname
+      ? `https://${referrerHostname}`
+      : `https://${config.bangumi.VALID_HOSTNAMES[0]}`,
+  );
+
+  return [
+    "error",
+    "VERSION_TOO_OLD",
+    `版本过旧，请使用超合金组件：<${gadgetURL}>。`,
+  ];
 }

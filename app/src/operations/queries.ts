@@ -3,10 +3,7 @@ import {
   APIResponse,
   GetEpisodePublicRatingsResponseData,
   GetEpisodeRatingsResponseData,
-  GetEpisodeRatingsResponseData__Until_0_3_0,
-  GetMyEpisodeRatingResponseData,
   GetSubjectEpisodesResponseData,
-  GetSubjectEpisodesResponseData_Until_0_5_0,
   GetUserEpisodeRatingsResponseData,
   GetUserTimeLineItemsResponseData,
   UserTimelineItemResponseData,
@@ -17,16 +14,10 @@ import { makeErrorAuthRequiredResponse } from "@/responding.tsx";
 export async function querySubjectEpisodesRatings(
   repo: Repo,
   userID: UserID | null,
-  opts: {
-    subjectID: SubjectID;
-
-    compatibility: {
-      withIntegralityBoolean: boolean;
-    };
-  },
+  opts: { subjectID: SubjectID },
 ): Promise<
   APIResponse<
-    GetSubjectEpisodesResponseData | GetSubjectEpisodesResponseData_Until_0_5_0
+    GetSubjectEpisodesResponseData
   >
 > {
   const { votesByScoreBySubject } = //
@@ -37,10 +28,6 @@ export async function querySubjectEpisodesRatings(
   const data: GetSubjectEpisodesResponseData = {
     episodes_votes: votesByScoreBySubject,
   };
-  if (opts.compatibility.withIntegralityBoolean) {
-    (data as GetSubjectEpisodesResponseData_Until_0_5_0)
-      .is_certain_that_episodes_votes_are_integral = true;
-  }
 
   if (userID !== null) {
     data.my_ratings = await repo.getUserEpisodesRatingsUnderSubject(
@@ -58,34 +45,22 @@ export async function queryEpisodeRatings(
   opts: {
     subjectID: SubjectID;
     episodeID: EpisodeID;
-
-    compatibility: {
-      noPublicRatings: boolean;
-    };
   },
 ): Promise<
   APIResponse<
-    GetEpisodeRatingsResponseData | GetEpisodeRatingsResponseData__Until_0_3_0
+    GetEpisodeRatingsResponseData
   >
 > {
   const votes = await repo
     .getAllEpisodeVotesGroupedByScore(opts.subjectID, opts.episodeID);
 
-  const publicRatingsResult: APIResponse<
-    GetEpisodePublicRatingsResponseData | null
-  > = opts.compatibility.noPublicRatings
-    ? ["ok", null]
-    : await queryEpisodePublicRatings(repo, opts);
+  const publicRatingsResult = await queryEpisodePublicRatings(repo, opts);
   if (publicRatingsResult[0] !== "ok") return publicRatingsResult;
 
-  const data:
-    | GetEpisodeRatingsResponseData
-    | GetEpisodeRatingsResponseData__Until_0_3_0 = { votes };
-
-  if (publicRatingsResult[1] !== null) {
-    (data as GetEpisodeRatingsResponseData).public_ratings =
-      publicRatingsResult[1];
-  }
+  const data: GetEpisodeRatingsResponseData = {
+    votes,
+    public_ratings: publicRatingsResult[1],
+  };
 
   if (userID !== null) {
     const myRatingResult = await queryEpisodeMyRating(repo, userID, opts);
@@ -96,17 +71,14 @@ export async function queryEpisodeRatings(
   return ["ok", data];
 }
 
-/**
- * @deprecated since gadget 0.7.0.
- */
-export async function queryEpisodeMyRating(
+async function queryEpisodeMyRating(
   repo: Repo,
   userID: UserID | null,
   opts: {
     subjectID: SubjectID;
     episodeID: EpisodeID;
   },
-): Promise<APIResponse<GetMyEpisodeRatingResponseData>> {
+): Promise<APIResponse<GetEpisodeRatingsResponseData["my_rating"]>> {
   if (userID === null) return makeErrorAuthRequiredResponse();
 
   const ratingResult = await repo.getUserEpisodeRatingResult //
