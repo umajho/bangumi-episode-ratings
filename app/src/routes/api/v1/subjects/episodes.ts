@@ -59,11 +59,33 @@ router.put(
 
     const data = await ctx.req.json() as RateEpisodeRequestData;
 
-    if (
-      subjectID === null || episodeID === null ||
-      // 更具体的判断是否为整数、是否为 1~10 由 `Commands.rateEpisode` 处理。
-      typeof data.score !== "number"
-    ) {
+    if (subjectID === null || episodeID === null) {
+      return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
+    }
+
+    const result = await Commands.rateEpisode(
+      Global.repo,
+      Global.bangumiClient,
+      await ctx.var.authenticate(Global.repo),
+      { claimedSubjectID: subjectID, episodeID, score: data.score },
+    );
+
+    return respondForAPI(ctx, result);
+  },
+);
+
+router.patch(
+  "/ratings/mine",
+  Middlewares.auth(),
+  async (ctx) => {
+    const subjectID = //
+      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
+    const episodeID = //
+      tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
+
+    const data = await ctx.req.json() as RateEpisodeRequestData;
+
+    if (subjectID === null || episodeID === null) {
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
     }
 

@@ -9,7 +9,7 @@ deploy * args:
 	deployctl deploy --prod --import-map=import_map.json {{args}}
 
 docker-build:
-	docker build \
+	docker buildx build --platform=linux/amd64 \
 		-t umajho/bangumi-episode-ratings:latest \
 		-t umajho/bangumi-episode-ratings:$(cat deno.json | jq -r .version) \
 		.
