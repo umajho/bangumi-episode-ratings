@@ -2,11 +2,11 @@ import * as log from "jsr:@std/log";
 import * as path from "jsr:@std/path";
 
 import { Hono } from "jsr:@hono/hono";
-import { cors } from "jsr:@hono/hono/cors";
 import { compress } from "jsr:@hono/hono/compress";
 
 import config from "./src/config.ts";
 import router from "./src/routes/mod.ts";
+import { cors } from "./src/middlewares/cors.ts";
 import ENDPOINT_PATHS from "./src/shared/endpoint-paths.ts";
 
 Deno.addSignalListener("SIGTERM", () => {
@@ -56,6 +56,7 @@ app.use(cors({
   allowHeaders: config.site.cloneCorsAllowedHeaders(),
   allowMethods: config.site.cloneCorsAllowedMethods(),
   credentials: true,
+  privateNetwork: config.app.DEV,
 }));
 app.use(compress());
 
