@@ -1,2 +1,4 @@
+set fallback
+
 docker-compose-build:
 	docker compose build

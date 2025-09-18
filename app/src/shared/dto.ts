@@ -18,24 +18,18 @@ export type APIOkResponse<T> = [tag: "ok", data: T];
 export type APIErrorResponse = [tag: "error", name: ErrorName, msg: string];
 export type APIResponse<T> = APIOkResponse<T> | APIErrorResponse;
 
-export interface RateEpisodeRequestData__V0 {
-  claimed_user_id: number;
-
-  subject_id: number;
-  episode_id: number;
-
-  score: number | null;
-}
-
-export interface RateEpisodeRequestData__V1 {
-  score: number;
+export interface RateEpisodeRequestData {
+  score?: number;
+  visibility?: {
+    is_visible: boolean;
+  };
 }
 
 export interface RateEpisodeResponseData {
   score: number | null;
   visibility: {
     is_visible: boolean;
-  } | null;
+  };
 }
 
 export interface GetEpisodeRatingsResponseData__Until_0_1_13 {
