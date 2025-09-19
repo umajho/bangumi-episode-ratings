@@ -45,7 +45,7 @@ async function processEpPageInternal(
     ),
   );
   Global.updateCurrentEpisodeVisibilityFromServerRaw(
-    ratingsData.my_rating?.visibility,
+    ratingsData.my_rating?.visibility ?? { is_visible: true },
   );
 
   renderScoreboard(opts.el, { votesData });
@@ -83,27 +83,11 @@ async function processEpPageInternal(
     };
   }
 
-  const currentVisibility = (() => {
-    const watched = new Watched<{ isVisible: boolean } | null>(null);
-    function update() {
-      if (!myReplies.getValueOnce().length) {
-        watched.setValue(null);
-      } else {
-        watched.setValue(
-          Global.currentEpisodeVisibilityFromServer.getValueOnce(),
-        );
-      }
-    }
-    myReplies.watchDeferred(update);
-    Global.currentEpisodeVisibilityFromServer.watch(update);
-    return watched;
-  })();
-
   const ratedScoreGeneric = ratedScore.createComputed((score) => score ?? NaN);
   myReplies.watch((myReplies) => {
     processMyUnprocessedComments({
       ratedScore: ratedScoreGeneric,
-      currentVisibility,
+      currentVisibility: Global.currentEpisodeVisibilityFromServer,
       replies: myReplies,
     });
   });
@@ -119,37 +103,15 @@ async function processEpPageInternal(
     myUserID: Global.claimedUserID!,
   });
 
-  const isVisibilityCheckboxRelevant = (() => {
-    const watched = new Watched(true);
-    function update() {
-      watched.setValue(
-        ratedScore.getValueOnce() !== null &&
-          currentVisibility.getValueOnce() === null,
-      );
-    }
-    ratedScore.watchDeferred(update);
-    currentVisibility.watch(update);
-    return watched;
-  })();
-  const visibilityCheckboxValue = new Watched(false, {
-    shouldDeduplicateShallowly: true,
-  });
-
   processReplyForm({
-    isVisibilityCheckboxRelevant,
-    visibilityCheckboxValue,
-    currentVisibility,
+    currentVisibility: Global.currentEpisodeVisibilityFromServer,
   });
   processReplysForm({
-    isVisibilityCheckboxRelevant,
-    visibilityCheckboxValue,
-    currentVisibility,
+    currentVisibility: Global.currentEpisodeVisibilityFromServer,
   });
 }
 
 function processReplyForm(opts: {
-  isVisibilityCheckboxRelevant: Watched<boolean>;
-  visibilityCheckboxValue: Watched<boolean>;
   currentVisibility: Watched<{ isVisible: boolean } | null>;
 }) {
   const el = $("#ReplyForm");
@@ -158,24 +120,12 @@ function processReplyForm(opts: {
 
   const controlEl = $("<div />").insertBefore(submitButtonEl);
   renderReplyFormVisibilityControl(controlEl, opts);
-
-  $(el.on("submit", async () => {
-    changeVisibilityIfNecessary({
-      isRelevant: opts.isVisibilityCheckboxRelevant.getValueOnce(),
-      currentVisibility: opts.currentVisibility.getValueOnce(),
-      changedVisibility: {
-        isVisible: !opts.visibilityCheckboxValue.getValueOnce(),
-      },
-    });
-  }));
 }
 
 /**
  * 处理子评论的表单。
  */
 function processReplysForm(opts: {
-  isVisibilityCheckboxRelevant: Watched<boolean>;
-  visibilityCheckboxValue: Watched<boolean>;
   currentVisibility: Watched<{ isVisible: boolean } | null>;
 }) {
   const unmountFns: (() => void)[] = [];
@@ -197,13 +147,6 @@ function processReplysForm(opts: {
 
     $(el.on("submit", async () => {
       unmountFns.forEach((fn) => fn());
-      await changeVisibilityIfNecessary({
-        isRelevant: opts.isVisibilityCheckboxRelevant.getValueOnce(),
-        currentVisibility: opts.currentVisibility.getValueOnce(),
-        changedVisibility: {
-          isVisible: !opts.visibilityCheckboxValue.getValueOnce(),
-        },
-      });
     }));
   };
 
@@ -214,35 +157,6 @@ function processReplysForm(opts: {
     unmountFns.forEach((fn) => fn());
     oldSubReplycancelFn(...args);
   };
-}
-
-async function changeVisibilityIfNecessary(opts: {
-  isRelevant: boolean;
-  currentVisibility: { isVisible: boolean } | null;
-  changedVisibility: { isVisible: boolean };
-}) {
-  if (!opts.isRelevant) return;
-
-  if (opts.currentVisibility?.isVisible === opts.changedVisibility.isVisible) {
-    return;
-  }
-
-  const result = await Global.client.changeUserEpisodeRatingVisibility({
-    isVisible: opts.changedVisibility.isVisible,
-  });
-  if (result[0] === "auth_required") {
-    Global.token.setValue(null);
-  } else if (result[0] === "error") {
-    console.warn(
-      "单集评分组件",
-      "`changeUserEpisodeRatingVisibility`",
-      result,
-    );
-  } else if (result[0] === "ok") {
-    Global.updateCurrentEpisodeVisibilityFromServerRaw(result[1]);
-  } else {
-    result satisfies never;
-  }
 }
 
 function processMyUnprocessedComments(opts: {

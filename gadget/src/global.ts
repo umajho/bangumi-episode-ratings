@@ -87,15 +87,11 @@ function makeGlobal() {
       broadcastID: `bgm_ep_ratings::broadcasts::${episodeID}::visibility`,
     });
   function updateCurrentEpisodeVisibilityFromServerRaw(
-    raw: { is_visible: boolean } | null | undefined,
+    raw: { is_visible: boolean },
   ) {
-    if (!raw) {
-      currentEpisodeVisibilityFromServer.setValue(null);
-    } else {
-      currentEpisodeVisibilityFromServer.setValue({
-        isVisible: raw.is_visible,
-      });
-    }
+    currentEpisodeVisibilityFromServer.setValue({
+      isVisible: raw.is_visible,
+    });
   }
 
   return {

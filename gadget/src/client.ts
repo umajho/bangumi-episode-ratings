@@ -3,7 +3,6 @@ import env from "./env";
 import Global from "./global";
 import {
   APIResponse,
-  ChangeUserEpisodeRatingVisibilityResponseData,
   GetEpisodeRatingsResponseData,
   GetSubjectEpisodesResponseData,
   GetUserTimeLineItemsResponseData,
@@ -58,35 +57,61 @@ export class Client {
     return resp;
   }
 
-  async rateEpisode(
-    opts: { subjectID: number; episodeID: number; score: Score | null },
+  async patchEpisodeRating(
+    opts: {
+      subjectID: number;
+      episodeID: number;
+      score?: Score | null;
+      isVisible?: boolean;
+    },
   ): Promise<APIResponseEx<RateEpisodeResponseData>> {
     if (!this.token) return ["auth_required"];
 
-    if (opts.score !== null) {
-      const bodyData: RateEpisodeRequestData = { score: opts.score };
+    const bodyData: RateEpisodeRequestData = {
+      ...(opts.score !== undefined ? { score: opts.score } : {}),
+      ...(opts.isVisible !== undefined
+        ? { visibility: { is_visible: opts.isVisible } }
+        : {}),
+    };
 
-      return await this.fetch(
+    const resp = await this.fetch<RateEpisodeResponseData>(
+      "api/v1",
+      `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings/mine`,
+      {
+        tokenType: "jwt",
+
+        method: "PATCH",
+        body: JSON.stringify(bodyData),
+      },
+    );
+
+    if (!("score" in opts) && resp[0] === "error" && resp[1] === "BAD_SCORE") {
+      // 服务端还未更新，临时兼容一下。
+      // TODO!!!: 更新服务端之后去掉这里。
+    }
+
+    if (
+      "isVisible" in opts && resp[0] === "ok" &&
+      resp[1].visibility?.is_visible !== opts.isVisible
+    ) {
+      // 服务端还未更新，临时兼容一下。
+      // TODO!!!: 更新服务端之后去掉这里。
+
+      const resp2 = await this.fetch(
         "api/v1",
-        `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings/mine`,
+        `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings/mine/is-visible`,
         {
           tokenType: "jwt",
 
           method: "PUT",
-          body: JSON.stringify(bodyData),
+          body: JSON.stringify(opts.isVisible),
         },
       );
-    } else {
-      return await this.fetch(
-        "api/v1",
-        `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings/mine`,
-        {
-          tokenType: "jwt",
-
-          method: "DELETE",
-        },
-      );
+      if (resp2[0] !== "ok") return resp2;
+      return resp;
     }
+
+    return resp;
   }
 
   private subjectEpisodesRatingsCache: {
@@ -153,21 +178,6 @@ export class Client {
     );
   }
 
-  async changeUserEpisodeRatingVisibility(
-    opts: { isVisible: boolean },
-  ): Promise<APIResponseEx<ChangeUserEpisodeRatingVisibilityResponseData>> {
-    return await this.fetch(
-      "api/v1",
-      `subjects/${Global.subjectID}/episodes/${Global.episodeID}/ratings/mine/is-visible`,
-      {
-        tokenType: "jwt",
-
-        method: "PUT",
-        body: JSON.stringify(opts.isVisible),
-      },
-    );
-  }
-
   get TIMELINE_ITEMS_PER_PAGE(): number {
     return 10;
   }
@@ -229,7 +239,7 @@ export class Client {
     opts: {
       tokenType: "basic" | "jwt";
 
-      method: "GET" | "POST" | "PUT" | "DELETE";
+      method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
       searchParams?: URLSearchParams;
       body?: string;
     },
@@ -279,7 +289,7 @@ export class Client {
   }
 
   private buildRequest(url: URL, init: {
-    method: "GET" | "POST" | "PUT" | "DELETE";
+    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
     headers: Headers;
     body?: string;
   }): Request {

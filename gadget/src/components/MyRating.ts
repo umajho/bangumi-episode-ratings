@@ -172,7 +172,7 @@ export function renderMyRating(
 
     updateMessage(["processing"]);
 
-    const resp = await Global.client.rateEpisode({
+    const resp = await Global.client.patchEpisodeRating({
       subjectID: Global.subjectID!,
       episodeID: props.episodeID,
       score: scoreToRate,

@@ -4,6 +4,9 @@ import { Watched } from "../utils/watched";
 export function renderVisibilityButton(
   el: JQuery<HTMLElement>,
   opts: {
+    /**
+     * `null` 现在仅代表数据还没有加载。
+     */
     currentVisibility: Watched<{ isVisible: boolean } | null>;
   },
 ) {
@@ -46,7 +49,9 @@ export function renderVisibilityButton(
     isDisabled.setValue(true);
     updateMessage(["processing"]);
 
-    const result = await Global.client.changeUserEpisodeRatingVisibility({
+    const result = await Global.client.patchEpisodeRating({
+      subjectID: Global.subjectID!,
+      episodeID: Global.episodeID!,
       isVisible: !currentVisibility,
     });
 
@@ -58,7 +63,9 @@ export function renderVisibilityButton(
     } else if (result[0] === "ok") {
       isDisabled.setValue(false);
       updateMessage(["none"]);
-      Global.updateCurrentEpisodeVisibilityFromServerRaw(result[1]);
+      Global.updateCurrentEpisodeVisibilityFromServerRaw(
+        result[1].visibility ?? { is_visible: true },
+      );
     } else {
       result satisfies never;
     }
