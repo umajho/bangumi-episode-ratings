@@ -113,7 +113,7 @@ export async function queryEpisodeMyRating(
     score: ratingResult.value?.score ?? null,
     visibility: ratingResult.value
       ? { is_visible: ratingResult.value.isVisible ?? false }
-      : null,
+      : { is_visible: true },
   }];
 }
 

@@ -19,17 +19,13 @@ export type APIErrorResponse = [tag: "error", name: ErrorName, msg: string];
 export type APIResponse<T> = APIOkResponse<T> | APIErrorResponse;
 
 export interface RateEpisodeRequestData {
-  score?: number;
-  visibility?: {
-    is_visible: boolean;
-  };
+  score?: number | null;
+  visibility?: { is_visible: boolean };
 }
 
 export interface RateEpisodeResponseData {
   score: number | null;
-  visibility: {
-    is_visible: boolean;
-  };
+  visibility: { is_visible: boolean };
 }
 
 export interface GetEpisodeRatingsResponseData__Until_0_1_13 {
@@ -50,9 +46,7 @@ export interface GetEpisodeRatingsResponseData {
 
 export interface GetMyEpisodeRatingResponseData {
   score: number | null;
-  visibility: {
-    is_visible: boolean;
-  } | null;
+  visibility: { is_visible: boolean };
 }
 
 export type GetSubjectEpisodesResponseData_Until_0_5_0 =
