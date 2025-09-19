@@ -3,7 +3,7 @@ import { match, P } from "npm:ts-pattern";
 import { APIRouteMode, AuthRouteMode } from "@/types.ts";
 
 const HARD_CODED = {
-  CORS_ALLOWED_METHODS: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  CORS_ALLOWED_METHODS: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   CORS_ALLOWED_HEADERS: [
     "Authorization",
     "X-Gadget-Version",
