@@ -1,8 +1,4 @@
-import {
-  APIResponse,
-  ChangeUserEpisodeRatingVisibilityResponseData,
-  RateEpisodeResponseData,
-} from "@/shared/dto.ts";
+import { APIResponse, RateEpisodeResponseData } from "@/shared/dto.ts";
 import {
   EpisodeID,
   SubjectID,
@@ -14,17 +10,18 @@ import { Repo } from "@/repo/mod.ts";
 import { BangumiClient } from "@/bangumi-client.ts";
 import { makeErrorAuthRequiredResponse } from "@/responding.tsx";
 
-export async function rateEpisode(
+export async function patchEpisodeRating(
   repo: Repo,
   bangumiClient: BangumiClient,
   userID: UserID | null,
   opts: {
     claimedSubjectID: SubjectID;
     episodeID: EpisodeID;
-    score: number | null;
+    score?: number | null;
+    isVisible?: boolean;
   },
 ): Promise<APIResponse<RateEpisodeResponseData>> {
-  if (opts.score !== null) {
+  if (opts.score != null) { // NOTE: `==` for both `null` and `undefined`.
     if (!Number.isInteger(opts.score) || opts.score < 1 || opts.score > 10) {
       return [
         "error",
@@ -44,138 +41,102 @@ export async function rateEpisode(
   if (checkSubjectIDResult[0] !== "ok") return checkSubjectIDResult;
   const subjectID = checkSubjectIDResult[1];
 
-  let scoreDelta = opts.score ?? 0;
-
   let isOk: boolean;
 
-  let oldRating!: UserSubjectEpisodeRatingData | null;
+  let oldRatingScore!: number | null;
+  let newRatingScore!: number | null;
+  let newRatingIsVisible!: boolean;
+
   isOk = false;
   while (!isOk) {
     const oldRatingResult = await repo
       .getUserEpisodeRatingResult(userID, subjectID, opts.episodeID);
-    oldRating = oldRatingResult.value;
+    const oldRating = oldRatingResult.value;
 
-    if (oldRating && oldRating.score === opts.score) {
+    oldRatingScore = oldRating?.score ?? null;
+    newRatingScore = opts.score === undefined ? oldRatingScore : opts.score;
+    const oldRatingIsVisible = oldRating?.isVisible ?? true;
+    newRatingIsVisible = opts.isVisible === undefined
+      ? oldRatingIsVisible
+      : opts.isVisible;
+
+    if (
+      oldRatingScore === newRatingScore &&
+      oldRatingIsVisible === newRatingIsVisible
+    ) {
       return ["ok", {
-        score: opts.score,
-        visibility: opts.score !== null
-          ? { is_visible: !!oldRating.isVisible }
-          : null,
+        score: oldRatingScore,
+        visibility: { is_visible: oldRatingIsVisible },
       }];
     }
 
     const nowMs = Date.now();
 
     const userRatingData: UserSubjectEpisodeRatingData = {
-      score: opts.score,
-      isVisible: oldRating?.isVisible ?? false,
+      score: newRatingScore,
+      isVisible: newRatingIsVisible,
       submittedAtMs: nowMs,
     };
-    if (oldRating) {
-      scoreDelta -= oldRating.score ?? 0;
-    }
 
     const result = await repo.tx((tx) => {
-      if (oldRating && oldRating.isVisible) {
-        if (
-          userRatingData.score === null &&
-          oldRating.score !== null
-        ) {
+      if (!oldRatingIsVisible && !newRatingIsVisible) {
+        // noop
+      } else if (oldRatingIsVisible && !newRatingIsVisible) {
+        if (oldRatingScore) {
           tx.deleteSubjectEpisodeScorePublicVoter //
-          (subjectID, opts.episodeID, oldRating.score, userID);
-        } else if (userRatingData.score !== null) {
+          (subjectID, opts.episodeID, oldRatingScore, userID);
+        }
+      } else if (!oldRatingIsVisible && newRatingIsVisible) {
+        if (newRatingScore) {
           tx.setSubjectEpisodeScorePublicVoter //
-          (subjectID, opts.episodeID, userRatingData.score, userID);
+          (subjectID, opts.episodeID, newRatingScore, userID);
+        }
+      } else { // oldRatingIsVisible && newRatingIsVisible
+        if (oldRatingScore !== newRatingScore) {
+          if (oldRatingScore) {
+            tx.deleteSubjectEpisodeScorePublicVoter //
+            (subjectID, opts.episodeID, oldRatingScore, userID);
+          }
+          if (newRatingScore) {
+            tx.setSubjectEpisodeScorePublicVoter //
+            (subjectID, opts.episodeID, newRatingScore, userID);
+          }
         }
       }
 
       tx.setUserEpisodeRating //
       (userID, subjectID, opts.episodeID, userRatingData, oldRatingResult);
-      tx.insertUserTimelineItem(userID, nowMs, ["rate-episode", {
-        episodeID: opts.episodeID,
-        score: userRatingData.score,
-      }]);
+      if (opts.score !== undefined) {
+        tx.insertUserTimelineItem(userID, nowMs, ["rate-episode", {
+          episodeID: opts.episodeID,
+          score: userRatingData.score,
+        }]);
+      }
     });
     isOk = result.ok;
   }
 
-  isOk = false;
-  while (!isOk) {
-    const result = await repo.tx((tx) => {
-      if (opts.score !== null) {
-        tx.increaseSubjectEpisodeScoreVotes //
-        (subjectID, opts.episodeID, opts.score);
-      }
-      if (oldRating && oldRating.score !== null) {
-        tx.decreaseSubjectEpisodeScoreVotes //
-        (subjectID, opts.episodeID, oldRating.score);
-      }
-    });
-    isOk = result.ok;
+  if (oldRatingScore !== newRatingScore) {
+    isOk = false;
+    while (!isOk) {
+      const result = await repo.tx((tx) => {
+        if (newRatingScore !== null) {
+          tx.increaseSubjectEpisodeScoreVotes //
+          (subjectID, opts.episodeID, newRatingScore);
+        }
+        if (oldRatingScore !== null) {
+          tx.decreaseSubjectEpisodeScoreVotes //
+          (subjectID, opts.episodeID, oldRatingScore);
+        }
+      });
+      isOk = result.ok;
+    }
   }
 
   return ["ok", {
-    score: opts.score,
-    visibility: oldRating ? { is_visible: oldRating.isVisible ?? false } : null,
+    score: newRatingScore,
+    visibility: { is_visible: newRatingIsVisible },
   }];
-}
-
-export async function changeUserEpisodeRatingVisibility(
-  repo: Repo,
-  bangumiClient: BangumiClient,
-  userID: UserID | null,
-  opts: {
-    claimedSubjectID: SubjectID;
-    episodeID: EpisodeID;
-    isVisible: boolean;
-  },
-): Promise<APIResponse<ChangeUserEpisodeRatingVisibilityResponseData>> {
-  if (userID === null) return makeErrorAuthRequiredResponse();
-
-  const checkSubjectIDResult = checkSubjectID({
-    subjectIDResult: await fetchSubjectID(repo, bangumiClient, opts),
-    claimedSubjectID: opts.claimedSubjectID,
-    episodeID: opts.episodeID,
-  });
-  if (checkSubjectIDResult[0] !== "ok") return checkSubjectIDResult;
-  const subjectID = checkSubjectIDResult[1];
-
-  let isOk: boolean;
-
-  isOk = false;
-  while (!isOk) {
-    const userRatingResult = await repo
-      .getUserEpisodeRatingResult(userID, subjectID, opts.episodeID);
-    const userRatingData = userRatingResult.value;
-    if (userRatingData === null) {
-      return [
-        "error",
-        "NOT_RATED_YET",
-        "既然还没有评分，那就应该不会涉及到其可见性，为什么会执行到这里…？",
-      ];
-    }
-    if (!!userRatingData.isVisible === opts.isVisible) break;
-
-    userRatingData.isVisible = opts.isVisible;
-
-    const result = await repo.tx((tx) => {
-      if (userRatingData.score !== null) {
-        if (opts.isVisible) {
-          tx.setSubjectEpisodeScorePublicVoter //
-          (subjectID, opts.episodeID, userRatingData.score, userID);
-        } else {
-          tx.deleteSubjectEpisodeScorePublicVoter //
-          (subjectID, opts.episodeID, userRatingData.score, userID);
-        }
-      }
-
-      tx.setUserEpisodeRating //
-      (userID, subjectID, opts.episodeID, userRatingData, userRatingResult);
-    });
-    isOk = result.ok;
-  }
-
-  return ["ok", { is_visible: opts.isVisible }];
 }
 
 /**

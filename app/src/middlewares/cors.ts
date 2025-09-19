@@ -29,7 +29,7 @@
  * forked from: https://github.com/honojs/hono/blob/6792789ec06bd14c96ecdf38a368f7d7526e601a/src/middleware/cors/index.ts
  */
 
-import { Context, MiddlewareHandler } from "hono";
+import { Context, MiddlewareHandler, Next } from "hono";
 
 type CORSOptions = {
   origin:
@@ -124,7 +124,7 @@ export const cors = (options?: CORSOptions): MiddlewareHandler => {
     }
   })(opts.allowMethods);
 
-  return async function cors(c, next) {
+  return async function cors(c: Context, next: Next) {
     function set(key: string, value: string) {
       c.res.headers.set(key, value);
     }

@@ -8,7 +8,10 @@ import {
 } from "@/responding.tsx";
 import * as Commands from "@/operations/commands.ts";
 import * as Queries from "@/operations/queries.ts";
-import { RateEpisodeRequestData } from "@/shared/dto.ts";
+import {
+  ChangeUserEpisodeRatingVisibilityResponseData,
+  RateEpisodeRequestData,
+} from "@/shared/dto.ts";
 import * as Global from "@/global.ts";
 
 import { tryExtractIntegerFromCTXParams } from "@/routes/api/utils.ts";
@@ -51,6 +54,7 @@ router.get(
 router.put(
   "/ratings/mine",
   Middlewares.auth(),
+  /** @deprecated */
   async (ctx) => {
     const subjectID = //
       tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
@@ -63,11 +67,11 @@ router.put(
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
     }
 
-    const result = await Commands.rateEpisode(
+    const result = await Commands.patchEpisodeRating(
       Global.repo,
       Global.bangumiClient,
       await ctx.var.authenticate(Global.repo),
-      { claimedSubjectID: subjectID, episodeID, score: data.score },
+      { claimedSubjectID: subjectID, episodeID, score: data.score! },
     );
 
     return respondForAPI(ctx, result);
@@ -89,11 +93,18 @@ router.patch(
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
     }
 
-    const result = await Commands.rateEpisode(
+    const result = await Commands.patchEpisodeRating(
       Global.repo,
       Global.bangumiClient,
       await ctx.var.authenticate(Global.repo),
-      { claimedSubjectID: subjectID, episodeID, score: data.score },
+      {
+        claimedSubjectID: subjectID,
+        episodeID,
+        ...(data.score !== undefined ? { score: data.score } : {}),
+        ...(data.visibility !== undefined
+          ? { isVisible: data.visibility.is_visible }
+          : {}),
+      },
     );
 
     return respondForAPI(ctx, result);
@@ -103,6 +114,7 @@ router.patch(
 router.delete(
   "/ratings/mine",
   Middlewares.auth(),
+  /** @deprecated */
   async (ctx) => {
     const subjectID = //
       tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
@@ -113,7 +125,7 @@ router.delete(
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
     }
 
-    const result = await Commands.rateEpisode(
+    const result = await Commands.patchEpisodeRating(
       Global.repo,
       Global.bangumiClient,
       await ctx.var.authenticate(Global.repo),
@@ -127,6 +139,7 @@ router.delete(
 router.put(
   "/ratings/mine/is-visible",
   Middlewares.auth(),
+  /** @deprecated */
   async (ctx) => {
     const subjectID = //
       tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
@@ -142,13 +155,20 @@ router.put(
       return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
     }
 
-    const result = await Commands.changeUserEpisodeRatingVisibility(
+    const result = await Commands.patchEpisodeRating(
       Global.repo,
       Global.bangumiClient,
       await ctx.var.authenticate(Global.repo),
       { claimedSubjectID: subjectID, episodeID, isVisible: data },
     );
 
-    return respondForAPI(ctx, result);
+    if (result[0] !== "ok") {
+      return respondForAPI(ctx, result);
+    } else {
+      return respondForAPI<ChangeUserEpisodeRatingVisibilityResponseData>(ctx, [
+        "ok",
+        result[1].visibility,
+      ]);
+    }
   },
 );
