@@ -8,10 +8,7 @@ import {
 } from "@/responding.tsx";
 import * as Commands from "@/operations/commands.ts";
 import * as Queries from "@/operations/queries.ts";
-import {
-  ChangeUserEpisodeRatingVisibilityResponseData,
-  RateEpisodeRequestData,
-} from "@/shared/dto.ts";
+import { RateEpisodeRequestData } from "@/shared/dto.ts";
 import * as Global from "@/global.ts";
 
 import { tryExtractIntegerFromCTXParams } from "@/routes/api/utils.ts";
@@ -51,33 +48,6 @@ router.get(
   },
 );
 
-router.put(
-  "/ratings/mine",
-  Middlewares.auth(),
-  /** @deprecated */
-  async (ctx) => {
-    const subjectID = //
-      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
-    const episodeID = //
-      tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
-
-    const data = await ctx.req.json() as RateEpisodeRequestData;
-
-    if (subjectID === null || episodeID === null) {
-      return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
-    }
-
-    const result = await Commands.patchEpisodeRating(
-      Global.repo,
-      Global.bangumiClient,
-      await ctx.var.authenticate(Global.repo),
-      { claimedSubjectID: subjectID, episodeID, score: data.score! },
-    );
-
-    return respondForAPI(ctx, result);
-  },
-);
-
 router.patch(
   "/ratings/mine",
   Middlewares.auth(),
@@ -111,64 +81,41 @@ router.patch(
   },
 );
 
+router.put(
+  "/ratings/mine",
+  Middlewares.referrers(),
+  Middlewares.auth(),
+  // deno-lint-ignore require-await
+  async (ctx) => {
+    return respondForAPI(
+      ctx,
+      makeErrorVersionTooOldResponse(ctx.var.referrerHostname),
+    );
+  },
+);
+
 router.delete(
   "/ratings/mine",
+  Middlewares.referrers(),
   Middlewares.auth(),
-  /** @deprecated */
+  // deno-lint-ignore require-await
   async (ctx) => {
-    const subjectID = //
-      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
-    const episodeID = //
-      tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
-
-    if (subjectID === null || episodeID === null) {
-      return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
-    }
-
-    const result = await Commands.patchEpisodeRating(
-      Global.repo,
-      Global.bangumiClient,
-      await ctx.var.authenticate(Global.repo),
-      { claimedSubjectID: subjectID, episodeID, score: null },
+    return respondForAPI(
+      ctx,
+      makeErrorVersionTooOldResponse(ctx.var.referrerHostname),
     );
-
-    return respondForAPI(ctx, result);
   },
 );
 
 router.put(
   "/ratings/mine/is-visible",
+  Middlewares.referrers(),
   Middlewares.auth(),
-  /** @deprecated */
+  // deno-lint-ignore require-await
   async (ctx) => {
-    const subjectID = //
-      tryExtractIntegerFromCTXParams(ctx, "subjectID") as SubjectID;
-    const episodeID = //
-      tryExtractIntegerFromCTXParams(ctx, "episodeID") as EpisodeID;
-
-    const data = await ctx.req.json() as boolean;
-
-    if (
-      subjectID === null || episodeID === null ||
-      typeof data !== "boolean"
-    ) {
-      return respondForAPI(ctx, ["error", "BAD_REQUEST", "参数有误。"]);
-    }
-
-    const result = await Commands.patchEpisodeRating(
-      Global.repo,
-      Global.bangumiClient,
-      await ctx.var.authenticate(Global.repo),
-      { claimedSubjectID: subjectID, episodeID, isVisible: data },
+    return respondForAPI(
+      ctx,
+      makeErrorVersionTooOldResponse(ctx.var.referrerHostname),
     );
-
-    if (result[0] !== "ok") {
-      return respondForAPI(ctx, result);
-    } else {
-      return respondForAPI<ChangeUserEpisodeRatingVisibilityResponseData>(ctx, [
-        "ok",
-        result[1].visibility,
-      ]);
-    }
   },
 );

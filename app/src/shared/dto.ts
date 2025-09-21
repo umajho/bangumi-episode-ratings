@@ -31,21 +31,15 @@ export interface RateEpisodeResponseData {
 export interface GetEpisodeRatingsResponseData {
   votes: { [score: number]: number };
   public_ratings: GetEpisodePublicRatingsResponseData;
-  my_rating?: GetMyEpisodeRatingResponseData;
-}
-
-export interface GetMyEpisodeRatingResponseData {
-  score: number | null;
-  visibility: { is_visible: boolean };
+  my_rating?: {
+    score: number | null;
+    visibility: { is_visible: boolean };
+  };
 }
 
 export interface GetSubjectEpisodesResponseData {
   episodes_votes: { [episode_id: number]: { [score: number]: number } | null };
   my_ratings?: { [episode_id: number]: number };
-}
-
-export interface ChangeUserEpisodeRatingVisibilityResponseData {
-  is_visible: boolean;
 }
 
 export interface GetEpisodePublicRatingsResponseData {
