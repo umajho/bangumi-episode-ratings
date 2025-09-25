@@ -130,10 +130,8 @@ function processReplysForm(opts: {
 }) {
   const unmountFns: (() => void)[] = [];
 
-  // @ts-ignore
-  const oldSubReplyFn = (window.unsafeWindow ?? window).subReply;
-  // @ts-ignore
-  (window.unsafeWindow ?? window).subReply = function (...args: any[]) {
+  const oldSubReplyFn = (window as any).subReply;
+  (window as any).subReply = function (...args: any[]) {
     oldSubReplyFn(...args);
 
     const el = $("#ReplysForm");
@@ -150,10 +148,8 @@ function processReplysForm(opts: {
     }));
   };
 
-  // @ts-ignore
-  const oldSubReplycancelFn = (window.unsafeWindow ?? window).subReplycancel;
-  // @ts-ignore
-  (window.unsafeWindow ?? window).subReplycancel = function (...args: any[]) {
+  const oldSubReplycancelFn = (window as any).subReplycancel;
+  (window as any).subReplycancel = function (...args: any[]) {
     unmountFns.forEach((fn) => fn());
     oldSubReplycancelFn(...args);
   };

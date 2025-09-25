@@ -11,9 +11,7 @@ export default global;
 export function initializeGlobal() {
   Object.assign(global, makeGlobal());
 
-  // @ts-ignore
-  (((window as any).unsafeWindow ?? window).__bgm_ep_ratings__debug ??= {})
-    .Global = global;
+  ((window as any).__bgm_ep_ratings__debug ??= {}).Global = global;
 }
 
 function makeGlobal() {
@@ -34,12 +32,7 @@ function makeGlobal() {
     return { subjectID, episodeID };
   })();
 
-  const claimedUserID: number | null = (() => {
-    if ("unsafeWindow" in window) {
-      return (window as any).unsafeWindow.CHOBITS_UID || null;
-    }
-    return (window as any).CHOBITS_UID || null;
-  })();
+  const claimedUserID: number | null = (window as any).CHOBITS_UID || null;
 
   if (claimedUserID === null) {
     localStorage.removeItem(env.LOCAL_STORAGE_KEY_TOKEN);
