@@ -1,6 +1,6 @@
 {
   "name": "@bangumi-episode-ratings/gadget",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Bangumi 单集评分的超合金组件",
   "license": "MIT",
   "homepage": "https://github.com/umajho/bangumi-episode-ratings",
