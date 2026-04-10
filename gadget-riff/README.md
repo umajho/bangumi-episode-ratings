@@ -1,28 +1,17 @@
-## Usage
+# 配套超合金组建（riff）
 
-```bash
-$ npm install # or pnpm install or yarn install
-```
+## TODO
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+- [ ] 实现旧组件已有功能：
+  - [ ] 章节页面：整体评分显示
+  - [ ] 章节页面：评分功能（+公开切换）
+  - [ ] 章节页面：吐槽中的评分显示（+公开切换）
+  - [ ] 条目章节列表页面：各章节的整体评分显示
+  - [ ] 条目章节列表页面：各章节的评分功能
+  - [ ] 悬浮框：整体评分显示（+防剧透机制）
+  - [ ] 时间线：“我的单集评分”（+导出数据+删除记录）
 
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm run dev`
-
-Runs the app in the development mode.<br>
-Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-## Deployment
-
-Learn more about deploying your application with the [documentations](https://vite.dev/guide/static-deploy.html)
+- [ ] 实现发布页中承诺的功能：
+  - [ ] 设置：改变 entrypoints
+  - [ ] 设置：禁用防剧透
+  - [ ] 音乐条目页面：评分功能
