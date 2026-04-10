@@ -30,13 +30,16 @@ export default defineConfig({
         banner: workaroundViteWeirdness(makeMetablock({
           version: PackageJSON.version,
           description: PackageJSON.description,
+          license: PackageJSON.license,
         })),
       },
     },
   },
 });
 
-function makeMetablock(opts: { version: string; description: string }) {
+function makeMetablock(
+  opts: { version: string; description: string; license: string },
+) {
   if (opts.description.includes("\n")) {
     throw new Error("Description should not contain newlines.");
   }
@@ -47,7 +50,7 @@ function makeMetablock(opts: { version: string; description: string }) {
 // @name        bangumi-episode-ratings-gadget
 // @version     ${opts.version}
 // @description ${opts.description}
-// @license     MIT
+// @license     ${opts.license}
 // @website     https://github.com/umajho/bangumi-episode-ratings
 // @match       https://bangumi.tv/*
 // @match       https://bgm.tv/*
