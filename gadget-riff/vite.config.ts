@@ -29,7 +29,7 @@ function makeMetablock(
   return `
 // ==UserScript==
 // @namespace   https://github.com/umajho
-// @name        bangumi-episode-ratings-gadget
+// @name        Bangumi 单集评分（riff）
 // @version     ${opts.version}
 // @description ${opts.description}
 // @license     ${opts.license}
