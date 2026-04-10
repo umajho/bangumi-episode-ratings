@@ -1,2 +1,3 @@
 catalog:
   oxlint: ^1.59.0
+  solid-element: ^1.9.1
