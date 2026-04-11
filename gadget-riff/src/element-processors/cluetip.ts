@@ -1,20 +1,64 @@
-import { createHelloElement } from "../components/Hello";
+import type { AppClient } from "../clients/app-client";
+import { createRateInfoInstance } from "../components/RateInfo";
+import {
+  type EpisodeId,
+  makeDataAttributeName,
+  type SubjectId,
+} from "../definitions";
+import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 
-export function processCluetip() {
-  function initializeCluetip() {
+export function processCluetip({ scoreStore }: { scoreStore: ScoreStore }) {
+  let counter = 0;
+
+  async function initializeCluetip(
+    opts: {
+      appClient: AppClient;
+
+      subjectId: SubjectId;
+      episodeId: EpisodeId;
+      hasUserWatched: boolean;
+    },
+  ) {
     const el = document.querySelector("#cluetip");
     if (!el) return;
     const popupEl = el.querySelector(".prg_popup");
     if (!popupEl) return;
 
-    if (popupEl.getAttribute("data-bgm-ep-ratings-initialized")) return;
-    popupEl.setAttribute("data-bgm-ep-ratings-initialized", "true");
+    const attrNameInitialized = makeDataAttributeName("initialized");
+    if (popupEl.getAttribute(attrNameInitialized)) return;
+    popupEl.setAttribute(attrNameInitialized, "true");
+
+    counter++;
+    const currentCounter = counter;
+
+    if (!scoreStore.hasTouchedCompleteSubjectVotes(opts.subjectId)) {
+      // 确保用户不是只是无意划过。
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      if (currentCounter !== counter || !$(popupEl).is(":visible")) return;
+    }
 
     const firstBoardEl = popupEl.querySelector(".tip .board");
     if (!firstBoardEl) return;
 
-    const helloEl = createHelloElement();
-    firstBoardEl.insertAdjacentElement("beforebegin", helloEl);
+    const rateInfoInstance = createRateInfoInstance({
+      appClient: opts.appClient,
+      scoreStore,
+      subjectId: opts.subjectId,
+      episodeId: opts.episodeId,
+      hasUserWatched: opts.hasUserWatched,
+    });
+    firstBoardEl.insertAdjacentElement("beforebegin", rateInfoInstance.element);
+
+    for (
+      const epStatusEl of popupEl
+        .querySelectorAll(".epStatusTool > a.ep_status")
+    ) {
+      if (epStatusEl.id.startsWith("Watched")) {
+        epStatusEl.addEventListener("click", () => {
+          rateInfoInstance.setHasUserWatched(true);
+        });
+      }
+    }
   }
 
   return { initializeCluetip };

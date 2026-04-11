@@ -16,6 +16,7 @@
     "solid-js": "^1.9.12"
   },
   "devDependencies": {
+    "@types/jquery": "catalog:",
     "@types/node": "^24.12.2",
     "oxlint": "catalog:",
     "typescript": "~6.0.2",

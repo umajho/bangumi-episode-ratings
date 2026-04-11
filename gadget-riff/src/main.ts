@@ -1,4 +1,11 @@
+import { AppClient } from "./clients/app-client";
 import { processRootPage } from "./page-processors/root";
+import {
+  type AuthStore,
+  createAuthStore,
+} from "./stores/persistent-stores/auth-store";
+import { createEntryPointStore } from "./stores/persistent-stores/entrypoint-store";
+import { createScoreStore } from "./stores/temporary-global-stores/score-store";
 
 async function main() {
   // 不在超展开页面执行。
@@ -7,17 +14,25 @@ async function main() {
     return;
   }
 
-  await migrate();
-  await initializeStore();
+  const entrypointStore = createEntryPointStore({
+    // TODO: 用 env 来配置。
+    defaultAuthEntrypoint: "https://bgm-ep-ratings.deno.dev/auth/",
+    // TODO: 用 env 来配置。
+    defaultApiEntrypoint: "https://xn--kbrs5al25jbhj.bgm.zone/api/",
+  });
+  const authStore = createAuthStore();
+  const appClient = new AppClient({ entrypointStore, authStore });
 
-  if ((await setUpToken()).shouldCloseWindow) {
+  if ((await setUpToken({ appClient, authStore })).shouldCloseWindow) {
     window.close();
     return;
   }
 
+  const scoreStore = createScoreStore({ appClient });
+
   switch (detectPageType()) {
     case "root": {
-      await processRootPage();
+      await processRootPage({ appClient, scoreStore });
       break;
     }
     case "subject": {
@@ -37,15 +52,10 @@ async function main() {
   }
 }
 
-async function migrate() {
-  // noop
-}
-
-async function initializeStore() {
-  // TODO
-}
-
-async function setUpToken(): Promise<{ shouldCloseWindow: boolean }> {
+async function setUpToken(_opts: {
+  appClient: AppClient;
+  authStore: AuthStore;
+}): Promise<{ shouldCloseWindow: boolean }> {
   // TODO
 
   return { shouldCloseWindow: false };

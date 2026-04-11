@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@types/jquery':
+      specifier: ^4.0.0
+      version: 4.0.0
     oxlint:
       specifier: ^1.59.0
       version: 1.59.0
@@ -24,6 +27,9 @@ importers:
         specifier: ^1.9.12
         version: 1.9.12
     devDependencies:
+      '@types/jquery':
+        specifier: 'catalog:'
+        version: 4.0.0
       '@types/node':
         specifier: ^24.12.2
         version: 24.12.2
@@ -156,6 +162,9 @@ packages:
 
   '@types/babel__traverse@7.28.0':
     resolution: {integrity: sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==}
+
+  '@types/jquery@4.0.0':
+    resolution: {integrity: sha512-Z+to+A2VkaHq1DfI2oSwsoCdhCHMpTSgjWzNcbNlRGYzksDBpPUgEcAL+RQjOBJRaLoEAOHXxqDGBVP+BblBwg==}
 
   '@types/node@24.12.2':
     resolution: {integrity: sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g==}
@@ -648,6 +657,8 @@ snapshots:
   '@types/babel__traverse@7.28.0':
     dependencies:
       '@babel/types': 7.29.0
+
+  '@types/jquery@4.0.0': {}
 
   '@types/node@24.12.2':
     dependencies:
