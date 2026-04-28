@@ -1,12 +1,5 @@
 import { customElement, noShadowDOM } from "solid-element";
-import {
-  type Component,
-  createMemo,
-  createSignal,
-  Match,
-  Show,
-  Switch,
-} from "solid-js";
+import { type Component, createMemo, Match, Show, Switch } from "solid-js";
 
 import {
   type EpisodeId,
@@ -18,29 +11,28 @@ import type { AppClient } from "../clients/app-client";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 import { SmallStars } from "./SmallStars";
 import { ErrorWithRetry } from "./ErrorWithRetry";
+import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 
 const TAG_NAME = makeCustomElementTagName("rate-info");
 
 export function createRateInfoInstance(opts: {
   appClient: AppClient;
   scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
 
   subjectId: SubjectId;
   episodeId: EpisodeId;
-  hasUserWatched: boolean;
 }) {
-  registerRateInfo({ appClient: opts.appClient, scroreStore: opts.scoreStore });
+  registerRateInfo({
+    appClient: opts.appClient,
+    scroreStore: opts.scoreStore,
+    revealedEpisodesStore: opts.revealedEpisodesStore,
+  });
   const el = document.createElement(TAG_NAME);
   el.setAttribute("subject-id", String(opts.subjectId));
   el.setAttribute("episode-id", String(opts.episodeId));
-  el.setAttribute("has-user-watched", String(opts.hasUserWatched));
 
-  return {
-    element: el,
-    setHasUserWatched(newValue: boolean) {
-      el.setAttribute("has-user-watched", String(newValue));
-    },
-  };
+  return { element: el };
 }
 
 let elementConstructor: CustomElementConstructor | null = null;
@@ -48,11 +40,11 @@ let elementConstructor: CustomElementConstructor | null = null;
 function registerRateInfo(opts: {
   appClient: AppClient;
   scroreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
 }) {
   elementConstructor ??= customElement(TAG_NAME, {
     episodeId: null,
     subjectId: null,
-    hasUserWatched: false,
   }, (props) => {
     noShadowDOM();
 
@@ -64,9 +56,9 @@ function registerRateInfo(opts: {
         <RateInfo
           appClient={opts.appClient}
           scoreStore={opts.scroreStore}
+          revealedEpisodesStore={opts.revealedEpisodesStore}
           subjectId={props.subjectId!}
           episodeId={props.episodeId!}
-          hasUserWatched={props.hasUserWatched}
         />
       </Show>
     );
@@ -76,10 +68,10 @@ function registerRateInfo(opts: {
 const RateInfo: Component<{
   appClient: AppClient;
   scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
 
   subjectId: SubjectId;
   episodeId: EpisodeId;
-  hasUserWatched: boolean;
 }> = (props) => {
   const votesResp = props.scoreStore.queryEpisodeVotesTracked(
     props.subjectId,
@@ -94,6 +86,8 @@ const RateInfo: Component<{
     const resp = votesResp();
     return resp[0] === "error" ? resp[2] : null;
   });
+  const isRevealedSignal = props.revealedEpisodesStore
+    .getIsRevealedSignal(props.episodeId);
 
   return (
     <Switch>
@@ -101,7 +95,8 @@ const RateInfo: Component<{
         {(votes) => (
           <RateInfoInner
             votes={votes()}
-            hasUserWatched={props.hasUserWatched}
+            isRevealed={isRevealedSignal()}
+            reveal={() => props.revealedEpisodesStore.reveal(props.episodeId)}
           />
         )}
       </Match>
@@ -126,7 +121,8 @@ const RateInfo: Component<{
 
 const RateInfoInner: Component<{
   votes: EpisodeVotes;
-  hasUserWatched: boolean;
+  isRevealed: boolean;
+  reveal: () => void;
 }> = (props) => {
   const totalVotes = createMemo(() => {
     return Object.values(props.votes).reduce(
@@ -142,15 +138,11 @@ const RateInfoInner: Component<{
   });
   const averageScore = () => scoreSum() / totalVotes();
 
-  const [isRevealed, setIsRevealed] = createSignal(
-    props.hasUserWatched || totalVotes() === 0,
-  );
-
   return (
     <Show
-      when={isRevealed()}
+      when={props.isRevealed}
       fallback={
-        <button type="button" onClick={() => setIsRevealed(true)}>
+        <button type="button" onClick={() => props.reveal()}>
           显示评分
         </button>
       }

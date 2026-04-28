@@ -5,9 +5,15 @@ import {
   makeDataAttributeName,
   type SubjectId,
 } from "../definitions";
+import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 
-export function processCluetip({ scoreStore }: { scoreStore: ScoreStore }) {
+export function processCluetip(
+  { scoreStore, revealedEpisodesStore }: {
+    scoreStore: ScoreStore;
+    revealedEpisodesStore: RevealedEpisodesStore;
+  },
+) {
   let counter = 0;
 
   async function initializeCluetip(
@@ -16,7 +22,6 @@ export function processCluetip({ scoreStore }: { scoreStore: ScoreStore }) {
 
       subjectId: SubjectId;
       episodeId: EpisodeId;
-      hasUserWatched: boolean;
     },
   ) {
     const el = document.querySelector("#cluetip");
@@ -43,9 +48,9 @@ export function processCluetip({ scoreStore }: { scoreStore: ScoreStore }) {
     const rateInfoInstance = createRateInfoInstance({
       appClient: opts.appClient,
       scoreStore,
+      revealedEpisodesStore,
       subjectId: opts.subjectId,
       episodeId: opts.episodeId,
-      hasUserWatched: opts.hasUserWatched,
     });
     firstBoardEl.insertAdjacentElement("beforebegin", rateInfoInstance.element);
 
@@ -55,7 +60,7 @@ export function processCluetip({ scoreStore }: { scoreStore: ScoreStore }) {
     ) {
       if (epStatusEl.id.startsWith("Watched")) {
         epStatusEl.addEventListener("click", () => {
-          rateInfoInstance.setHasUserWatched(true);
+          revealedEpisodesStore.reveal(opts.episodeId);
         });
       }
     }

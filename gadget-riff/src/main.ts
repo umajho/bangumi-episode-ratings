@@ -5,6 +5,7 @@ import {
   createAuthStore,
 } from "./stores/persistent-stores/auth-store";
 import { createEntryPointStore } from "./stores/persistent-stores/entrypoint-store";
+import { createRevealedEpisodesStore } from "./stores/temporary-global-stores/revealed-episodes-store";
 import { createScoreStore } from "./stores/temporary-global-stores/score-store";
 
 async function main() {
@@ -29,10 +30,11 @@ async function main() {
   }
 
   const scoreStore = createScoreStore({ appClient });
+  const revealedEpisodesStore = createRevealedEpisodesStore();
 
   switch (detectPageType()) {
     case "root": {
-      await processRootPage({ appClient, scoreStore });
+      await processRootPage({ appClient, scoreStore, revealedEpisodesStore });
       break;
     }
     case "subject": {

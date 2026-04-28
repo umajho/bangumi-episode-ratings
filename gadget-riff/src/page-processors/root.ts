@@ -1,11 +1,13 @@
 import type { AppClient } from "../clients/app-client";
 import type { EpisodeId, SubjectId } from "../definitions";
 import { processCluetip } from "../element-processors/cluetip";
+import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 
 export async function processRootPage(opts: {
   appClient: AppClient;
   scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
 }) {
   const { initializeCluetip } = processCluetip(opts);
 
@@ -31,12 +33,14 @@ export async function processRootPage(opts: {
       if (episodeId === undefined) return;
 
       const hasUserWatched = aEl.classList.contains("epBtnWatched");
+      if (hasUserWatched) {
+        opts.revealedEpisodesStore.reveal(episodeId);
+      }
 
       initializeCluetip({
         appClient: opts.appClient,
         subjectId,
         episodeId,
-        hasUserWatched,
       });
     });
 
