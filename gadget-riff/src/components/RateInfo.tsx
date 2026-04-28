@@ -1,5 +1,12 @@
 import { customElement, noShadowDOM } from "solid-element";
-import { type Component, createMemo, Match, Show, Switch } from "solid-js";
+import {
+  type Component,
+  createEffect,
+  createMemo,
+  Match,
+  Show,
+  Switch,
+} from "solid-js";
 
 import {
   type EpisodeId,
@@ -137,6 +144,12 @@ const RateInfoInner: Component<{
     );
   });
   const averageScore = () => scoreSum() / totalVotes();
+
+  createEffect(() => {
+    if (totalVotes() === 0) {
+      props.reveal();
+    }
+  });
 
   return (
     <Show
