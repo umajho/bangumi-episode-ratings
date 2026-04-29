@@ -49,7 +49,7 @@ const SettingsTab: Component<{
           : undefined}
       >
         <div class="section">
-          <div class="title">剧集评分防剧透</div>
+          <div class="title">章节评分防剧透</div>
           <RadioGroup
             currentValue={optAntiSpoiler()}
             options={settingsStore.getAntiSpoilerValues()}
