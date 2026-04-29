@@ -1,10 +1,12 @@
 import { AppClient } from "./clients/app-client";
 import { processRootPage } from "./page-processors/root";
+import { processSubjectPage } from "./page-processors/subject";
 import {
   type AuthStore,
   createAuthStore,
 } from "./stores/persistent-stores/auth-store";
 import { createEntryPointStore } from "./stores/persistent-stores/entrypoint-store";
+import { readonlyPageData } from "./stores/readonly-page-data";
 import { createRevealedEpisodesStore } from "./stores/temporary-global-stores/revealed-episodes-store";
 import { createScoreStore } from "./stores/temporary-global-stores/score-store";
 
@@ -38,7 +40,16 @@ async function main() {
       break;
     }
     case "subject": {
-      // TODO
+      const subjectId = readonlyPageData.subjectId;
+      if (subjectId) {
+        await processSubjectPage({
+          appClient,
+          scoreStore,
+          revealedEpisodesStore,
+          subjectId,
+        });
+      }
+
       break;
     }
     case "subject_ep_list": {

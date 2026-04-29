@@ -1,6 +1,7 @@
 import type { AppClient } from "../clients/app-client";
-import type { EpisodeId, SubjectId } from "../definitions";
+import type { SubjectId } from "../definitions";
 import { processCluetip } from "../element-processors/cluetip";
+import { processPrgList } from "../element-processors/prg-list";
 import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 
@@ -11,41 +12,23 @@ export async function processRootPage(opts: {
 }) {
   const { initializeCluetip } = processCluetip(opts);
 
-  let isMouseOver = false;
-  for (const liEl of document.querySelectorAll("ul.prg_list > li")) {
-    if (!liEl.querySelector(".load-epinfo")) continue;
+  for (const prgListEl of document.querySelectorAll("ul.prg_list")) {
+    const subjectId = (() => {
+      const epGrid = prgListEl.closest(".epGird");
+      if (!epGrid) return;
+      const a = epGrid.querySelector("a[data-subject-id]");
+      if (!a) return;
+      return Number(a.getAttribute("data-subject-id")) as SubjectId;
+    })();
+    if (subjectId === undefined || Number.isNaN(subjectId)) continue;
 
-    liEl.addEventListener("mouseover", () => {
-      if (isMouseOver) return;
-      isMouseOver = true;
-
-      const aEl = liEl.querySelector("a");
-      if (!aEl) return;
-
-      const subjectId = Number(aEl.getAttribute("subject_id")) as SubjectId;
-      const episodeId = (() => {
-        const href = aEl.getAttribute("href");
-        if (!href) return;
-        const match = href.match(/^\/ep\/(\d+)/);
-        if (!match) return;
-        return Number(match[1]) as EpisodeId;
-      })();
-      if (episodeId === undefined) return;
-
-      const hasUserWatched = aEl.classList.contains("epBtnWatched");
-      if (hasUserWatched) {
-        opts.revealedEpisodesStore.reveal(episodeId);
-      }
-
-      initializeCluetip({
-        appClient: opts.appClient,
-        subjectId,
-        episodeId,
-      });
-    });
-
-    liEl.addEventListener("mouseout", () => {
-      isMouseOver = false;
+    processPrgList({
+      appClient: opts.appClient,
+      scoreStore: opts.scoreStore,
+      revealedEpisodesStore: opts.revealedEpisodesStore,
+      initializeCluetip,
+      prgListElement: prgListEl as HTMLUListElement,
+      subjectId,
     });
   }
 }
