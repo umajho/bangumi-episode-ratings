@@ -156,7 +156,7 @@ const RateInfoInner: Component<{
       when={props.isRevealed}
       fallback={
         <button type="button" onClick={() => props.reveal()}>
-          显示评分
+          揭开评分
         </button>
       }
     >

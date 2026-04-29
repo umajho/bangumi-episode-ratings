@@ -1,4 +1,6 @@
 import { AppClient } from "./clients/app-client";
+import { registerSettingsTab } from "./components/SettingsTab";
+import { EPRT_ID_HTML_SAFE } from "./definitions";
 import { processRootPage } from "./page-processors/root";
 import { processSubjectPage } from "./page-processors/subject";
 import {
@@ -6,6 +8,10 @@ import {
   createAuthStore,
 } from "./stores/persistent-stores/auth-store";
 import { createEntryPointStore } from "./stores/persistent-stores/entrypoint-store";
+import {
+  createSettingsStore,
+  type SettingsStore,
+} from "./stores/persistent-stores/settings-store";
 import { readonlyPageData } from "./stores/readonly-page-data";
 import { createRevealedEpisodesStore } from "./stores/temporary-global-stores/revealed-episodes-store";
 import { createScoreStore } from "./stores/temporary-global-stores/score-store";
@@ -16,6 +22,8 @@ async function main() {
   if (/^\/rakuen(\/|$)/.test(window.location.pathname)) {
     return;
   }
+
+  const settingsStore = createSettingsStore();
 
   const entrypointStore = createEntryPointStore({
     // TODO: 用 env 来配置。
@@ -31,8 +39,10 @@ async function main() {
     return;
   }
 
+  setUpCustomizationPanelTab({ settingsStore });
+
   const scoreStore = createScoreStore({ appClient });
-  const revealedEpisodesStore = createRevealedEpisodesStore();
+  const revealedEpisodesStore = createRevealedEpisodesStore({ settingsStore });
 
   switch (detectPageType()) {
     case "root": {
@@ -72,6 +82,25 @@ async function setUpToken(_opts: {
   // TODO
 
   return { shouldCloseWindow: false };
+}
+
+function setUpCustomizationPanelTab(opts: { settingsStore: SettingsStore }) {
+  chiiLib.ukagaka.addPanelTab({
+    tab: EPRT_ID_HTML_SAFE,
+    label: "单集评分",
+    type: "custom",
+    customContent: () => {
+      const r = registerSettingsTab(opts);
+      if (!/^[a-z-]+$/.test(r.tagName)) {
+        throw new Error(
+          `No way the tag name is \`${
+            JSON.stringify(r.tagName)
+          }\`. To prevent XSS, an error is thrown.`,
+        );
+      }
+      return `<${r.tagName}></${r.tagName}>`;
+    },
+  });
 }
 
 type BANGUMI_PAGE_TYPE = "root" | "subject" | "subject_ep_list" | "ep";

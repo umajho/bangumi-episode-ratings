@@ -1,14 +1,25 @@
 // NOTE: 直接用 `import PackageJson …` 会导致整个 package.json 被打包进输出文件。
 import * as PackageJson from "../package.json";
 
-const NAME_PREFIX = "umajho-bangumi-eprt";
+export const EPRT_ID_HTML_SAFE = "umajho-bangumi-eprt";
+export const EPRT_ID_ASCII_SAFE = "umajho.bangumi.eprt";
 
-export function makeCustomElementTagName(name: string) {
-  return `${NAME_PREFIX}-${name}`;
+export function makeCustomElementTagName<T extends string>(
+  name: T,
+): `${typeof EPRT_ID_HTML_SAFE}-${T}` {
+  return `${EPRT_ID_HTML_SAFE}-${name}`;
 }
 
-export function makeDataAttributeName(name: string) {
-  return `data-${NAME_PREFIX}-${name}`;
+export function makeDataAttributeName<T extends string>(
+  name: T,
+): `data-${typeof EPRT_ID_HTML_SAFE}-${T}` {
+  return `data-${EPRT_ID_HTML_SAFE}-${name}`;
+}
+
+export function makeBroadcastChannelName<T extends string>(
+  name: T,
+): `${typeof EPRT_ID_ASCII_SAFE}:${T}` {
+  return `${EPRT_ID_ASCII_SAFE}:${name}`;
 }
 
 export const GADGET_VERSION = PackageJson.version;
