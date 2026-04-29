@@ -217,10 +217,10 @@ export class AppClient {
       }
     }
     headers.set("X-Gadget-Version", GADGET_VERSION);
-    if (readonlyPageData.claimedUserID !== null) {
+    if (readonlyPageData.claimedUserId !== null) {
       headers.set(
         "X-Claimed-User-ID",
-        readonlyPageData.claimedUserID.toString(),
+        readonlyPageData.claimedUserId.toString(),
       );
     }
 
