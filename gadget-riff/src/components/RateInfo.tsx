@@ -30,6 +30,7 @@ export function createRateInfoInstance(opts: {
   subjectId: SubjectId;
   episodeId: EpisodeId;
   silentLoading?: boolean;
+  revealAllButton?: boolean;
 }) {
   registerRateInfo({
     appClient: opts.appClient,
@@ -41,6 +42,9 @@ export function createRateInfoInstance(opts: {
   el.setAttribute("episode-id", String(opts.episodeId));
   if (opts.silentLoading) {
     el.setAttribute("silent-loading", "1");
+  }
+  if (opts.revealAllButton) {
+    el.setAttribute("reveal-all-button", "1");
   }
 
   return { element: el };
@@ -57,6 +61,7 @@ function registerRateInfo(opts: {
     episodeId: null,
     subjectId: null,
     silentLoading: null,
+    revealAllButton: null,
   }, (props) => {
     noShadowDOM();
 
@@ -72,6 +77,7 @@ function registerRateInfo(opts: {
           subjectId={props.subjectId!}
           episodeId={props.episodeId!}
           silentLoading={!!props.silentLoading}
+          revealAllButton={!!props.revealAllButton}
         />
       </Show>
     );
@@ -86,6 +92,7 @@ const RateInfo: Component<{
   subjectId: SubjectId;
   episodeId: EpisodeId;
   silentLoading: boolean;
+  revealAllButton: boolean;
 }> = (props) => {
   const votesResp = props.scoreStore.queryEpisodeVotesTracked(
     props.subjectId,
@@ -103,42 +110,48 @@ const RateInfo: Component<{
   const isRevealedSignal = props.revealedEpisodesStore
     .getIsRevealedSignal(props.episodeId);
 
-  return (
-    <Switch>
-      <Match when={votesOk()}>
-        {(votes) => (
-          <RateInfoInner
-            votes={votes()}
-            isRevealed={isRevealedSignal()}
-            reveal={() => props.revealedEpisodesStore.reveal(props.episodeId)}
-          />
-        )}
-      </Match>
-      <Match when={votesResp()[0] === "loading"}>
-        <Show when={!props.silentLoading}>
-          <div style="color: grey">
-            单集评分加载中…
-          </div>
-        </Show>
-      </Match>
-      <Match when={errorMessage()}>
-        {(message) => (
-          <ErrorWithRetry
-            message={message()}
-            onRetry={() => {
-              throw new Error("TODO");
-            }}
-          />
-        )}
-      </Match>
-    </Switch>
+  return ( // `div` 用于确保换行。
+    <div>
+      <Switch>
+        <Match when={votesOk()}>
+          {(votes) => (
+            <RateInfoInner
+              revealAllButton={props.revealAllButton}
+              votes={votes()}
+              isRevealed={isRevealedSignal()}
+              reveal={() => props.revealedEpisodesStore.reveal(props.episodeId)}
+              revealAll={() => props.revealedEpisodesStore.revealAll()}
+            />
+          )}
+        </Match>
+        <Match when={votesResp()[0] === "loading"}>
+          <Show when={!props.silentLoading}>
+            <div style="color: grey">
+              单集评分加载中…
+            </div>
+          </Show>
+        </Match>
+        <Match when={errorMessage()}>
+          {(message) => (
+            <ErrorWithRetry
+              message={message()}
+              onRetry={() => {
+                throw new Error("TODO");
+              }}
+            />
+          )}
+        </Match>
+      </Switch>
+    </div>
   );
 };
 
 const RateInfoInner: Component<{
+  revealAllButton: boolean;
   votes: EpisodeVotes;
   isRevealed: boolean;
   reveal: () => void;
+  revealAll: () => void;
 }> = (props) => {
   const totalVotes = createMemo(() => {
     return Object.values(props.votes).reduce(
@@ -164,9 +177,16 @@ const RateInfoInner: Component<{
     <Show
       when={props.isRevealed}
       fallback={
-        <button type="button" onClick={() => props.reveal()}>
-          揭开评分
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button type="button" onClick={() => props.reveal()}>
+            揭开评分
+          </button>
+          <Show when={props.revealAllButton}>
+            <button type="button" onClick={() => props.revealAll()}>
+              揭开全部评分
+            </button>
+          </Show>
+        </div>
       }
     >
       <div class="rateInfo">

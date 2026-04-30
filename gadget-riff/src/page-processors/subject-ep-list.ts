@@ -60,22 +60,14 @@ export async function processSubjectEpListPage(opts: {
       subjectId: opts.subjectId,
       episodeId,
       silentLoading: i !== 0,
+      revealAllButton: true,
     });
-    liEl.appendChild(
-      // 确保换行。
-      wrapInDiv(rateInfoInstance.element),
-    );
+    liEl.appendChild(rateInfoInstance.element);
   }
 }
 
 function createClearDivElement() {
   const divEl = document.createElement("div");
   divEl.classList.add("clear");
-  return divEl;
-}
-
-function wrapInDiv(el: HTMLElement) {
-  const divEl = document.createElement("div");
-  divEl.appendChild(el);
   return divEl;
 }
