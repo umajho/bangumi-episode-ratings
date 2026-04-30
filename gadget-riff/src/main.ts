@@ -3,6 +3,7 @@ import { registerSettingsTab } from "./components/SettingsTab";
 import { EPRT_ID_HTML_SAFE } from "./definitions";
 import { processRootPage } from "./page-processors/root";
 import { processSubjectPage } from "./page-processors/subject";
+import { processSubjectEpListPage } from "./page-processors/subject-ep-list";
 import {
   type AuthStore,
   createAuthStore,
@@ -63,7 +64,15 @@ async function main() {
       break;
     }
     case "subject_ep_list": {
-      // TODO
+      const subjectId = readonlyPageData.subjectId;
+      if (subjectId) {
+        await processSubjectEpListPage({
+          appClient,
+          scoreStore,
+          revealedEpisodesStore,
+          subjectId,
+        });
+      }
       break;
     }
     case "ep": {

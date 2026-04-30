@@ -16,11 +16,11 @@ export const readonlyPageData = {
     }
 
     const a = document.querySelector("#headerSubject a");
-    if (!a) return null;
-
-    const aPathParts = a.getAttribute("href")?.split("/").slice(1);
-    if (aPathParts && aPathParts[0] === "subject" && aPathParts.length >= 2) {
-      return Number(aPathParts[1]) as SubjectId;
+    if (a) { // for pages like `/ep/42`.
+      const aPathParts = a.getAttribute("href")?.split("/").slice(1);
+      if (aPathParts && aPathParts[0] === "subject" && aPathParts.length >= 2) {
+        return Number(aPathParts[1]) as SubjectId;
+      }
     }
 
     return null;

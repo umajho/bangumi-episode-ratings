@@ -29,6 +29,7 @@ export function createRateInfoInstance(opts: {
 
   subjectId: SubjectId;
   episodeId: EpisodeId;
+  silentLoading?: boolean;
 }) {
   registerRateInfo({
     appClient: opts.appClient,
@@ -38,6 +39,9 @@ export function createRateInfoInstance(opts: {
   const el = document.createElement(TAG_NAME);
   el.setAttribute("subject-id", String(opts.subjectId));
   el.setAttribute("episode-id", String(opts.episodeId));
+  if (opts.silentLoading) {
+    el.setAttribute("silent-loading", "1");
+  }
 
   return { element: el };
 }
@@ -52,6 +56,7 @@ function registerRateInfo(opts: {
   elementConstructor ??= customElement(TAG_NAME, {
     episodeId: null,
     subjectId: null,
+    silentLoading: null,
   }, (props) => {
     noShadowDOM();
 
@@ -66,6 +71,7 @@ function registerRateInfo(opts: {
           revealedEpisodesStore={opts.revealedEpisodesStore}
           subjectId={props.subjectId!}
           episodeId={props.episodeId!}
+          silentLoading={!!props.silentLoading}
         />
       </Show>
     );
@@ -79,6 +85,7 @@ const RateInfo: Component<{
 
   subjectId: SubjectId;
   episodeId: EpisodeId;
+  silentLoading: boolean;
 }> = (props) => {
   const votesResp = props.scoreStore.queryEpisodeVotesTracked(
     props.subjectId,
@@ -108,9 +115,11 @@ const RateInfo: Component<{
         )}
       </Match>
       <Match when={votesResp()[0] === "loading"}>
-        <div style="color: grey">
-          单集评分加载中…
-        </div>
+        <Show when={!props.silentLoading}>
+          <div style="color: grey">
+            单集评分加载中…
+          </div>
+        </Show>
       </Match>
       <Match when={errorMessage()}>
         {(message) => (
