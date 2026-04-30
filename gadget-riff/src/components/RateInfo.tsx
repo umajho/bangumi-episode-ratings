@@ -34,7 +34,7 @@ export function createRateInfoInstance(opts: {
 }) {
   registerRateInfo({
     appClient: opts.appClient,
-    scroreStore: opts.scoreStore,
+    scoreStore: opts.scoreStore,
     revealedEpisodesStore: opts.revealedEpisodesStore,
   });
   const el = document.createElement(TAG_NAME);
@@ -54,7 +54,7 @@ let elementConstructor: CustomElementConstructor | null = null;
 
 function registerRateInfo(opts: {
   appClient: AppClient;
-  scroreStore: ScoreStore;
+  scoreStore: ScoreStore;
   revealedEpisodesStore: RevealedEpisodesStore;
 }) {
   elementConstructor ??= customElement(TAG_NAME, {
@@ -72,7 +72,7 @@ function registerRateInfo(opts: {
       >
         <RateInfo
           appClient={opts.appClient}
-          scoreStore={opts.scroreStore}
+          scoreStore={opts.scoreStore}
           revealedEpisodesStore={opts.revealedEpisodesStore}
           subjectId={props.subjectId!}
           episodeId={props.episodeId!}
