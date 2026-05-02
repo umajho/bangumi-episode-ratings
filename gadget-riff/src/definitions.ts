@@ -28,6 +28,13 @@ export const LOCAL_STORAGE_KEY_TOKEN = "bgm_ep_ratings_token";
 export const LOCAL_STORAGE_KEY_JWT = "bgm_ep_ratings_jwt";
 export const SEARCH_PARAMS_KEY_TOKEN_COUPON = "bgm_ep_ratings_token_coupon";
 
+export const DEFAULT_AUTH_ENTRYPOINT =
+  (import.meta as unknown as { env: Record<string, string> }).env
+    .VITE_DEFAULT_AUTH_ENTRYPOINT;
+export const DEFAULT_API_ENTRYPOINT =
+  (import.meta as unknown as { env: Record<string, string> }).env
+    .VITE_DEFAULT_API_ENTRYPOINT;
+
 export type SubjectId = number & { readonly __tag: unique symbol };
 export type EpisodeId = number & { readonly __tag: unique symbol };
 

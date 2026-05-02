@@ -1,6 +1,10 @@
 import { AppClient } from "./clients/app-client";
 import { registerSettingsTab } from "./components/SettingsTab";
-import { EPRT_ID_HTML_SAFE } from "./definitions";
+import {
+  DEFAULT_API_ENTRYPOINT,
+  DEFAULT_AUTH_ENTRYPOINT,
+  EPRT_ID_HTML_SAFE,
+} from "./definitions";
 import { processRootPage } from "./page-processors/root";
 import { processSubjectPage } from "./page-processors/subject";
 import { processSubjectEpListPage } from "./page-processors/subject-ep-list";
@@ -27,10 +31,8 @@ async function main() {
   const settingsStore = createSettingsStore();
 
   const entrypointStore = createEntryPointStore({
-    // TODO: 用 env 来配置。
-    defaultAuthEntrypoint: "https://bgm-ep-ratings.deno.dev/auth/",
-    // TODO: 用 env 来配置。
-    defaultApiEntrypoint: "https://xn--kbrs5al25jbhj.bgm.zone/api/",
+    defaultAuthEntrypoint: DEFAULT_AUTH_ENTRYPOINT,
+    defaultApiEntrypoint: DEFAULT_API_ENTRYPOINT,
   });
   const authStore = createAuthStore();
   const appClient = new AppClient({ entrypointStore, authStore });
