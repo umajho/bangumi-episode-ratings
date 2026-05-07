@@ -1,15 +1,22 @@
 import { AppClient } from "./clients/app-client";
-import { registerSettingsTab } from "./components/SettingsTab";
+import { AuthClient } from "./clients/auth-client";
+import {
+  createSettingsTabSectionAuthInTheWildInstance,
+  registerSettingsTab,
+} from "./components/SettingsTab";
 import {
   DEFAULT_API_ENTRYPOINT,
   DEFAULT_AUTH_ENTRYPOINT,
   EPRT_ID_HTML_SAFE,
+  LEGACY_SEARCH_PARAMS_KEY_TOKEN_COUPON,
+  // LOCAL_STORAGE_KEY_SESSION_TOKEN,
 } from "./definitions";
 import { processRootPage } from "./page-processors/root";
 import { processSubjectPage } from "./page-processors/subject";
 import { processSubjectEpListPage } from "./page-processors/subject-ep-list";
 import {
   type AuthStore,
+  // type AuthStore,
   createAuthStore,
 } from "./stores/persistent-stores/auth-store";
 import { createEntryPointStore } from "./stores/persistent-stores/entrypoint-store";
@@ -28,21 +35,21 @@ async function main() {
     return;
   }
 
+  await migrate();
+
   const settingsStore = createSettingsStore();
 
   const entrypointStore = createEntryPointStore({
     defaultAuthEntrypoint: DEFAULT_AUTH_ENTRYPOINT,
     defaultApiEntrypoint: DEFAULT_API_ENTRYPOINT,
   });
-  const authStore = createAuthStore();
+  const authClient = new AuthClient({ entrypointStore });
+  const authStore = createAuthStore({ authClient });
   const appClient = new AppClient({ entrypointStore, authStore });
 
-  if ((await setUpToken({ appClient, authStore })).shouldCloseWindow) {
-    window.close();
-    return;
-  }
+  setUpAuthRelatedStuff({ authStore });
 
-  setUpCustomizationPanelTab({ settingsStore });
+  setUpCustomizationPanelTab({ authStore, settingsStore });
 
   const scoreStore = createScoreStore({ appClient });
   const revealedEpisodesStore = createRevealedEpisodesStore({ settingsStore });
@@ -86,16 +93,55 @@ async function main() {
   }
 }
 
-async function setUpToken(_opts: {
-  appClient: AppClient;
-  authStore: AuthStore;
-}): Promise<{ shouldCloseWindow: boolean }> {
-  // TODO
+/**
+ * TODO: 在确认好从空白状态开始 auth 相关的功能是否正常之后，再考虑实现迁移 auth
+ * 相关本地存储的事情。
+ */
+async function migrate() {
+  // const LEGACI_LOCAL_STORAGE_KEY_SESSION_TOKEN = "bgm_ep_ratings_token";
+  // const LEGACY_LOCAL_STORAGE_KEY_ACCESS_TOKEN = "bgm_ep_ratings_jwt";
 
-  return { shouldCloseWindow: false };
+  // const legacy_session_token = localStorage
+  //   .getItem(LEGACI_LOCAL_STORAGE_KEY_SESSION_TOKEN);
+  // if (legacy_session_token) {
+  //   localStorage.setItem(LOCAL_STORAGE_KEY_SESSION_TOKEN, legacy_session_token);
+  //   localStorage.removeItem(LEGACI_LOCAL_STORAGE_KEY_SESSION_TOKEN);
+  //   localStorage.removeItem(LEGACY_LOCAL_STORAGE_KEY_ACCESS_TOKEN);
+  // }
 }
 
-function setUpCustomizationPanelTab(opts: { settingsStore: SettingsStore }) {
+function setUpAuthRelatedStuff({ authStore }: { authStore: AuthStore }) {
+  { // `showCustomizePanelWithTab` 用不了的替代方案：
+    const aEl = document.querySelector(
+      '[href="https://_/__umajho_bangumi_eprt__anchor_auth_status"]',
+    );
+    if (!aEl) return;
+    const sectionAuthEl = //
+      createSettingsTabSectionAuthInTheWildInstance({ authStore });
+    aEl.replaceWith(sectionAuthEl.element);
+  }
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const tokenCoupon = searchParams.get(LEGACY_SEARCH_PARAMS_KEY_TOKEN_COUPON);
+  if (tokenCoupon) {
+    searchParams.delete(LEGACY_SEARCH_PARAMS_KEY_TOKEN_COUPON);
+    let newURL = `${window.location.pathname}`;
+    if (searchParams.size) {
+      newURL += `?${searchParams.toString()}`;
+    }
+    window.history.replaceState(null, "", newURL);
+
+    // 没用，也许是还没准备好：
+    // chiiLib.ukagaka.showCustomizePanelWithTab(EPRT_ID_HTML_SAFE);
+
+    authStore.redeemTokenCoupon(tokenCoupon);
+  }
+}
+
+function setUpCustomizationPanelTab(opts: {
+  authStore: AuthStore;
+  settingsStore: SettingsStore;
+}) {
   chiiLib.ukagaka.addPanelTab({
     tab: EPRT_ID_HTML_SAFE,
     label: "单集评分",

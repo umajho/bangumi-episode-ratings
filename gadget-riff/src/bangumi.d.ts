@@ -6,6 +6,7 @@ namespace chiiLib {
       type: "custom";
       customContent: () => unknown;
     });
+    function showCustomizePanelWithTab(tabName: string);
   }
 }
 

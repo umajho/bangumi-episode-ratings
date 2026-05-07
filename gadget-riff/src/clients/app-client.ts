@@ -1,7 +1,6 @@
 import {
   type EpisodeId,
   GADGET_VERSION,
-  LOCAL_STORAGE_KEY_JWT,
   type Score,
   type SubjectId,
 } from "../definitions";
@@ -13,7 +12,6 @@ import type {
   RateEpisodeRequestData,
   RateEpisodeResponseData,
 } from "../shared/dto";
-import ENDPOINT_PATHS from "../shared/endpoint-paths";
 import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import type { EntrypointStore } from "../stores/persistent-stores/entrypoint-store";
 import { readonlyPageData } from "../stores/readonly-page-data";
@@ -34,33 +32,6 @@ export class AppClient {
     this.authStore = opts.authStore;
   }
 
-  get URL_AUTH_BANGUMI_PAGE(): string {
-    const url = //
-      new URL(this.buildFullEndpoint("auth", ENDPOINT_PATHS.AUTH.BANGUMI_PAGE));
-    url.searchParams.set("gadget_version", GADGET_VERSION);
-    url.searchParams.set("referrer", window.location.origin);
-    return url.toString();
-  }
-
-  async redeemTokenCoupon(
-    tokenCoupon: string,
-  ): Promise<APIResponse<string | null>> {
-    const resp: APIResponseEx<string> = await this.fetch(
-      "auth",
-      ENDPOINT_PATHS.AUTH.REDEEM_TOKEN_COUPON,
-      {
-        tokenType: "basic",
-
-        method: "POST",
-        body: JSON.stringify({ tokenCoupon }),
-      },
-    );
-
-    if (resp[0] === "auth_required") throw new Error("unreachable!");
-
-    return resp;
-  }
-
   async patchEpisodeRating(
     opts: {
       subjectID: SubjectId;
@@ -69,7 +40,8 @@ export class AppClient {
       isVisible?: boolean;
     },
   ): Promise<APIResponseEx<RateEpisodeResponseData>> {
-    if (!this.authStore.token) return ["auth_required"];
+    const jwt = await this.authStore.fetchAccessToken();
+    if (jwt[0] !== "ok") return jwt;
 
     const bodyData: RateEpisodeRequestData = {
       ...(opts.score !== undefined ? { score: opts.score } : {}),
@@ -82,7 +54,7 @@ export class AppClient {
       "api/v1",
       `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings/mine`,
       {
-        tokenType: "jwt",
+        token: ["jwt", jwt[1]],
 
         method: "PATCH",
         body: JSON.stringify(bodyData),
@@ -95,13 +67,19 @@ export class AppClient {
   async getSubjectEpisodesRatings(
     opts: { subjectID: SubjectId },
   ): Promise<APIResponse<GetSubjectEpisodesResponseData>> {
+    const jwt = await this.authStore.fetchAccessToken();
+    if (jwt[0] !== "ok") {
+      if (jwt[0] === "auth_required") throw new Error("unreachable!");
+      return jwt;
+    }
+
     return this.fetch<
       GetSubjectEpisodesResponseData
     >(
       "api/v1",
       `subjects/${opts.subjectID}/episodes/ratings`,
       {
-        tokenType: "jwt",
+        token: ["jwt", jwt[1]],
 
         method: "GET",
       },
@@ -123,11 +101,14 @@ export class AppClient {
   async getEpisodeRatings(
     opts: { subjectID: SubjectId; episodeID: EpisodeId },
   ): Promise<APIResponseEx<GetEpisodeRatingsResponseData>> {
+    const jwt = await this.authStore.fetchAccessToken();
+    if (jwt[0] !== "ok") return jwt;
+
     return await this.fetch(
       "api/v1",
       `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings`,
       {
-        tokenType: "jwt",
+        token: ["jwt", jwt[1]],
 
         method: "GET",
       },
@@ -141,6 +122,9 @@ export class AppClient {
   async getMyTimelineItems(
     opts: { pageNumber: number },
   ): Promise<APIResponseEx<GetUserTimeLineItemsResponseData>> {
+    const jwt = await this.authStore.fetchAccessToken();
+    if (jwt[0] !== "ok") return jwt;
+
     const searchParams = new URLSearchParams();
     searchParams.set("offset", "" + ((opts.pageNumber - 1) * 10));
     searchParams.set("limit", "" + this.TIMELINE_ITEMS_PER_PAGE);
@@ -149,7 +133,7 @@ export class AppClient {
       "api/v1",
       `users/me/timeline/items`,
       {
-        tokenType: "jwt",
+        token: ["jwt", jwt[1]],
 
         method: "GET",
         searchParams,
@@ -160,11 +144,14 @@ export class AppClient {
   async deleteMyTimelineItem(
     opts: { timestampMs: number },
   ): Promise<APIResponseEx<null>> {
+    const jwt = await this.authStore.fetchAccessToken();
+    if (jwt[0] !== "ok") return jwt;
+
     return await this.fetch(
       "api/v1",
       `users/me/timeline/items/${opts.timestampMs}`,
       {
-        tokenType: "jwt",
+        token: ["jwt", jwt[1]],
 
         method: "DELETE",
       },
@@ -172,11 +159,14 @@ export class AppClient {
   }
 
   async downloadMyEpisodeRatingsData(): Promise<APIResponseEx<void>> {
+    const jwt = await this.authStore.fetchAccessToken();
+    if (jwt[0] !== "ok") return jwt;
+
     const resp = await this.fetch<any>( // TODO!!!: remove `any`.
       "api/v1",
       "users/me/episode-ratings-data-file",
       {
-        tokenType: "jwt",
+        token: ["jwt", jwt[1]],
 
         method: "GET",
       },
@@ -190,10 +180,10 @@ export class AppClient {
   }
 
   private async fetch<T>(
-    group: "auth" | "api/v1",
+    group: "api/v1",
     endpointPath: string,
     opts: {
-      tokenType: "basic" | "jwt";
+      token: ["jwt", string];
 
       method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
       searchParams?: URLSearchParams;
@@ -206,14 +196,12 @@ export class AppClient {
     }
 
     const headers = new Headers();
-    if (this.authStore.token) {
-      if (opts.tokenType === "basic") {
-        headers.set("Authorization", `Basic ${this.authStore.token}`);
-      } else {
-        const resp = await this.fetchJWT();
-        if (resp[0] !== "ok") return resp;
-        const [_, jwt] = resp;
-        headers.set("Authorization", `Bearer ${jwt}`);
+    if (opts.token) {
+      switch (opts.token[0]) {
+        case "jwt": {
+          headers.set("Authorization", `Bearer ${opts.token[1]}`);
+          break;
+        }
       }
     }
     headers.set("X-Gadget-Version", GADGET_VERSION);
@@ -233,7 +221,7 @@ export class AppClient {
 
       const respJSON = await resp.json() as APIResponse<unknown>;
       if (respJSON[0] === "error" && respJSON[1] === "AUTH_REQUIRED") {
-        this.authStore.token = null;
+        this.authStore.clear();
         return ["auth_required"];
       }
 
@@ -254,13 +242,11 @@ export class AppClient {
   }
 
   private buildFullEndpoint(
-    group: "auth" | "api/v1",
+    group: "api/v1",
     endpointPath: string,
   ): string {
     const entrypoint = ((): string => {
       switch (group) {
-        case "auth":
-          return this.entrypointStore.authEntrypoint;
         case "api/v1":
           return this.entrypointStore.apiEntrypoint + "v1/";
         default:
@@ -270,38 +256,6 @@ export class AppClient {
     })();
 
     return join(entrypoint, endpointPath);
-  }
-
-  private async fetchJWT(): Promise<APIResponseEx<string>> {
-    const fn = async (): Promise<APIResponseEx<string>> => {
-      const localToken = localStorage.getItem(LOCAL_STORAGE_KEY_JWT);
-      if (localToken && checkJWTExpiry(localToken) === "valid") {
-        return ["ok", localToken];
-      }
-
-      const resp: APIResponseEx<string> = await this.fetch(
-        "auth",
-        ENDPOINT_PATHS.AUTH.REFRESH_JWT,
-        {
-          tokenType: "basic",
-
-          method: "POST",
-        },
-      );
-
-      if (resp[0] === "ok") {
-        const [_, jwt] = resp;
-        localStorage.setItem(LOCAL_STORAGE_KEY_JWT, jwt);
-      }
-
-      return resp;
-    };
-
-    if (window.navigator.locks) {
-      return window.navigator.locks.request(LOCAL_STORAGE_KEY_JWT, fn);
-    } else {
-      return fn();
-    }
   }
 
   private saveFile(data: string, opts: { fileName: string }) {
@@ -316,11 +270,4 @@ export class AppClient {
 
 function join(base: string, url: string): string {
   return (new URL(url, base)).href;
-}
-
-function checkJWTExpiry(jwt: string): "expired" | "valid" {
-  const decoded = JSON.parse(atob(jwt.split(".")[1]));
-  const exp = decoded.exp;
-  const now = Math.floor(Date.now() / 1000);
-  return now > exp ? "expired" : "valid";
 }

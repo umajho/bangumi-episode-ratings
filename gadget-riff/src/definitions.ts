@@ -22,11 +22,20 @@ export function makeBroadcastChannelName<T extends string>(
   return `${EPRT_ID_ASCII_SAFE}:${name}`;
 }
 
+export function makeLocalStorageKeyName<T extends string>(
+  name: T,
+): `${typeof EPRT_ID_ASCII_SAFE}:${T}` {
+  return `${EPRT_ID_ASCII_SAFE}:${name}`;
+}
+
 export const GADGET_VERSION = PackageJson.version;
 
-export const LOCAL_STORAGE_KEY_TOKEN = "bgm_ep_ratings_token";
-export const LOCAL_STORAGE_KEY_JWT = "bgm_ep_ratings_jwt";
-export const SEARCH_PARAMS_KEY_TOKEN_COUPON = "bgm_ep_ratings_token_coupon";
+export const LOCAL_STORAGE_KEY_SESSION_TOKEN = //
+  makeLocalStorageKeyName("session-token");
+export const LOCAL_STORAGE_KEY_ACCESS_TOKEN = //
+  makeLocalStorageKeyName("access-token");
+export const LEGACY_SEARCH_PARAMS_KEY_TOKEN_COUPON =
+  "bgm_ep_ratings_token_coupon";
 
 export const DEFAULT_AUTH_ENTRYPOINT =
   (import.meta as unknown as { env: Record<string, string> }).env
