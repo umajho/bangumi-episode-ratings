@@ -40,8 +40,8 @@ export class AppClient {
       isVisible?: boolean;
     },
   ): Promise<APIResponseEx<RateEpisodeResponseData>> {
-    const jwt = await this.authStore.fetchAccessToken();
-    if (jwt[0] !== "ok") return jwt;
+    const tokenResult = await this.fetchAccessTokenRequired();
+    if (tokenResult[0] !== "ok") return tokenResult;
 
     const bodyData: RateEpisodeRequestData = {
       ...(opts.score !== undefined ? { score: opts.score } : {}),
@@ -54,7 +54,7 @@ export class AppClient {
       "api/v1",
       `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings/mine`,
       {
-        token: ["jwt", jwt[1]],
+        token: tokenResult[1],
 
         method: "PATCH",
         body: JSON.stringify(bodyData),
@@ -67,11 +67,8 @@ export class AppClient {
   async getSubjectEpisodesRatings(
     opts: { subjectID: SubjectId },
   ): Promise<APIResponse<GetSubjectEpisodesResponseData>> {
-    const jwt = await this.authStore.fetchAccessToken();
-    if (jwt[0] !== "ok") {
-      if (jwt[0] === "auth_required") throw new Error("unreachable!");
-      return jwt;
-    }
+    const tokenResult = await this.fetchAccessTokenOptional();
+    if (tokenResult[0] !== "ok") return tokenResult;
 
     return this.fetch<
       GetSubjectEpisodesResponseData
@@ -79,7 +76,7 @@ export class AppClient {
       "api/v1",
       `subjects/${opts.subjectID}/episodes/ratings`,
       {
-        token: ["jwt", jwt[1]],
+        token: tokenResult[1],
 
         method: "GET",
       },
@@ -101,14 +98,14 @@ export class AppClient {
   async getEpisodeRatings(
     opts: { subjectID: SubjectId; episodeID: EpisodeId },
   ): Promise<APIResponseEx<GetEpisodeRatingsResponseData>> {
-    const jwt = await this.authStore.fetchAccessToken();
-    if (jwt[0] !== "ok") return jwt;
+    const tokenResult = await this.fetchAccessTokenOptional();
+    if (tokenResult[0] !== "ok") return tokenResult;
 
     return await this.fetch(
       "api/v1",
       `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings`,
       {
-        token: ["jwt", jwt[1]],
+        token: tokenResult[1],
 
         method: "GET",
       },
@@ -122,8 +119,8 @@ export class AppClient {
   async getMyTimelineItems(
     opts: { pageNumber: number },
   ): Promise<APIResponseEx<GetUserTimeLineItemsResponseData>> {
-    const jwt = await this.authStore.fetchAccessToken();
-    if (jwt[0] !== "ok") return jwt;
+    const tokenResult = await this.fetchAccessTokenRequired();
+    if (tokenResult[0] !== "ok") return tokenResult;
 
     const searchParams = new URLSearchParams();
     searchParams.set("offset", "" + ((opts.pageNumber - 1) * 10));
@@ -133,7 +130,7 @@ export class AppClient {
       "api/v1",
       `users/me/timeline/items`,
       {
-        token: ["jwt", jwt[1]],
+        token: tokenResult[1],
 
         method: "GET",
         searchParams,
@@ -144,14 +141,14 @@ export class AppClient {
   async deleteMyTimelineItem(
     opts: { timestampMs: number },
   ): Promise<APIResponseEx<null>> {
-    const jwt = await this.authStore.fetchAccessToken();
-    if (jwt[0] !== "ok") return jwt;
+    const tokenResult = await this.fetchAccessTokenRequired();
+    if (tokenResult[0] !== "ok") return tokenResult;
 
     return await this.fetch(
       "api/v1",
       `users/me/timeline/items/${opts.timestampMs}`,
       {
-        token: ["jwt", jwt[1]],
+        token: tokenResult[1],
 
         method: "DELETE",
       },
@@ -159,14 +156,14 @@ export class AppClient {
   }
 
   async downloadMyEpisodeRatingsData(): Promise<APIResponseEx<void>> {
-    const jwt = await this.authStore.fetchAccessToken();
-    if (jwt[0] !== "ok") return jwt;
+    const tokenResult = await this.fetchAccessTokenRequired();
+    if (tokenResult[0] !== "ok") return tokenResult;
 
     const resp = await this.fetch<any>( // TODO!!!: remove `any`.
       "api/v1",
       "users/me/episode-ratings-data-file",
       {
-        token: ["jwt", jwt[1]],
+        token: tokenResult[1],
 
         method: "GET",
       },
@@ -183,7 +180,7 @@ export class AppClient {
     group: "api/v1",
     endpointPath: string,
     opts: {
-      token: ["jwt", string];
+      token: ["jwt", string] | null;
 
       method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
       searchParams?: URLSearchParams;
@@ -231,6 +228,25 @@ export class AppClient {
       console.error(`${operation} 失败`, e);
       return ["error", "UNKNOWN", `${operation} 失败： ${e}`];
     }
+  }
+
+  async fetchAccessTokenRequired(): Promise<
+    APIResponseEx<["jwt", string]>
+  > {
+    const jwt = await this.authStore.fetchAccessToken();
+    if (jwt[0] === "ok") return ["ok", ["jwt", jwt[1]]];
+    return jwt;
+  }
+
+  async fetchAccessTokenOptional(): Promise<
+    APIResponse<["jwt", string] | null>
+  > {
+    const jwt = await this.authStore.fetchAccessToken();
+    if (jwt[0] === "ok") return ["ok", ["jwt", jwt[1]]];
+    if (jwt[0] === "auth_required") {
+      return ["ok", null];
+    }
+    return jwt;
   }
 
   private buildRequest(url: URL, init: {
