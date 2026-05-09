@@ -59,7 +59,7 @@ export async function processSubjectEpListPage(opts: {
       revealedEpisodesStore: opts.revealedEpisodesStore,
       subjectId: opts.subjectId,
       episodeId,
-      silentLoading: i !== 0,
+      isPrimary: i === 0,
       revealAllButton: true,
     });
     liEl.appendChild(rateInfoInstance.element);

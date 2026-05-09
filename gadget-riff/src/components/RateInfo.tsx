@@ -29,7 +29,7 @@ export function createRateInfoInstance(opts: {
 
   subjectId: SubjectId;
   episodeId: EpisodeId;
-  silentLoading?: boolean;
+  isPrimary?: boolean;
   revealAllButton?: boolean;
 }) {
   registerRateInfo({
@@ -40,8 +40,8 @@ export function createRateInfoInstance(opts: {
   const el = document.createElement(TAG_NAME);
   el.setAttribute("subject-id", String(opts.subjectId));
   el.setAttribute("episode-id", String(opts.episodeId));
-  if (opts.silentLoading) {
-    el.setAttribute("silent-loading", "1");
+  if (opts.isPrimary) {
+    el.setAttribute("is-primary", "1");
   }
   if (opts.revealAllButton) {
     el.setAttribute("reveal-all-button", "1");
@@ -60,7 +60,7 @@ function registerRateInfo(opts: {
   elementConstructor ??= customElement(TAG_NAME, {
     episodeId: null,
     subjectId: null,
-    silentLoading: null,
+    isPrimary: null,
     revealAllButton: null,
   }, (props) => {
     noShadowDOM();
@@ -76,7 +76,7 @@ function registerRateInfo(opts: {
           revealedEpisodesStore={opts.revealedEpisodesStore}
           subjectId={props.subjectId!}
           episodeId={props.episodeId!}
-          silentLoading={!!props.silentLoading}
+          isPrimary={!!props.isPrimary}
           revealAllButton={!!props.revealAllButton}
         />
       </Show>
@@ -91,7 +91,7 @@ const RateInfo: Component<{
 
   subjectId: SubjectId;
   episodeId: EpisodeId;
-  silentLoading: boolean;
+  isPrimary: boolean;
   revealAllButton: boolean;
 }> = (props) => {
   const votesResp = props.scoreStore.queryEpisodeVotesTracked(
@@ -125,7 +125,7 @@ const RateInfo: Component<{
           )}
         </Match>
         <Match when={votesResp()[0] === "loading"}>
-          <Show when={!props.silentLoading}>
+          <Show when={props.isPrimary}>
             <div style="color: grey">
               单集评分加载中…
             </div>

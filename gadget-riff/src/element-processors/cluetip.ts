@@ -51,6 +51,7 @@ export function processCluetip(
       revealedEpisodesStore,
       subjectId: opts.subjectId,
       episodeId: opts.episodeId,
+      isPrimary: true,
     });
     firstBoardEl.insertAdjacentElement("beforebegin", rateInfoInstance.element);
 
