@@ -51,7 +51,7 @@ async function main() {
 
   setUpCustomizationPanelTab({ authStore, settingsStore });
 
-  const scoreStore = createScoreStore({ appClient });
+  const scoreStore = createScoreStore({ authStore, appClient });
   const revealedEpisodesStore = createRevealedEpisodesStore({ settingsStore });
 
   switch (detectPageType()) {
@@ -77,6 +77,7 @@ async function main() {
       if (subjectId) {
         await processSubjectEpListPage({
           appClient,
+          authStore,
           scoreStore,
           revealedEpisodesStore,
           subjectId,

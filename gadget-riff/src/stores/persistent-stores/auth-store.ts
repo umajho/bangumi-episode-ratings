@@ -31,6 +31,7 @@ export function createAuthStore(opts: { authClient: AuthClient }) {
     if (ev.newValue) {
       setStatus(["withSessionToken", ev.newValue]);
     } else {
+      localStorage.removeItem(LOCAL_STORAGE_KEY_ACCESS_TOKEN);
       setStatus(["noSessionToken"]);
     }
   });
@@ -86,7 +87,11 @@ export function createAuthStore(opts: { authClient: AuthClient }) {
   async function fetchAccessToken(): Promise<APIResponseEx<string>> {
     const status_ = status();
     if (status_[0] === "withSessionToken") {
-      return opts.authClient.fetchAccessToken(status_[1]);
+      const resp = await opts.authClient.fetchAccessToken(status_[1]);
+      if (resp[0] === "auth_required") {
+        clear();
+      }
+      return resp;
     }
     return ["auth_required"];
   }

@@ -1,5 +1,6 @@
 // NOTE: 直接用 `import PackageJson …` 会导致整个 package.json 被打包进输出文件。
 import * as PackageJson from "../package.json";
+import type { APIResponse } from "./shared/dto";
 
 export const EPRT_ID_HTML_SAFE = "umajho-bangumi-eprt";
 export const EPRT_ID_ASCII_SAFE = "umajho.bangumi.eprt";
@@ -75,4 +76,28 @@ export function describeScoreEx(score: Score) {
 }
 
 export type EpisodeVotes = { [S in Score]?: number };
-export type SubjectEpisodesVotes = { [episodeId: EpisodeId]: EpisodeVotes };
+export interface EpisodeData {
+  votes: EpisodeVotes;
+  /**
+   * `undefined` 在没有有效的身份认证令牌时，为 `undefined`。
+   */
+  myRating?: MyRating;
+}
+export interface SubjectData {
+  episodes: {
+    [episodeId: EpisodeId]:
+      | APIResponse<EpisodeData>
+      | ["loading", opts: { oldData?: EpisodeData }]
+      | ["processing", opts: { oldData?: EpisodeData }];
+  };
+  isComplete: boolean;
+  hasMyRatings: boolean;
+}
+
+export interface MyRating {
+  score: Score | null;
+  /**
+   * TODO: 去掉 `"unknown"`。
+   */
+  visibility: { isVisible: boolean } | "unknown";
+}

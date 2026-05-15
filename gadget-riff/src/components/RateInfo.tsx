@@ -94,17 +94,17 @@ const RateInfo: Component<{
   isPrimary: boolean;
   revealAllButton: boolean;
 }> = (props) => {
-  const votesResp = props.scoreStore.queryEpisodeVotesTracked(
+  const epDataResp = props.scoreStore.queryEpisodeDataTracked(
     props.subjectId,
     props.episodeId,
     { prefersFetchingCompleteSubjectVotes: true },
   );
   const votesOk = createMemo((): EpisodeVotes | null => {
-    const resp = votesResp();
-    return resp[0] === "ok" ? resp[1] : null;
+    const resp = epDataResp();
+    return resp[0] === "ok" ? resp[1].votes : null;
   });
   const errorMessage = createMemo(() => {
-    const resp = votesResp();
+    const resp = epDataResp();
     return resp[0] === "error" ? resp[2] : null;
   });
   const isRevealedSignal = props.revealedEpisodesStore
@@ -124,7 +124,7 @@ const RateInfo: Component<{
             />
           )}
         </Match>
-        <Match when={votesResp()[0] === "loading"}>
+        <Match when={epDataResp()[0] === "loading"}>
           <Show when={props.isPrimary}>
             <div style="color: grey">
               单集评分加载中…

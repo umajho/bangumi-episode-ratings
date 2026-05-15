@@ -1,11 +1,14 @@
 import type { AppClient } from "../clients/app-client";
+import { createMyRatingInstance } from "../components/MyRating";
 import { createRateInfoInstance } from "../components/RateInfo";
 import type { EpisodeId, SubjectId } from "../definitions";
+import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 
 export async function processSubjectEpListPage(opts: {
   appClient: AppClient;
+  authStore: AuthStore;
   scoreStore: ScoreStore;
   revealedEpisodesStore: RevealedEpisodesStore;
 
@@ -53,6 +56,17 @@ export async function processSubjectEpListPage(opts: {
       }
     }
 
+    const myRatingInstance = createMyRatingInstance({
+      appClient: opts.appClient,
+      authStore: opts.authStore,
+      scoreStore: opts.scoreStore,
+      revealedEpisodesStore: opts.revealedEpisodesStore,
+      subjectId: opts.subjectId,
+      episodeId,
+      isPrimary: i === 0,
+    });
+    liEl.appendChild(myRatingInstance.element);
+
     const rateInfoInstance = createRateInfoInstance({
       appClient: opts.appClient,
       scoreStore: opts.scoreStore,
@@ -63,6 +77,8 @@ export async function processSubjectEpListPage(opts: {
       revealAllButton: true,
     });
     liEl.appendChild(rateInfoInstance.element);
+
+    liEl.appendChild(createClearDivElement());
   }
 }
 

@@ -7,6 +7,7 @@ import type {
   SettingsStore,
 } from "../stores/persistent-stores/settings-store";
 import type { AuthStore } from "../stores/persistent-stores/auth-store";
+import { PleaseDoAuth } from "./PleaseDoAuth";
 
 const TAG_NAME = makeCustomElementTagName("settings-tab");
 const TAG_NAME_SECTION_AUTH_IN_THE_WILD = //
@@ -113,17 +114,7 @@ const SectionAuth: Component<{
           <div>
             <Switch>
               <Match when={props.authStore.statusUnion().noSessionToken}>
-                尚未取得用于身份认证的令牌。
-                <br />
-                请<a
-                  class="l"
-                  target="_blank"
-                  href={props.authStore.URL_AUTH_BANGUMI_PAGE}
-                >
-                  授权此应用。
-                </a>以获取该令牌。
-                <br />
-                此流程用于确认登录者。
+                <PleaseDoAuth authStore={props.authStore} />
               </Match>
               <Match when={props.authStore.statusUnion().withSessionToken}>
                 <span style={{ color: "green" }}>已取得身份认证令牌。</span>
