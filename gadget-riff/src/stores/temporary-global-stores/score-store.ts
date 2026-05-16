@@ -132,10 +132,8 @@ export function createScoreStore(opts: {
       switch (resp[0]) {
         case "ok": {
           store.updateMyRating(episodeId, {
-            ...(resp[1].score ? { score: resp[1].score as Score } : {}),
-            ...(resp[1].visibility
-              ? { visibility: { isVisible: resp[1].visibility.is_visible } }
-              : {}),
+            score: resp[1].score as Score | null,
+            visibility: { isVisible: resp[1].visibility.is_visible },
           });
           break;
         }
