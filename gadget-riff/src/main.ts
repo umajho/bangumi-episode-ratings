@@ -51,8 +51,9 @@ async function main() {
 
   setUpCustomizationPanelTab({ authStore, settingsStore });
 
-  const scoreStore = createScoreStore({ authStore, appClient });
   const revealedEpisodesStore = createRevealedEpisodesStore({ settingsStore });
+  const scoreStore = //
+    createScoreStore({ authStore, appClient, revealedEpisodesStore });
 
   switch (detectPageType()) {
     case "root": {

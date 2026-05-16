@@ -5,6 +5,7 @@ import {
   createSignal,
   getOwner,
   runWithOwner,
+  untrack,
 } from "solid-js";
 import { createStore } from "solid-js/store";
 
@@ -25,7 +26,9 @@ export function createRevealedEpisodesStore({ settingsStore }: {
   const antiSpoilerSetting = settingsStore.getAntiSpoilerSignal();
 
   function reveal(episodeId: EpisodeId) {
-    setStore(episodeId, true);
+    if (untrack(() => !store[episodeId])) {
+      setStore(episodeId, true);
+    }
   }
 
   function revealAll() {

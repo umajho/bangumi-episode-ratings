@@ -1,6 +1,7 @@
 import {
   type Accessor,
   batch,
+  createEffect,
   createMemo,
   createRoot,
   createSignal,
@@ -28,6 +29,7 @@ import type {
 } from "../../shared/dto";
 import type { AppClient } from "../../clients/app-client";
 import type { AuthStore } from "../persistent-stores/auth-store";
+import type { RevealedEpisodesStore } from "./revealed-episodes-store";
 
 export type ScoreStore = ReturnType<typeof createScoreStore>;
 
@@ -42,6 +44,7 @@ export type EpisodeDataResponse =
 export function createScoreStore(opts: {
   authStore: AuthStore;
   appClient: AppClient;
+  revealedEpisodesStore: RevealedEpisodesStore;
 }) {
   const knownSubjects: { [subjectId: SubjectId]: SubjectStore } = {};
 
@@ -49,7 +52,9 @@ export function createScoreStore(opts: {
     subjectId: SubjectId,
   ): { store: SubjectStore; isCached: boolean } {
     const isCached = subjectId in knownSubjects;
-    const store = knownSubjects[subjectId] ??= new SubjectStore();
+    const store = knownSubjects[subjectId] ??= new SubjectStore({
+      revealedEpisodesStore: opts.revealedEpisodesStore,
+    });
     return { store, isCached };
   }
 
@@ -168,10 +173,25 @@ class SubjectStore {
 
   #episodeMemos: { [episodeId: EpisodeId]: Accessor<EpisodeDataResponse> } = {};
 
-  constructor() {
+  constructor(opts: { revealedEpisodesStore: RevealedEpisodesStore }) {
     this.#owner = createRoot(() => getOwner()!);
     [this.#accessor, this.#setter] = //
       createSignal<SubjectDataResponse>(["loading", {}]);
+
+    createEffect(on(this.#accessor, () => {
+      const sData = this.#tryQuerySubjectData();
+      if (!sData) return;
+
+      for (const [epId_, _] of Object.entries(sData.episodes)) {
+        const epId = Number(epId_) as EpisodeId;
+        const epData = this.#tryQueryEpisodeData(epId);
+        if (!epData) continue;
+
+        if (typeof epData.myRating?.score === "number") {
+          opts.revealedEpisodesStore.reveal(epId);
+        }
+      }
+    }, { defer: true }));
   }
 
   get subjectAccessor() {
