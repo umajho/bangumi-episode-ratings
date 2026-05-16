@@ -108,7 +108,7 @@ const RateInfo: Component<{
     return resp[0] === "error" ? resp[2] : null;
   });
   const isRevealedSignal = props.revealedEpisodesStore
-    .getIsRevealedSignal(props.episodeId);
+    .getIsRevealedAccessor(props.episodeId);
 
   return ( // `div` 用于确保换行。
     <div>

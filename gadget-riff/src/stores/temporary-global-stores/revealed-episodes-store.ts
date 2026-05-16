@@ -1,4 +1,11 @@
-import { createSignal } from "solid-js";
+import {
+  type Accessor,
+  createMemo,
+  createRoot,
+  createSignal,
+  getOwner,
+  runWithOwner,
+} from "solid-js";
 import { createStore } from "solid-js/store";
 
 import type { EpisodeId } from "../../definitions";
@@ -10,6 +17,8 @@ export type RevealedEpisodesStore = //
 export function createRevealedEpisodesStore({ settingsStore }: {
   settingsStore: SettingsStore;
 }) {
+  const owner = createRoot(() => getOwner()!);
+
   const [store, setStore] = createStore<{ [id in EpisodeId]?: boolean }>({});
   const [areAllRevealed, setAreAllRevealed] = createSignal(false);
 
@@ -23,13 +32,18 @@ export function createRevealedEpisodesStore({ settingsStore }: {
     setAreAllRevealed(true);
   }
 
-  function getIsRevealedSignal(episodeId: EpisodeId) {
-    return () => {
-      if (antiSpoilerSetting() === "off") return true;
-      if (areAllRevealed()) return true;
-      return !!store[episodeId];
-    };
+  const isRevealedMemo: Record<EpisodeId, Accessor<boolean>> = {};
+  function getIsRevealedAccessor(episodeId: EpisodeId) {
+    return isRevealedMemo[episodeId] ??= runWithOwner(
+      owner,
+      () =>
+        createMemo(() => {
+          if (antiSpoilerSetting() === "off") return true;
+          if (areAllRevealed()) return true;
+          return !!store[episodeId];
+        }),
+    )!;
   }
 
-  return { reveal, revealAll, getIsRevealedSignal };
+  return { reveal, revealAll, getIsRevealedAccessor };
 }
