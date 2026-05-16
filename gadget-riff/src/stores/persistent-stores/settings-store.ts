@@ -6,7 +6,7 @@ import { readonlyPageData } from "../readonly-page-data";
 
 export type SettingsStore = ReturnType<typeof createSettingsStore>;
 
-type SettingAntiSpoilerOption = "off" | "on-for-rated";
+type SettingAntiSpoilerOption = "off" | "on-for-neither-watched-nor-rated";
 
 export interface SettingsStatus {
   ready?: true;
@@ -19,7 +19,7 @@ export interface Settings {
 }
 
 const DEFAULT_SETTINGS: Required<Settings> = {
-  antiSpoiler: "on-for-rated",
+  antiSpoiler: "on-for-neither-watched-nor-rated",
 };
 
 export function createSettingsStore() {
@@ -60,14 +60,15 @@ export function createSettingsStore() {
     update("antiSpoiler", value);
   }
   function getAntiSpoilerValues(): SettingAntiSpoilerOption[] {
-    return ["off", "on-for-rated"];
+    return ["off", "on-for-neither-watched-nor-rated"];
   }
   function getAntiSpoilerValueLabelText(
     value: SettingAntiSpoilerOption,
   ): string {
     return {
       "off": "关闭",
-      "on-for-rated": "已有评分而自己尚未评分时，需主动揭开评分",
+      "on-for-neither-watched-nor-rated":
+        "已有评分而自己尚未观看且尚未评分时，需主动揭开评分",
     }[value];
   }
   function getAntiSpoilerSignal(): Accessor<SettingAntiSpoilerOption> {
