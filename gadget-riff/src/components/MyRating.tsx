@@ -25,6 +25,7 @@ import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import { PleaseDoAuth, PleaseDoRefetch } from "./PleaseDoAuth";
 import { cls } from "../utils/cls";
+import { ErrorMessageWithRetry } from "./errors";
 
 const TAG_NAME = makeCustomElementTagName("my-rating");
 
@@ -222,7 +223,12 @@ const MyRating: Component<{
         </Match>
         <Match when={status().error}>
           <Header displayMode={props.displayMode} />
-          <div style={{ color: "red" }}>{status().error}</div>
+          <ErrorMessageWithRetry
+            message={status().error!}
+            onRetry={() => {
+              throw new Error("TODO");
+            }}
+          />
         </Match>
         <Match when={status().requiring_auth}>
           <Show when={props.isPrimary}>

@@ -1,6 +1,6 @@
 import type { Component } from "solid-js";
 
-export const ErrorWithRetry: Component<{
+export const ErrorMessageWithRetry: Component<{
   message: string;
   onRetry: () => void;
 }> = (props) => {
@@ -13,6 +13,14 @@ export const ErrorWithRetry: Component<{
         重试
       </button> */
       }
+    </div>
+  );
+};
+
+export const ErrorMessage: Component<{ message: string }> = (props) => {
+  return (
+    <div style={{ color: "red" }}>
+      <span>{`错误：${props.message}`}</span>
     </div>
   );
 };

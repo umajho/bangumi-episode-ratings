@@ -17,7 +17,7 @@ import {
 import type { AppClient } from "../clients/app-client";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 import { SmallStars } from "./SmallStars";
-import { ErrorWithRetry } from "./ErrorWithRetry";
+import { ErrorMessageWithRetry } from "./errors";
 import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 
 const TAG_NAME = makeCustomElementTagName("rate-info");
@@ -158,7 +158,7 @@ const RateInfo: Component<{
         </Match>
         <Match when={errorMessage()}>
           {(message) => (
-            <ErrorWithRetry
+            <ErrorMessageWithRetry
               message={message()}
               onRetry={() => {
                 throw new Error("TODO");

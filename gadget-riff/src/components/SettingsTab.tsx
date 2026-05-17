@@ -8,6 +8,7 @@ import type {
 } from "../stores/persistent-stores/settings-store";
 import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import { PleaseDoAuth } from "./PleaseDoAuth";
+import { ErrorMessage } from "./errors";
 
 const TAG_NAME = makeCustomElementTagName("settings-tab");
 const TAG_NAME_SECTION_AUTH_IN_THE_WILD = //
@@ -48,11 +49,7 @@ const SettingsTab: Component<
           正在保存…
         </Match>
         <Match when={status().error}>
-          {(error) => (
-            <div style={{ color: "red" }}>
-              <span>{`错误：${error()}`}</span>
-            </div>
-          )}
+          {(error) => <ErrorMessage message={error()} />}
         </Match>
       </Switch>
 
