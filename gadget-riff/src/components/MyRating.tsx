@@ -28,7 +28,11 @@ import { cls } from "../utils/cls";
 
 const TAG_NAME = makeCustomElementTagName("my-rating");
 
+type DisplayMode = "normal" | "inline_compact";
+
 export function createMyRatingInstance(opts: {
+  displayMode?: DisplayMode;
+
   appClient: AppClient;
   authStore: AuthStore;
   scoreStore: ScoreStore;
@@ -45,6 +49,9 @@ export function createMyRatingInstance(opts: {
     revealedEpisodesStore: opts.revealedEpisodesStore,
   });
   const el = document.createElement(TAG_NAME);
+  if (opts.displayMode) {
+    el.setAttribute("display-mode", opts.displayMode);
+  }
   el.setAttribute("subject-id", String(opts.subjectId));
   el.setAttribute("episode-id", String(opts.episodeId));
   if (opts.isPrimary) {
@@ -63,6 +70,7 @@ function registerMyRating(opts: {
   revealedEpisodesStore: RevealedEpisodesStore;
 }) {
   elementConstructor ??= customElement(TAG_NAME, {
+    displayMode: null,
     episodeId: null,
     subjectId: null,
     isPrimary: null,
@@ -75,6 +83,7 @@ function registerMyRating(opts: {
           Number.isInteger(props.episodeId)}
       >
         <MyRating
+          displayMode={props.displayMode ?? "normal"}
           appClient={opts.appClient}
           authStore={opts.authStore}
           scoreStore={opts.scoreStore}
@@ -98,6 +107,8 @@ type Status = {
 };
 
 const MyRating: Component<{
+  displayMode: DisplayMode;
+
   appClient: AppClient;
   authStore: AuthStore;
   scoreStore: ScoreStore;
@@ -165,13 +176,18 @@ const MyRating: Component<{
 
   return (
     <div
-      style={{ float: "right", display: "flex", "flex-direction": "column" }}
+      style={{
+        ...(props.displayMode === "normal"
+          ? { float: "right", display: "flex" }
+          : { display: "inline-flex" }),
+        "flex-direction": "column",
+      }}
     >
       <Switch>
         <Match when={status().normal}>
           {(data) => (
             <>
-              <Header alarmText={alarmText()} />
+              <Header displayMode={props.displayMode} alarmText={alarmText()} />
               <Stars
                 ratedScore={data().ratedScore}
                 onRateEpisode={(score) =>
@@ -190,7 +206,7 @@ const MyRating: Component<{
         <Match when={status().processing}>
           {(data) => (
             <>
-              <Header />
+              <Header displayMode={props.displayMode} />
               <div
                 style={{ filter: "grayscale(100%)", "pointer-events": "none" }}
               >
@@ -201,22 +217,22 @@ const MyRating: Component<{
           )}
         </Match>
         <Match when={status().loading}>
-          <Header />
+          <Header displayMode={props.displayMode} />
           <div style={{ color: "gray" }}>加载中…</div>
         </Match>
         <Match when={status().error}>
-          <Header />
+          <Header displayMode={props.displayMode} />
           <div style={{ color: "red" }}>{status().error}</div>
         </Match>
         <Match when={status().requiring_auth}>
           <Show when={props.isPrimary}>
-            <Header />
+            <Header displayMode={props.displayMode} />
             <PleaseDoAuth authStore={props.authStore} shorter />
           </Show>
         </Match>
         <Match when={status().requiring_fetch}>
           <Show when={props.isPrimary}>
-            <Header />
+            <Header displayMode={props.displayMode} />
             <PleaseDoRefetch
               onRequestRefetch={() =>
                 props.scoreStore.queryCompleteSubjectDataTracked(
@@ -231,14 +247,19 @@ const MyRating: Component<{
   );
 };
 
-const Header: Component<{ alarmText?: string | null }> = (props) => {
+const Header: Component<{
+  displayMode: DisplayMode;
+  alarmText?: string | null;
+}> = (props) => {
   return (
-    <p style="font-size: 12px;">
-      我的评价:{" "}
-      <Show when={props.alarmText}>
-        <span class="alarm">{props.alarmText}</span>
-      </Show>
-    </p>
+    <Show when={props.displayMode === "normal"}>
+      <p style="font-size: 12px;">
+        我的评价:{" "}
+        <Show when={props.alarmText}>
+          <span class="alarm">{props.alarmText}</span>
+        </Show>
+      </p>
+    </Show>
   );
 };
 

@@ -22,13 +22,18 @@ import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/re
 
 const TAG_NAME = makeCustomElementTagName("rate-info");
 
+type DisplayMode = "normal" | "inline_compact";
+
 export function createRateInfoInstance(opts: {
+  displayMode?: DisplayMode;
+
   appClient: AppClient;
   scoreStore: ScoreStore;
   revealedEpisodesStore: RevealedEpisodesStore;
 
   subjectId: SubjectId;
   episodeId: EpisodeId;
+  isMusic?: boolean;
   isPrimary?: boolean;
   revealAllButton?: boolean;
 }) {
@@ -38,8 +43,14 @@ export function createRateInfoInstance(opts: {
     revealedEpisodesStore: opts.revealedEpisodesStore,
   });
   const el = document.createElement(TAG_NAME);
+  if (opts.displayMode) {
+    el.setAttribute("display-mode", opts.displayMode);
+  }
   el.setAttribute("subject-id", String(opts.subjectId));
   el.setAttribute("episode-id", String(opts.episodeId));
+  if (opts.isMusic) {
+    el.setAttribute("is-music", "1");
+  }
   if (opts.isPrimary) {
     el.setAttribute("is-primary", "1");
   }
@@ -58,8 +69,10 @@ function registerRateInfo(opts: {
   revealedEpisodesStore: RevealedEpisodesStore;
 }) {
   elementConstructor ??= customElement(TAG_NAME, {
+    displayMode: null,
     episodeId: null,
     subjectId: null,
+    isMusic: null,
     isPrimary: null,
     revealAllButton: null,
   }, (props) => {
@@ -71,11 +84,13 @@ function registerRateInfo(opts: {
           Number.isInteger(props.episodeId)}
       >
         <RateInfo
+          displayMode={props.displayMode ?? "normal"}
           appClient={opts.appClient}
           scoreStore={opts.scoreStore}
           revealedEpisodesStore={opts.revealedEpisodesStore}
           subjectId={props.subjectId!}
           episodeId={props.episodeId!}
+          isMusic={!!props.isMusic}
           isPrimary={!!props.isPrimary}
           revealAllButton={!!props.revealAllButton}
         />
@@ -85,12 +100,15 @@ function registerRateInfo(opts: {
 }
 
 const RateInfo: Component<{
+  displayMode: DisplayMode;
+
   appClient: AppClient;
   scoreStore: ScoreStore;
   revealedEpisodesStore: RevealedEpisodesStore;
 
   subjectId: SubjectId;
   episodeId: EpisodeId;
+  isMusic: boolean;
   isPrimary: boolean;
   revealAllButton: boolean;
 }> = (props) => {
@@ -108,14 +126,21 @@ const RateInfo: Component<{
     return resp[0] === "error" ? resp[2] : null;
   });
   const isRevealedSignal = props.revealedEpisodesStore
-    .getIsRevealedAccessor(props.episodeId);
+    .getIsRevealedAccessor(props.episodeId, { isMusic: props.isMusic });
 
   return ( // `div` 用于确保换行。
-    <div>
+    <div
+      style={{
+        display: props.displayMode === "inline_compact"
+          ? "inline-block"
+          : "block",
+      }}
+    >
       <Switch>
         <Match when={votesOk()}>
           {(votes) => (
             <RateInfoInner
+              displayMode={props.displayMode}
               revealAllButton={props.revealAllButton}
               votes={votes()}
               isRevealed={isRevealedSignal()}
@@ -147,6 +172,7 @@ const RateInfo: Component<{
 };
 
 const RateInfoInner: Component<{
+  displayMode: DisplayMode;
   revealAllButton: boolean;
   votes: EpisodeVotes;
   isRevealed: boolean;
@@ -173,6 +199,9 @@ const RateInfoInner: Component<{
     }
   });
 
+  const shouldHideStars = () =>
+    props.displayMode === "inline_compact" && totalVotes() === 0;
+
   return (
     <Show
       when={props.isRevealed}
@@ -190,7 +219,10 @@ const RateInfoInner: Component<{
       }
     >
       <div class="rateInfo">
-        <SmallStars score={averageScore()} shouldShowNumber={true} />{" "}
+        <Show when={!shouldHideStars()}>
+          <SmallStars score={averageScore()} shouldShowNumber={true} />
+          {" "}
+        </Show>
         <span class="tip_j">({totalVotes()}人评分)</span>
       </div>
     </Show>

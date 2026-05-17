@@ -7,6 +7,7 @@ import { readonlyPageData } from "../readonly-page-data";
 export type SettingsStore = ReturnType<typeof createSettingsStore>;
 
 type SettingAntiSpoilerOption = "off" | "on-for-neither-watched-nor-rated";
+type SettingAntiSpoilerForMusicOption = "off" | "on-for-not-rated";
 
 export interface SettingsStatus {
   ready?: true;
@@ -16,10 +17,12 @@ export interface SettingsStatus {
 
 export interface Settings {
   antiSpoiler?: SettingAntiSpoilerOption;
+  antiSpoilerForMusic?: SettingAntiSpoilerForMusicOption;
 }
 
 const DEFAULT_SETTINGS: Required<Settings> = {
   antiSpoiler: "on-for-neither-watched-nor-rated",
+  antiSpoilerForMusic: "off",
 };
 
 export function createSettingsStore() {
@@ -75,12 +78,37 @@ export function createSettingsStore() {
     return () => store.antiSpoiler ?? DEFAULT_SETTINGS.antiSpoiler;
   }
 
+  function updateAntiSpoilerForMusic(value: SettingAntiSpoilerForMusicOption) {
+    update("antiSpoilerForMusic", value);
+  }
+  function getAntiSpoilerForMusicValues(): SettingAntiSpoilerForMusicOption[] {
+    return ["off", "on-for-not-rated"];
+  }
+  function getAntiSpoilerForMusicValueLabelText(
+    value: SettingAntiSpoilerForMusicOption,
+  ): string {
+    return {
+      "off": "关闭",
+      "on-for-not-rated": "已有评分而自己尚未评分时，需主动揭开评分",
+    }[value];
+  }
+  function getAntiSpoilerForMusicSignal(): Accessor<
+    SettingAntiSpoilerForMusicOption
+  > {
+    return () =>
+      store.antiSpoilerForMusic ?? DEFAULT_SETTINGS.antiSpoilerForMusic;
+  }
+
   return {
     getStatusSignal: () => status,
     updateAntiSpoiler,
     getAntiSpoilerValues,
     getAntiSpoilerValueLabelText,
     getAntiSpoilerSignal,
+    updateAntiSpoilerForMusic,
+    getAntiSpoilerForMusicValues,
+    getAntiSpoilerForMusicValueLabelText,
+    getAntiSpoilerForMusicSignal,
   };
 }
 

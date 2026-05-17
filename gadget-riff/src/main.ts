@@ -65,6 +65,7 @@ async function main() {
       if (subjectId) {
         await processSubjectPage({
           appClient,
+          authStore,
           scoreStore,
           revealedEpisodesStore,
           subjectId,

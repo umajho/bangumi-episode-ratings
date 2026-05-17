@@ -64,6 +64,10 @@ const SettingsTab: Component<
         settingsStore={props.settingsStore}
         status={status()}
       />
+      <SectionAntiSpoilerForMusic
+        settingsStore={props.settingsStore}
+        status={status()}
+      />
     </div>
   );
 };
@@ -161,6 +165,27 @@ const SectionAntiSpoiler: Component<{
         getLabel={(value) =>
           props.settingsStore.getAntiSpoilerValueLabelText(value)}
         setValue={(v) => props.settingsStore.updateAntiSpoiler(v)}
+      />
+    </DisableableSection>
+  );
+};
+
+const SectionAntiSpoilerForMusic: Component<{
+  settingsStore: SettingsStore;
+  status: SettingsStatus;
+}> = (props) => {
+  const optAntiSpoilerForMusic = props.settingsStore
+    .getAntiSpoilerForMusicSignal();
+
+  return (
+    <DisableableSection disabled={!!props.status.saving}>
+      <div class="title">音乐曲目评分防剧透</div>
+      <RadioGroup
+        currentValue={optAntiSpoilerForMusic()}
+        options={props.settingsStore.getAntiSpoilerForMusicValues()}
+        getLabel={(value) =>
+          props.settingsStore.getAntiSpoilerForMusicValueLabelText(value)}
+        setValue={(v) => props.settingsStore.updateAntiSpoilerForMusic(v)}
       />
     </DisableableSection>
   );

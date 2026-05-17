@@ -24,6 +24,8 @@ export function createRevealedEpisodesStore({ settingsStore }: {
   const [areAllRevealed, setAreAllRevealed] = createSignal(false);
 
   const antiSpoilerSetting = settingsStore.getAntiSpoilerSignal();
+  const antiSpoilerForMusicSetting = settingsStore
+    .getAntiSpoilerForMusicSignal();
 
   function reveal(episodeId: EpisodeId) {
     if (untrack(() => !store[episodeId])) {
@@ -36,12 +38,20 @@ export function createRevealedEpisodesStore({ settingsStore }: {
   }
 
   const isRevealedMemo: Record<EpisodeId, Accessor<boolean>> = {};
-  function getIsRevealedAccessor(episodeId: EpisodeId) {
+  function getIsRevealedAccessor(
+    episodeId: EpisodeId,
+    opts: { isMusic: boolean },
+  ) {
     return isRevealedMemo[episodeId] ??= runWithOwner(
       owner,
       () =>
         createMemo(() => {
-          if (antiSpoilerSetting() === "off") return true;
+          if (opts.isMusic) {
+            if (antiSpoilerForMusicSetting() === "off") return true;
+          } else {
+            if (antiSpoilerSetting() === "off") return true;
+          }
+
           if (areAllRevealed()) return true;
           return !!store[episodeId];
         }),

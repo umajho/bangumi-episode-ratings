@@ -7,27 +7,28 @@ import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/re
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 import { createClearDivElement } from "../utils/elements";
 
-export async function processSubjectEpListPage(opts: {
+export async function processMusicSubjectEpSection(opts: {
   appClient: AppClient;
   authStore: AuthStore;
   scoreStore: ScoreStore;
   revealedEpisodesStore: RevealedEpisodesStore;
 
+  subjectEpSection: HTMLDivElement;
   subjectId: SubjectId;
 }) {
-  const editEpBatchEl = document.querySelector('[name="edit_ep_batch"]');
-  if (!editEpBatchEl) return;
-
   for (
-    const [i, liEl] of [...editEpBatchEl.querySelectorAll(".line_list > li")]
-      .filter((li) => li.querySelector('[name="ep_mod[]"]'))
+    const [i, liEl] of [
+      ...opts.subjectEpSection.querySelectorAll(".line_list > li"),
+    ]
+      .filter((li) => li.querySelector("cite"))
       .entries()
   ) {
-    liEl.querySelector("h6")
-      ?.insertAdjacentElement("afterend", createClearDivElement());
+    const h6El = liEl.querySelector("h6");
+    const citeEl = liEl.querySelector("cite");
+    if (!h6El || !citeEl) continue;
 
     const episodeId = ((): EpisodeId | null => {
-      const href = liEl.querySelector<HTMLAnchorElement>("h6 > a")?.href;
+      const href = h6El.querySelector<HTMLAnchorElement>(":scope > a")?.href;
       if (!href) return null;
       const match = href.match(/\/ep\/(\d+)/);
       if (!match) return null;
@@ -35,29 +36,8 @@ export async function processSubjectEpListPage(opts: {
     })();
     if (episodeId === null) continue;
 
-    const hasUserWatched = (() => {
-      if (liEl.querySelector(".statusWatched")) return true;
-
-      // 在某次更新后，bangumi 会记录看过的剧集的标记时间，某集存在这个时间表明
-      // 那一集有标记为看过。（但是没有这个时间不代表剧集一定没看过，也有可能是
-      // 在标记时 bangumi 还没去记录标记时间。因此，这不是万能解。）
-      if (liEl.querySelector(".rr")?.textContent.trim()) return true;
-
-      return false;
-    })();
-    if (hasUserWatched) {
-      opts.revealedEpisodesStore.reveal(episodeId);
-    }
-
-    for (const aEl of liEl.querySelectorAll("a.ep_status")) {
-      if (aEl.id.startsWith("Watched_")) {
-        aEl.addEventListener("click", () => {
-          opts.revealedEpisodesStore.reveal(episodeId);
-        });
-      }
-    }
-
     const myRatingInstance = createMyRatingInstance({
+      displayMode: "inline_compact",
       appClient: opts.appClient,
       authStore: opts.authStore,
       scoreStore: opts.scoreStore,
@@ -66,19 +46,30 @@ export async function processSubjectEpListPage(opts: {
       episodeId,
       isPrimary: i === 0,
     });
-    liEl.appendChild(myRatingInstance.element);
+    citeEl.prepend(createSpacingSpan());
+    citeEl.prepend(myRatingInstance.element);
 
     const rateInfoInstance = createRateInfoInstance({
+      displayMode: "inline_compact",
       appClient: opts.appClient,
       scoreStore: opts.scoreStore,
       revealedEpisodesStore: opts.revealedEpisodesStore,
       subjectId: opts.subjectId,
       episodeId,
+      isMusic: true,
       isPrimary: i === 0,
       revealAllButton: true,
     });
-    liEl.appendChild(rateInfoInstance.element);
+    h6El.appendChild(createSpacingSpan());
+    h6El.appendChild(rateInfoInstance.element);
 
     liEl.appendChild(createClearDivElement());
   }
+}
+
+function createSpacingSpan() {
+  const spanEl = document.createElement("span");
+  spanEl.style.display = "inline-block";
+  spanEl.style.width = "0.25rem";
+  return spanEl;
 }
