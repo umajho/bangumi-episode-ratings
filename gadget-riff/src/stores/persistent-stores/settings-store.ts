@@ -8,6 +8,7 @@ export type SettingsStore = ReturnType<typeof createSettingsStore>;
 
 type SettingAntiSpoilerOption = "off" | "on-for-neither-watched-nor-rated";
 type SettingAntiSpoilerForMusicOption = "off" | "on-for-not-rated";
+type SettingTimelineTabButtonLocation = "more-dropdown" | "main-row";
 
 export interface SettingsStatus {
   ready?: true;
@@ -18,11 +19,13 @@ export interface SettingsStatus {
 export interface Settings {
   antiSpoiler?: SettingAntiSpoilerOption;
   antiSpoilerForMusic?: SettingAntiSpoilerForMusicOption;
+  timelineTabButtonLocation?: SettingTimelineTabButtonLocation;
 }
 
 const DEFAULT_SETTINGS: Required<Settings> = {
   antiSpoiler: "on-for-neither-watched-nor-rated",
   antiSpoilerForMusic: "off",
+  timelineTabButtonLocation: "more-dropdown",
 };
 
 export function createSettingsStore() {
@@ -99,6 +102,30 @@ export function createSettingsStore() {
       store.antiSpoilerForMusic ?? DEFAULT_SETTINGS.antiSpoilerForMusic;
   }
 
+  function updateTimelineTabButtonLocation(
+    value: SettingTimelineTabButtonLocation,
+  ) {
+    update("timelineTabButtonLocation", value);
+  }
+  function getTimelineTabButtonLocationValues(): SettingTimelineTabButtonLocation[] {
+    return ["more-dropdown", "main-row"];
+  }
+  function getTimelineTabButtonLocationValueLabelText(
+    value: SettingTimelineTabButtonLocation,
+  ): string {
+    return {
+      "more-dropdown": "“更多” 下拉菜单之内",
+      "main-row": "与 “更多” 平级",
+    }[value];
+  }
+  function getTimelineTabButtonLocationSignal(): Accessor<
+    SettingTimelineTabButtonLocation
+  > {
+    return () =>
+      store.timelineTabButtonLocation ??
+        DEFAULT_SETTINGS.timelineTabButtonLocation;
+  }
+
   return {
     getStatusSignal: () => status,
     updateAntiSpoiler,
@@ -109,6 +136,10 @@ export function createSettingsStore() {
     getAntiSpoilerForMusicValues,
     getAntiSpoilerForMusicValueLabelText,
     getAntiSpoilerForMusicSignal,
+    updateTimelineTabButtonLocation,
+    getTimelineTabButtonLocationValues,
+    getTimelineTabButtonLocationValueLabelText,
+    getTimelineTabButtonLocationSignal,
   };
 }
 

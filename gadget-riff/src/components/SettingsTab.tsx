@@ -81,6 +81,10 @@ const SettingsTab: Component<
         settingsStore={props.settingsStore}
         status={status()}
       />
+      <SectionTimelineTabButtonLocation
+        settingsStore={props.settingsStore}
+        status={status()}
+      />
     </div>
   );
 };
@@ -275,6 +279,29 @@ const SectionAntiSpoilerForMusic: Component<{
         getLabel={(value) =>
           props.settingsStore.getAntiSpoilerForMusicValueLabelText(value)}
         setValue={(v) => props.settingsStore.updateAntiSpoilerForMusic(v)}
+      />
+    </DisableableSection>
+  );
+};
+
+const SectionTimelineTabButtonLocation: Component<{
+  settingsStore: SettingsStore;
+  status: SettingsStatus;
+}> = (props) => {
+  const optTimelineTabButtonLocation = props.settingsStore
+    .getTimelineTabButtonLocationSignal();
+
+  return (
+    <DisableableSection disabled={!!props.status.saving}>
+      <div class="title">时间线标签页按钮位置</div>
+      <RadioGroup
+        currentValue={optTimelineTabButtonLocation()}
+        options={props.settingsStore.getTimelineTabButtonLocationValues()}
+        getLabel={(value) =>
+          props.settingsStore.getTimelineTabButtonLocationValueLabelText(
+            value,
+          )}
+        setValue={(v) => props.settingsStore.updateTimelineTabButtonLocation(v)}
       />
     </DisableableSection>
   );

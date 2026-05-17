@@ -57,7 +57,12 @@ async function main() {
 
   switch (detectPageType()) {
     case "root": {
-      processRootPage({ appClient, scoreStore, revealedEpisodesStore });
+      processRootPage({
+        settingsStore,
+        appClient,
+        scoreStore,
+        revealedEpisodesStore,
+      });
       break;
     }
     case "subject": {
