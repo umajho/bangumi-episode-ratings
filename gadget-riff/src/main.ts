@@ -57,13 +57,13 @@ async function main() {
 
   switch (detectPageType()) {
     case "root": {
-      await processRootPage({ appClient, scoreStore, revealedEpisodesStore });
+      processRootPage({ appClient, scoreStore, revealedEpisodesStore });
       break;
     }
     case "subject": {
       const subjectId = readonlyPageData.subjectId;
       if (subjectId) {
-        await processSubjectPage({
+        processSubjectPage({
           appClient,
           authStore,
           scoreStore,
@@ -77,7 +77,7 @@ async function main() {
     case "subject_ep_list": {
       const subjectId = readonlyPageData.subjectId;
       if (subjectId) {
-        await processSubjectEpListPage({
+        processSubjectEpListPage({
           appClient,
           authStore,
           scoreStore,

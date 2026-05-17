@@ -4,7 +4,7 @@ import { processCluetip } from "../element-processors/cluetip";
 import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 
-export async function processPrgList(opts: {
+export function processPrgList(opts: {
   appClient: AppClient;
   scoreStore: ScoreStore;
   revealedEpisodesStore: RevealedEpisodesStore;

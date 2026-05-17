@@ -7,7 +7,7 @@ import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/re
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 import { createClearDivElement } from "../utils/elements";
 
-export async function processSubjectEpListPage(opts: {
+export function processSubjectEpListPage(opts: {
   appClient: AppClient;
   authStore: AuthStore;
   scoreStore: ScoreStore;

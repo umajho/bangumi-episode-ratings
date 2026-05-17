@@ -7,7 +7,7 @@ import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 
-export async function processSubjectPage(opts: {
+export function processSubjectPage(opts: {
   appClient: AppClient;
   authStore: AuthStore;
   scoreStore: ScoreStore;

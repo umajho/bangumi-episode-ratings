@@ -5,7 +5,7 @@ import { processPrgList } from "../element-processors/prg-list";
 import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 
-export async function processRootPage(opts: {
+export function processRootPage(opts: {
   appClient: AppClient;
   scoreStore: ScoreStore;
   revealedEpisodesStore: RevealedEpisodesStore;
