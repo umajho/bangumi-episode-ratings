@@ -227,11 +227,24 @@ class SubjectStore {
   /**
    * not reactive.
    */
-  #tryQueryEpisodeData(episodeId: EpisodeId): EpisodeData | null {
+  #tryQueryEpisodeData(episodeId: EpisodeId, opts?: {
+    shouldReturnEmptyDataForAbsentEpisode?: boolean;
+  }): EpisodeData | null {
     const sData = this.#tryQuerySubjectData();
     if (!sData) return null;
     const epResp = sData.episodes[episodeId];
-    if (!epResp) return null;
+    if (!epResp) {
+      if (opts?.shouldReturnEmptyDataForAbsentEpisode) {
+        return {
+          votes: {},
+          ...(sData.hasMyRatings
+            ? { myRating: { score: null, visibility: "unknown" } }
+            : {}),
+        };
+      } else {
+        return null;
+      }
+    }
     switch (epResp[0]) {
       case "ok":
         return epResp[1];
@@ -291,10 +304,14 @@ class SubjectStore {
   #tryUpdateEpisodeState(
     episodeId: EpisodeId,
     newState: "loading" | "processing",
+    opts?: { shouldTreatAbsentEpisodeAsEmpty?: boolean },
   ): boolean {
     const sData = this.#tryQuerySubjectData();
     if (!sData) return false;
-    const epData = this.#tryQueryEpisodeData(episodeId);
+    const epData = this.#tryQueryEpisodeData(episodeId, {
+      shouldReturnEmptyDataForAbsentEpisode: opts
+        ?.shouldTreatAbsentEpisodeAsEmpty,
+    });
     const newSData: SubjectData = {
       ...sData,
       episodes: {
@@ -333,7 +350,9 @@ class SubjectStore {
   }
 
   tryMarkEpisodeAsProcessing(episodeId: EpisodeId): boolean {
-    return this.#tryUpdateEpisodeState(episodeId, "processing");
+    return this.#tryUpdateEpisodeState(episodeId, "processing", {
+      shouldTreatAbsentEpisodeAsEmpty: true,
+    });
   }
 
   mergeSubjectData(newData: GetSubjectEpisodesResponseData) {
@@ -386,7 +405,9 @@ class SubjectStore {
     episodeId: EpisodeId,
     myRating: { score?: Score | null; visibility?: { isVisible: boolean } },
   ) {
-    const oldEpData = this.#tryQueryEpisodeData(episodeId);
+    const oldEpData = this.#tryQueryEpisodeData(episodeId, {
+      shouldReturnEmptyDataForAbsentEpisode: true,
+    });
     if (!oldEpData) throw new Error("unreachable!");
     if (!oldEpData.myRating) throw new Error("unreachable!");
 
