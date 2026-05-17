@@ -1,4 +1,13 @@
-import { type Component, Index, type JSX, Match, Show, Switch } from "solid-js";
+import {
+  type Component,
+  createMemo,
+  createSignal,
+  Index,
+  type JSX,
+  Match,
+  Show,
+  Switch,
+} from "solid-js";
 import { customElement, noShadowDOM } from "solid-element";
 
 import { makeCustomElementTagName } from "../definitions";
@@ -9,6 +18,7 @@ import type {
 import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import { PleaseDoAuth } from "./PleaseDoAuth";
 import { ErrorMessage } from "./errors";
+import type { AppClient } from "../clients/app-client";
 
 const TAG_NAME = makeCustomElementTagName("settings-tab");
 const TAG_NAME_SECTION_AUTH_IN_THE_WILD = //
@@ -18,16 +28,18 @@ let elementConstructor: CustomElementConstructor | null = null;
 let elementConstructorSectionAuth: CustomElementConstructor | null = null;
 
 export function registerSettingsTab(opts: {
-  authStore: AuthStore;
   settingsStore: SettingsStore;
+  authStore: AuthStore;
+  appClient: AppClient;
 }): { tagName: typeof TAG_NAME } {
   elementConstructor ??= customElement(TAG_NAME, {}, () => {
     noShadowDOM();
 
     return (
       <SettingsTab
-        authStore={opts.authStore}
         settingsStore={opts.settingsStore}
+        authStore={opts.authStore}
+        appClient={opts.appClient}
       />
     );
   });
@@ -36,7 +48,7 @@ export function registerSettingsTab(opts: {
 }
 
 const SettingsTab: Component<
-  { authStore: AuthStore; settingsStore: SettingsStore }
+  { settingsStore: SettingsStore; authStore: AuthStore; appClient: AppClient }
 > = (props) => {
   const status = props.settingsStore.getStatusSignal();
 
@@ -57,6 +69,10 @@ const SettingsTab: Component<
         <a class="l" target="_blank" href={`/dev/app/${CHII_APP_ID}`}>组件页</a>
       </div>
       <SectionAuth authStore={props.authStore} />
+      <SectionExportData
+        authStore={props.authStore}
+        appClient={props.appClient}
+      />
       <SectionAntiSpoiler
         settingsStore={props.settingsStore}
         status={status()}
@@ -143,6 +159,82 @@ const SectionAuth: Component<{
           </Show>
         </div>
       </div>
+    </DisableableSection>
+  );
+};
+
+const SectionExportData: Component<{
+  authStore: AuthStore;
+  appClient: AppClient;
+}> = (props) => {
+  type State = ["normal"] | ["processing"] | ["error", string];
+  type StateUnion = {
+    normal?: true;
+    processing?: true;
+    error?: { message: string };
+  };
+
+  const hasSessionToken = () => props.authStore.statusUnion().withSessionToken;
+
+  const [state, setState] = createSignal<State>(["normal"]);
+  const stateUnion = createMemo((): StateUnion => {
+    const s = state();
+    switch (s[0]) {
+      case "normal":
+        return { normal: true };
+      case "processing":
+        return { processing: true };
+      case "error":
+        return { error: { message: s[1] } };
+      default:
+        s[0] satisfies never;
+        throw new Error("unreachable!");
+    }
+  });
+
+  async function exportData() {
+    setState(["processing"]);
+
+    const resp = await props.appClient.downloadMyEpisodeRatingsData();
+    switch (resp[0]) {
+      case "ok": {
+        setState(["normal"]);
+        break;
+      }
+      case "error": {
+        setState(["error", resp[2]]);
+        break;
+      }
+      case "auth_required": {
+        props.authStore.clear();
+        setState(["normal"]);
+        break;
+      }
+      default:
+        resp[0] satisfies never;
+    }
+  }
+
+  return (
+    <DisableableSection disabled={state()[0] === "processing"}>
+      <div class="title">
+        数据导出<span
+          style={{ "color": hasSessionToken() ? undefined : "orange" }}
+        >
+          （需取得身份认证令牌）
+        </span>
+      </div>
+      <Switch>
+        <Match when={stateUnion().processing}>
+          <div style={{ color: "gray" }}>处理中…</div>
+        </Match>
+        <Match when={stateUnion().error}>
+          {(error) => <ErrorMessage message={error().message} />}
+        </Match>
+      </Switch>
+      <button onClick={exportData} disabled={!hasSessionToken()}>
+        导出我的单集评分数据
+      </button>
     </DisableableSection>
   );
 };

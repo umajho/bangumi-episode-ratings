@@ -49,7 +49,7 @@ async function main() {
 
   setUpAuthRelatedStuff({ authStore });
 
-  setUpCustomizationPanelTab({ authStore, settingsStore });
+  setUpCustomizationPanelTab({ settingsStore, authStore, appClient });
 
   const revealedEpisodesStore = createRevealedEpisodesStore({ settingsStore });
   const scoreStore = //
@@ -142,8 +142,9 @@ function setUpAuthRelatedStuff({ authStore }: { authStore: AuthStore }) {
 }
 
 function setUpCustomizationPanelTab(opts: {
-  authStore: AuthStore;
   settingsStore: SettingsStore;
+  authStore: AuthStore;
+  appClient: AppClient;
 }) {
   chiiLib.ukagaka.addPanelTab({
     tab: EPRT_ID_HTML_SAFE,
