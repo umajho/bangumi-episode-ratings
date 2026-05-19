@@ -27,7 +27,8 @@ export const PleaseDoRefetch: Component<{ onRequestRefetch: () => void }> = (
 ) => {
   return (
     <div>
-      点击<button onClick={props.onRequestRefetch}>此处
+      点击<button onClick={props.onRequestRefetch}>
+        此处
       </button>或刷新本页以获取。
     </div>
   );
