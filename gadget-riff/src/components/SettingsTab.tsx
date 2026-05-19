@@ -19,6 +19,7 @@ import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import { PleaseDoAuth } from "./PleaseDoAuth";
 import { ErrorMessage } from "./errors";
 import type { AppClient } from "../clients/app-client";
+import { L } from "./utils";
 
 const TAG_NAME = makeCustomElementTagName("settings-tab");
 const TAG_NAME_SECTION_AUTH_IN_THE_WILD = //
@@ -66,7 +67,7 @@ const SettingsTab: Component<
       </Switch>
 
       <div style={{ "text-align": "center" }}>
-        <a class="l" target="_blank" href={`/dev/app/${CHII_APP_ID}`}>组件页</a>
+        <L _blank href={`/dev/app/${CHII_APP_ID}`}>组件页</L>
       </div>
       <SectionAuth authStore={props.authStore} />
       <SectionExportData
