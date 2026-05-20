@@ -2,7 +2,7 @@ import { createEffect, on } from "solid-js";
 
 import type { AppClient } from "../clients/app-client";
 import { createMyTimelineContentInstance } from "../components/MyTimelineContent";
-import type { SubjectId } from "../definitions";
+import type { EpisodeId, SubjectId } from "../definitions";
 import { processCluetip } from "../element-processors/cluetip";
 import { processPrgList } from "../element-processors/prg-list";
 import type { SettingsStore } from "../stores/persistent-stores/settings-store";
@@ -22,12 +22,38 @@ interface ProcessOptions {
 
 export function processRootPage(opts: ProcessOptions) {
   {
+    for (const tinyHeaderEl of document.querySelectorAll(".tinyHeader")) {
+      const textTipEl = tinyHeaderEl
+        .querySelector<HTMLAnchorElement>(".textTip");
+      if (!textTipEl) continue;
+
+      const subjectId = Number(textTipEl.dataset.subjectId) as SubjectId;
+      if (isNaN(subjectId)) continue;
+
+      const name = textTipEl.textContent;
+      const nameCn = textTipEl.dataset.subjectNameCn;
+      const eps = ((): number | null => {
+        const smallEl = tinyHeaderEl.querySelector(".progress_percent_text");
+        if (!smallEl) return null;
+        const m = /\[\d+\/(\d+)\]/.exec(smallEl.textContent);
+        if (!m) return null;
+        const eps = Number(m[1]);
+        return Number.isNaN(eps) ? null : eps;
+      })();
+
+      opts.bgmClient.putEntryIntoSubjectCache(subjectId, {
+        name,
+        ...(nameCn ? { nameCn } : {}),
+        eps,
+      });
+    }
+
     for (const epInfoEl of document.querySelectorAll(".load-epinfo")) {
       const href = epInfoEl.getAttribute("href");
       const title = epInfoEl.getAttribute("title");
       if (!href || !title) continue;
 
-      const episodeID = Number(href.split("/").at(-1));
+      const episodeID = Number(href.split("/").at(-1)) as EpisodeId;
       const m = /^ep\.(.+?) (.+)$/.exec(title);
       if (isNaN(episodeID) || !m) continue;
 

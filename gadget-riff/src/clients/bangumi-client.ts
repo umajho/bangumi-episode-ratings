@@ -1,6 +1,14 @@
+import type { EpisodeId, SubjectId } from "../definitions";
+
 type BangumiAPIResponse<T> =
   | ["ok", T]
   | ["error"];
+
+export interface SubjectCacheEntry {
+  name: string;
+  nameCn?: string;
+  eps: number | null;
+}
 
 interface EpisodeCacheEntry {
   name: string;
@@ -8,19 +16,53 @@ interface EpisodeCacheEntry {
 }
 
 export class BangumiClient {
-  private episodeCache: Record<
+  private subjectCache: Record<
     number,
+    SubjectCacheEntry | null | Promise<SubjectCacheEntry | null>
+  > = {};
+  private episodeCache: Record<
+    EpisodeId,
     EpisodeCacheEntry | null | Promise<EpisodeCacheEntry | null>
   > = {};
 
+  putEntryIntoSubjectCache(
+    subjectID: number,
+    entry: SubjectCacheEntry,
+  ): void {
+    this.subjectCache[subjectID] = entry;
+  }
   putEntryIntoEpisodeCache(
-    episodeID: number,
+    episodeID: EpisodeId,
     entry: EpisodeCacheEntry,
   ): void {
     this.episodeCache[episodeID] = entry;
   }
 
-  async getEpisodeTitle(episodeID: number): Promise<string> {
+  private subjectEntryCache: Record<
+    SubjectId,
+    Promise<SubjectCacheEntry | null>
+  > = {};
+  async getSubjectEntry(
+    subjectID: SubjectId,
+  ): Promise<SubjectCacheEntry | null> {
+    const path = `/v0/subjects/${subjectID}`;
+    return this.subjectEntryCache[subjectID] ??= this
+      .fetchAPI(path, { method: "GET" })
+      .then((resp) => {
+        if (resp[0] === "error") {
+          return null;
+        } else {
+          const data = resp[1] as any;
+          return {
+            name: data.name,
+            ...(data.name_cn ? { nameCn: data.name_cn } : {}),
+            eps: data.eps || null,
+          };
+        }
+      });
+  }
+
+  async getEpisodeTitle(episodeID: EpisodeId): Promise<string> {
     const cacheEntry = await (this.episodeCache[episodeID] ??= //
       this.getEpisode(episodeID)
         .then((episode) => {
@@ -38,8 +80,8 @@ export class BangumiClient {
     return `ep.${cacheEntry.sort} ${cacheEntry.name}`;
   }
 
-  private episodeResponseCache: Record<number, any> = {};
-  private async getEpisode(episodeID: number): Promise<any> {
+  private episodeResponseCache: Record<EpisodeId, any> = {};
+  private async getEpisode(episodeID: EpisodeId): Promise<any> {
     const path = `/v0/episodes/${episodeID}`;
     return this.episodeResponseCache[episodeID] ??= this
       .fetchAPI(path, { method: "GET" })

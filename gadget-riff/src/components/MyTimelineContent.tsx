@@ -28,7 +28,10 @@ import { readonlyPageData } from "../stores/readonly-page-data";
 import { SmallStars } from "./SmallStars";
 import { L } from "./utils";
 import { formatDatesDifferences } from "../utils/date-formatting";
-import type { BangumiClient } from "../clients/bangumi-client";
+import type {
+  BangumiClient,
+  SubjectCacheEntry,
+} from "../clients/bangumi-client";
 
 const TAG_NAME = makeCustomElementTagName("my-timeline-content");
 
@@ -351,6 +354,7 @@ const TimelineItem: Component<{
 }> = (props) => {
   const [isHovering, setIsHovering] = createSignal(false);
 
+  const [subject, setSubject] = createSignal<SubjectCacheEntry | null>(null);
   const [epTitle, setEpTitle] = createSignal<string | null>(null);
 
   const [visRef, setVisRef] = createSignal<HTMLElement | null>(null);
@@ -358,6 +362,16 @@ const TimelineItem: Component<{
   createEffect(on(isVisible, (isVisible) => {
     if (isVisible) {
       setVisRef(null);
+
+      const subjectId = (() => {
+        if (props.item.rate_episode) {
+          return props.item.rate_episode.subjectId;
+        }
+      })();
+      if (subjectId) {
+        props.bgmClient.getSubjectEntry(subjectId).then(setSubject);
+      }
+
       const episodeId = (() => {
         if (props.item.rate_episode) {
           return props.item.rate_episode.episodeId;
@@ -388,6 +402,7 @@ const TimelineItem: Component<{
               data={data()}
               now={props.now}
               episodeTitle={epTitle()}
+              subject={subject()}
             />
           )}
         </Match>
@@ -413,6 +428,7 @@ const TimelineItemRateEpisode: Component<{
   data: NonNullable<ItemUnion["rate_episode"]>;
   now: Date;
   episodeTitle: string | null;
+  subject: SubjectCacheEntry | null;
 }> = (props) => {
   return (
     <span class="info clearit">
@@ -442,6 +458,33 @@ const TimelineItemRateEpisode: Component<{
               />
             </span>
           </a>
+          <Show
+            when={props.subject}
+            fallback={
+              <div class="inner">
+                <p class="title">
+                  <a href={`/subject/${props.data.subjectId}`}>
+                    <span style={{ color: "gray" }}>（加载中…）</span>
+                  </a>
+                </p>
+              </div>
+            }
+          >
+            {(subject) => (
+              <div class="inner">
+                <p class="title">
+                  <a href={`/subject/${props.data.subjectId}`}>
+                    {subject().nameCn ?? subject().name}
+                  </a>
+                </p>
+                <p class="info tip">
+                  <Show when={subject().eps !== null}>
+                    {` ${subject().eps}话`}
+                  </Show>
+                </p>
+              </div>
+            )}
+          </Show>
         </div>
       </div>
       <div class="post_actions date">
