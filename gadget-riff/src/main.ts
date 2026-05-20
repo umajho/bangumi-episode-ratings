@@ -60,6 +60,7 @@ async function main() {
       processRootPage({
         settingsStore,
         appClient,
+        authStore,
         scoreStore,
         revealedEpisodesStore,
       });

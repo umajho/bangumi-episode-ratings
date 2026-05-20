@@ -8,10 +8,12 @@ import { processPrgList } from "../element-processors/prg-list";
 import type { SettingsStore } from "../stores/persistent-stores/settings-store";
 import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
+import type { AuthStore } from "../stores/persistent-stores/auth-store";
 
 interface ProcessOptions {
   settingsStore: SettingsStore;
   appClient: AppClient;
+  authStore: AuthStore;
   scoreStore: ScoreStore;
   revealedEpisodesStore: RevealedEpisodesStore;
 }
@@ -61,7 +63,10 @@ function processTimelineColumn(opts: ProcessOptions) {
 
     containerEl.innerHTML = "";
 
-    const myTimelineContentInstance = createMyTimelineContentInstance({});
+    const myTimelineContentInstance = createMyTimelineContentInstance({
+      appClient: opts.appClient,
+      authStore: opts.authStore,
+    });
     containerEl.appendChild(myTimelineContentInstance.element);
   }
 
