@@ -1,5 +1,6 @@
 import { AppClient } from "./clients/app-client";
 import { AuthClient } from "./clients/auth-client";
+import { BangumiClient } from "./clients/bangumi-client";
 import {
   createSettingsTabSectionAuthInTheWildInstance,
   registerSettingsTab,
@@ -46,6 +47,7 @@ async function main() {
   const authClient = new AuthClient({ entrypointStore });
   const authStore = createAuthStore({ authClient });
   const appClient = new AppClient({ entrypointStore, authStore });
+  const bgmClient = new BangumiClient();
 
   setUpAuthRelatedStuff({ authStore });
 
@@ -57,7 +59,14 @@ async function main() {
 
   switch (detectPageType()) {
     case "root": {
-      processRootPage({ appClient, scoreStore, revealedEpisodesStore });
+      processRootPage({
+        settingsStore,
+        appClient,
+        bgmClient,
+        authStore,
+        scoreStore,
+        revealedEpisodesStore,
+      });
       break;
     }
     case "subject": {

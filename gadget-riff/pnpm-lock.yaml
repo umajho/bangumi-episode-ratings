@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@solid-primitives/intersection-observer':
+      specifier: ^2.2.4
+      version: 2.2.4
     '@types/jquery':
       specifier: ^4.0.0
       version: 4.0.0
@@ -20,6 +23,9 @@ importers:
 
   .:
     dependencies:
+      '@solid-primitives/intersection-observer':
+        specifier: 'catalog:'
+        version: 2.2.4(solid-js@1.9.12)
       solid-element:
         specifier: 'catalog:'
         version: 1.9.1(solid-js@1.9.12)
@@ -382,6 +388,16 @@ packages:
 
   '@rolldown/pluginutils@1.0.0-rc.17':
     resolution: {integrity: sha512-n8iosDOt6Ig1UhJ2AYqoIhHWh/isz0xpicHTzpKBeotdVsTEcxsSA/i3EVM7gQAj0rU27OLAxCjzlj15IWY7bg==}
+
+  '@solid-primitives/intersection-observer@2.2.4':
+    resolution: {integrity: sha512-3+QaAT/TUdEaeKkqiTf+sk8g1/vE+QM9PucG2/JI8hLI8ALpBYBnlhtvcwIdpjaKMSpPN/1L4hneLvwqnx4YRA==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/utils@6.4.0':
+    resolution: {integrity: sha512-AeGTBg8Wtkh/0s+evyLtP8piQoS4wyqqQaAFs2HJcFMMjYAtUgo+ZPduRXLjPlqKVc2ejeR544oeqpbn8Egn8A==}
+    peerDependencies:
+      solid-js: ^1.6.12
 
   '@tybys/wasm-util@0.10.2':
     resolution: {integrity: sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==}
@@ -1003,6 +1019,15 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.0-rc.17': {}
+
+  '@solid-primitives/intersection-observer@2.2.4(solid-js@1.9.12)':
+    dependencies:
+      '@solid-primitives/utils': 6.4.0(solid-js@1.9.12)
+      solid-js: 1.9.12
+
+  '@solid-primitives/utils@6.4.0(solid-js@1.9.12)':
+    dependencies:
+      solid-js: 1.9.12
 
   '@tybys/wasm-util@0.10.2':
     dependencies:

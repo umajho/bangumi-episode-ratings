@@ -19,6 +19,8 @@ import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import { PleaseDoAuth } from "./PleaseDoAuth";
 import { ErrorMessage } from "./errors";
 import type { AppClient } from "../clients/app-client";
+import { L } from "./utils";
+import { readonlyPageData } from "../stores/readonly-page-data";
 
 const TAG_NAME = makeCustomElementTagName("settings-tab");
 const TAG_NAME_SECTION_AUTH_IN_THE_WILD = //
@@ -66,7 +68,7 @@ const SettingsTab: Component<
       </Switch>
 
       <div style={{ "text-align": "center" }}>
-        <a class="l" target="_blank" href={`/dev/app/${CHII_APP_ID}`}>组件页</a>
+        <L _blank href={readonlyPageData.gadgetPagePath}>组件页</L>
       </div>
       <SectionAuth authStore={props.authStore} />
       <SectionExportData
@@ -78,6 +80,10 @@ const SettingsTab: Component<
         status={status()}
       />
       <SectionAntiSpoilerForMusic
+        settingsStore={props.settingsStore}
+        status={status()}
+      />
+      <SectionTimelineTabButtonLocation
         settingsStore={props.settingsStore}
         status={status()}
       />
@@ -275,6 +281,29 @@ const SectionAntiSpoilerForMusic: Component<{
         getLabel={(value) =>
           props.settingsStore.getAntiSpoilerForMusicValueLabelText(value)}
         setValue={(v) => props.settingsStore.updateAntiSpoilerForMusic(v)}
+      />
+    </DisableableSection>
+  );
+};
+
+const SectionTimelineTabButtonLocation: Component<{
+  settingsStore: SettingsStore;
+  status: SettingsStatus;
+}> = (props) => {
+  const optTimelineTabButtonLocation = props.settingsStore
+    .getTimelineTabButtonLocationSignal();
+
+  return (
+    <DisableableSection disabled={!!props.status.saving}>
+      <div class="title">时间线标签页按钮位置</div>
+      <RadioGroup
+        currentValue={optTimelineTabButtonLocation()}
+        options={props.settingsStore.getTimelineTabButtonLocationValues()}
+        getLabel={(value) =>
+          props.settingsStore.getTimelineTabButtonLocationValueLabelText(
+            value,
+          )}
+        setValue={(v) => props.settingsStore.updateTimelineTabButtonLocation(v)}
       />
     </DisableableSection>
   );

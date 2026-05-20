@@ -9,6 +9,19 @@ export const readonlyPageData = {
     return window.CHOBITS_UID ?? null;
   },
 
+  getClaimedUserTextIdAndName(): { textId: string; name: string } | null {
+    const meAEl = document.querySelector("#dock .content .first > a");
+    if (!meAEl) return null;
+    const claimedUserTextId = meAEl.getAttribute("href")?.split("/").at(-1) ??
+      null;
+    const claimedUserName = meAEl.textContent?.trim() ?? null;
+    if (claimedUserTextId && claimedUserName) {
+      return { textId: claimedUserTextId, name: claimedUserName };
+    } else {
+      return null;
+    }
+  },
+
   get subjectId(): SubjectId | null {
     const pathParts = window.location.pathname.split("/").slice(1);
     if (pathParts[0] === "subject" && pathParts.length >= 2) {
@@ -24,5 +37,9 @@ export const readonlyPageData = {
     }
 
     return null;
+  },
+
+  get gadgetPagePath(): string {
+    return `/dev/app/${CHII_APP_ID}`;
   },
 };

@@ -1,6 +1,7 @@
 import { type Component, Show } from "solid-js";
 
 import type { AuthStore } from "../stores/persistent-stores/auth-store";
+import { L } from "./utils";
 
 export const PleaseDoAuth: Component<{
   authStore: AuthStore;
@@ -14,13 +15,9 @@ export const PleaseDoAuth: Component<{
       </Show>
       若要查看或提交自己的单集评分，
       <br />
-      请<a
-        class="l"
-        target="_blank"
-        href={props.authStore.URL_AUTH_BANGUMI_PAGE}
-      >
+      请<L _blank href={props.authStore.URL_AUTH_BANGUMI_PAGE}>
         授权此应用
-      </a>。（用于确认登录者）
+      </L>。（用于确认登录者）
     </div>
   );
 };
@@ -30,7 +27,8 @@ export const PleaseDoRefetch: Component<{ onRequestRefetch: () => void }> = (
 ) => {
   return (
     <div>
-      点击<button onClick={props.onRequestRefetch}>此处
+      点击<button onClick={props.onRequestRefetch}>
+        此处
       </button>或刷新本页以获取。
     </div>
   );

@@ -12,6 +12,7 @@
     "lint:fix": "oxlint --fix"
   },
   "dependencies": {
+    "@solid-primitives/intersection-observer": "catalog:",
     "solid-element": "catalog:",
     "solid-js": "^1.9.12"
   },

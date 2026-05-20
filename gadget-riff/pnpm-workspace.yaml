@@ -1,4 +1,5 @@
 catalog:
+  '@solid-primitives/intersection-observer': ^2.2.4
   '@types/jquery': ^4.0.0
   oxlint: ^1.59.0
   solid-element: ^1.9.1
