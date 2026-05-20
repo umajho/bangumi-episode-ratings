@@ -20,6 +20,7 @@ import { PleaseDoAuth } from "./PleaseDoAuth";
 import { ErrorMessage } from "./errors";
 import type { AppClient } from "../clients/app-client";
 import { L } from "./utils";
+import { readonlyPageData } from "../stores/readonly-page-data";
 
 const TAG_NAME = makeCustomElementTagName("settings-tab");
 const TAG_NAME_SECTION_AUTH_IN_THE_WILD = //
@@ -67,7 +68,7 @@ const SettingsTab: Component<
       </Switch>
 
       <div style={{ "text-align": "center" }}>
-        <L _blank href={`/dev/app/${CHII_APP_ID}`}>组件页</L>
+        <L _blank href={readonlyPageData.gadgetPagePath}>组件页</L>
       </div>
       <SectionAuth authStore={props.authStore} />
       <SectionExportData

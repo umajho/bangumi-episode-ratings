@@ -81,7 +81,7 @@ export function formatDatesDifferences(dateA: Date, dateB: Date): string {
   } else if (diffMonths !== 0) {
     ret = `${diffMonths}月${diffDays > 0 ? `${diffDays}天` : ""}`;
   } else if (diffDays !== 0) {
-    ret = `${diffDays}天${diffHours > 0 ? `${diffHours}时` : ""}`;
+    ret = `${diffDays}天${diffHours > 0 ? `${diffHours}小时` : ""}`;
   } else if (diffHours !== 0) {
     ret = `${diffHours}小时${diffMinutes > 0 ? `${diffMinutes}分钟` : ""}`;
   } else if (diffMinutes !== 0) {

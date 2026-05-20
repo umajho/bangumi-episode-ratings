@@ -10,11 +10,14 @@ import {
   Switch,
 } from "solid-js";
 import { customElement, noShadowDOM } from "solid-element";
+import { createVisibilityObserver } from "@solid-primitives/intersection-observer";
 
 import {
+  type EpisodeId,
   EPRT_ID_HTML_SAFE,
   makeCustomElementTagName,
   type Score,
+  type SubjectId,
 } from "../definitions";
 import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import { PleaseDoAuth, PleaseDoRefetch } from "./PleaseDoAuth";
@@ -24,11 +27,17 @@ import type { AppClient } from "../clients/app-client";
 import { readonlyPageData } from "../stores/readonly-page-data";
 import { SmallStars } from "./SmallStars";
 import { L } from "./utils";
+import { formatDatesDifferences } from "../utils/date-formatting";
+import type { BangumiClient } from "../clients/bangumi-client";
 
 const TAG_NAME = makeCustomElementTagName("my-timeline-content");
 
 export function createMyTimelineContentInstance(
-  opts: { appClient: AppClient; authStore: AuthStore },
+  opts: {
+    appClient: AppClient;
+    bgmClient: BangumiClient;
+    authStore: AuthStore;
+  },
 ) {
   registerMyTimelineContent(opts);
   const el = document.createElement(TAG_NAME);
@@ -38,7 +47,11 @@ export function createMyTimelineContentInstance(
 let elementConstructor: CustomElementConstructor | null = null;
 
 function registerMyTimelineContent(
-  opts: { appClient: AppClient; authStore: AuthStore },
+  opts: {
+    appClient: AppClient;
+    bgmClient: BangumiClient;
+    authStore: AuthStore;
+  },
 ) {
   elementConstructor ??= customElement(TAG_NAME, {}, () => {
     noShadowDOM();
@@ -46,6 +59,7 @@ function registerMyTimelineContent(
     return (
       <MyTimelineContent
         appClient={opts.appClient}
+        bgmClient={opts.bgmClient}
         authStore={opts.authStore}
       />
     );
@@ -54,6 +68,7 @@ function registerMyTimelineContent(
 
 const MyTimelineContent: Component<{
   appClient: AppClient;
+  bgmClient: BangumiClient;
   authStore: AuthStore;
 }> = (props) => {
   type State =
@@ -168,6 +183,7 @@ const MyTimelineContent: Component<{
               <div id="timeline" style="position: relative;">
                 <TimelineItems
                   appClient={props.appClient}
+                  bgmClient={props.bgmClient}
                   data={data()}
                   removeTimelineItem={removeTimelineItem}
                 />
@@ -186,26 +202,43 @@ const MyTimelineContent: Component<{
   );
 };
 
+type ItemUser = {
+  textId: string;
+  name: string;
+  smallAvatarUrl: string;
+  shouldShowAvatar: boolean;
+};
+type ItemUnion = {
+  timestampMs: number;
+  timestamp: Date;
+  rate_episode?: {
+    subjectId: SubjectId;
+    episodeId: EpisodeId;
+    score: Score | null;
+  };
+};
+
 const TimelineItems: Component<{
   appClient: AppClient;
+  bgmClient: BangumiClient;
   data: GetUserTimeLineItemsResponseData;
   removeTimelineItem: (timestampMs: number) => void;
 }> = (props) => {
-  type ItemUser = {
-    textId: string;
-    name: string;
-    smallAvatarUrl: string;
-    shouldShowAvatar: boolean;
-  };
-  type ItemUnion = {
-    timestampMs: number;
-    rate_episode?: {
-      episodeId: number;
-      score: Score | null;
-    };
-  };
+  // XXX: 非 reactive。
+  const now = new Date();
 
   const itemsByDateHeader = createMemo(() => {
+    const episodeToSubjectMap: Record<EpisodeId, SubjectId> = {};
+    for (
+      const [subjectId, { episode_ids }] of Object.entries(props.data.subjects)
+    ) {
+      for (const episodeId of episode_ids) {
+        episodeToSubjectMap[episodeId as EpisodeId] = Number(
+          subjectId,
+        ) as SubjectId;
+      }
+    }
+
     const groups: {
       header: string;
       items: (ItemUnion & { user: ItemUser })[];
@@ -231,10 +264,15 @@ const TimelineItems: Component<{
       const itemUnion = ((): ItemUnion | null => {
         switch (item[1]) {
           case "rate-episode": {
+            const episodeId = item[2].episode_id as EpisodeId;
+            const subjectId = episodeToSubjectMap[episodeId];
+            if (!subjectId) throw new Error("unreachable!");
             return {
               timestampMs: item[0],
+              timestamp: date,
               rate_episode: {
-                episodeId: item[2].episode_id,
+                subjectId,
+                episodeId,
                 score: item[2].score as Score | null,
               },
             };
@@ -254,7 +292,7 @@ const TimelineItems: Component<{
     return groups;
   });
 
-  const [hoveringItem, setHoveringItem] = createSignal<number | null>(null);
+  const useVisibilityObserver = createVisibilityObserver();
 
   async function deleteTimelineItem(timestampMs: number) {
     const result = await props.appClient.deleteMyTimelineItem({ timestampMs });
@@ -285,53 +323,14 @@ const TimelineItems: Component<{
             <ul>
               <For each={group.items}>
                 {(item) => (
-                  <li
-                    class="clearit tml_item"
-                    onMouseEnter={() => setHoveringItem(item.timestampMs)}
-                    onMouseLeave={() => setHoveringItem(null)}
-                  >
-                    <Show when={item.user.shouldShowAvatar}>
-                      <Avatar user={item.user} />
-                    </Show>
-                    <Switch>
-                      <Match when={item.rate_episode}>
-                        {(data) => (
-                          <span class="info clearit">
-                            <L href={`/user/${item.user.textId}`}>
-                              {item.user.name}
-                            </L>
-                            为剧集
-                            <L href={`/ep/${data().episodeId}`}>
-                              {data().episodeId}
-                            </L>
-                            <Show
-                              when={data().score !== null}
-                              fallback={"取消评分"}
-                            >
-                              评分{" "}
-                              <SmallStars
-                                score={data().score!}
-                                shouldShowNumber={false}
-                              />
-                            </Show>
-                          </span>
-                        )}
-                      </Match>
-                    </Switch>
-                    <a
-                      title="删除这条时间线"
-                      class="tml_del"
-                      style={{
-                        display: hoveringItem() === item.timestampMs
-                          ? "block"
-                          : "none",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => deleteTimelineItem(item.timestampMs)}
-                    >
-                      del
-                    </a>
-                  </li>
+                  <TimelineItem
+                    appClient={props.appClient}
+                    bgmClient={props.bgmClient}
+                    item={item}
+                    now={now}
+                    deleteTimelineItem={deleteTimelineItem}
+                    useVisibilityObserver={useVisibilityObserver}
+                  />
                 )}
               </For>
             </ul>
@@ -339,6 +338,124 @@ const TimelineItems: Component<{
         )}
       </For>
     </div>
+  );
+};
+
+const TimelineItem: Component<{
+  appClient: AppClient;
+  bgmClient: BangumiClient;
+  item: ItemUnion & { user: ItemUser };
+  now: Date;
+  deleteTimelineItem: (timestampMs: number) => void;
+  useVisibilityObserver: ReturnType<typeof createVisibilityObserver>;
+}> = (props) => {
+  const [isHovering, setIsHovering] = createSignal(false);
+
+  const [epTitle, setEpTitle] = createSignal<string | null>(null);
+
+  const [visRef, setVisRef] = createSignal<HTMLElement | null>(null);
+  const isVisible = props.useVisibilityObserver(visRef);
+  createEffect(on(isVisible, (isVisible) => {
+    if (isVisible) {
+      setVisRef(null);
+      const episodeId = (() => {
+        if (props.item.rate_episode) {
+          return props.item.rate_episode.episodeId;
+        }
+      })();
+      if (episodeId) {
+        props.bgmClient.getEpisodeTitle(episodeId).then(setEpTitle);
+      }
+    }
+  }));
+
+  return (
+    <li
+      ref={setVisRef}
+      class="clearit tml_item"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      <Show when={props.item.user.shouldShowAvatar}>
+        <Avatar user={props.item.user} />
+      </Show>
+      <Switch>
+        <Match when={props.item.rate_episode}>
+          {(data) => (
+            <TimelineItemRateEpisode
+              timestamp={props.item.timestamp}
+              user={props.item.user}
+              data={data()}
+              now={props.now}
+              episodeTitle={epTitle()}
+            />
+          )}
+        </Match>
+      </Switch>
+      <a
+        title="删除这条时间线"
+        class="tml_del"
+        style={{
+          display: isHovering() ? "block" : "none",
+          cursor: "pointer",
+        }}
+        onClick={() => props.deleteTimelineItem(props.item.timestampMs)}
+      >
+        del
+      </a>
+    </li>
+  );
+};
+
+const TimelineItemRateEpisode: Component<{
+  timestamp: Date;
+  user: ItemUser;
+  data: NonNullable<ItemUnion["rate_episode"]>;
+  now: Date;
+  episodeTitle: string | null;
+}> = (props) => {
+  return (
+    <span class="info clearit">
+      <L href={`/user/${props.user.textId}`}>{props.user.name}</L>
+      为剧集{" "}
+      <Show
+        when={props.episodeTitle}
+        fallback={
+          <>
+            <L href={`/ep/${props.data.episodeId}`}>{props.data.episodeId}</L>
+            <span style={{ color: "gray" }}>（加载中…）</span>
+          </>
+        }
+      >
+        {(epTitle) => <L href={`/ep/${props.data.episodeId}`}>{epTitle()}</L>}
+      </Show>{" "}
+      <Show when={props.data.score !== null} fallback={"取消评分"}>
+        评分 <SmallStars score={props.data.score!} shouldShowNumber={false} />
+      </Show>
+      <div class="card card_tiny">
+        <div class="container">
+          <a href={`/subject/${props.data.subjectId}`}>
+            <span class="cover">
+              <img
+                loading="lazy"
+                src={`https://api.bgm.tv/v0/subjects/${props.data.subjectId}/image?type=grid`}
+              />
+            </span>
+          </a>
+        </div>
+      </div>
+      <div class="post_actions date">
+        <span class="titleTip">
+          {formatDatesDifferences(props.timestamp, props.now)}
+        </span>
+        ·{" "}
+        <small class="grey">
+          <a target="_blank" href={readonlyPageData.gadgetPagePath}>
+            单集评分
+          </a>
+        </small>
+      </div>
+    </span>
   );
 };
 

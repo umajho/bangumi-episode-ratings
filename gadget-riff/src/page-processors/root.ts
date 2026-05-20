@@ -9,16 +9,36 @@ import type { SettingsStore } from "../stores/persistent-stores/settings-store";
 import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 import type { AuthStore } from "../stores/persistent-stores/auth-store";
+import type { BangumiClient } from "../clients/bangumi-client";
 
 interface ProcessOptions {
   settingsStore: SettingsStore;
   appClient: AppClient;
+  bgmClient: BangumiClient;
   authStore: AuthStore;
   scoreStore: ScoreStore;
   revealedEpisodesStore: RevealedEpisodesStore;
 }
 
 export function processRootPage(opts: ProcessOptions) {
+  {
+    for (const epInfoEl of document.querySelectorAll(".load-epinfo")) {
+      const href = epInfoEl.getAttribute("href");
+      const title = epInfoEl.getAttribute("title");
+      if (!href || !title) continue;
+
+      const episodeID = Number(href.split("/").at(-1));
+      const m = /^ep\.(.+?) (.+)$/.exec(title);
+      if (isNaN(episodeID) || !m) continue;
+
+      const sort = Number(m[1]);
+      const name = m[2];
+      if (isNaN(sort)) continue;
+
+      opts.bgmClient.putEntryIntoEpisodeCache(episodeID, { name, sort });
+    }
+  }
+
   const { initializeCluetip } = processCluetip(opts);
 
   for (const prgListEl of document.querySelectorAll("ul.prg_list")) {
@@ -65,6 +85,7 @@ function processTimelineColumn(opts: ProcessOptions) {
 
     const myTimelineContentInstance = createMyTimelineContentInstance({
       appClient: opts.appClient,
+      bgmClient: opts.bgmClient,
       authStore: opts.authStore,
     });
     containerEl.appendChild(myTimelineContentInstance.element);

@@ -38,4 +38,8 @@ export const readonlyPageData = {
 
     return null;
   },
+
+  get gadgetPagePath(): string {
+    return `/dev/app/${CHII_APP_ID}`;
+  },
 };
