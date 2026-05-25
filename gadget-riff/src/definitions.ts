@@ -50,6 +50,7 @@ export type EpisodeId = number & { readonly __tag: unique symbol };
 
 export const scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 export type Score = typeof scores[number];
+export const scoresReversed = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as const;
 
 export function describeScore(score: number) {
   return ([
@@ -82,6 +83,7 @@ export interface EpisodeData {
    * `undefined` 在没有有效的身份认证令牌时，为 `undefined`。
    */
   myRating?: MyRating;
+  publicVotersByScore?: { [S in Score]?: number[] };
 }
 export interface SubjectData {
   episodes: {

@@ -1,4 +1,4 @@
-import type { SubjectId } from "../definitions";
+import type { EpisodeId, SubjectId } from "../definitions";
 
 export const readonlyPageData = {
   get appId(): string {
@@ -36,6 +36,14 @@ export const readonlyPageData = {
       }
     }
 
+    return null;
+  },
+
+  get episodeId(): EpisodeId | null {
+    const pathParts = window.location.pathname.split("/").slice(1);
+    if (pathParts[0] === "ep" && pathParts.length >= 2) {
+      return Number(pathParts[1]) as EpisodeId;
+    }
     return null;
   },
 

@@ -24,6 +24,7 @@ import type {
 } from "../../definitions";
 import type {
   APIResponse,
+  GetEpisodeRatingsResponseData,
   GetSubjectEpisodesResponseData,
   RateEpisodeResponseData,
 } from "../../shared/dto";
@@ -50,10 +51,12 @@ export function createScoreStore(opts: {
 
   function getKnownSubject(
     subjectId: SubjectId,
+    innerOpts?: { shouldCreateEmptySubjectStores?: boolean },
   ): { store: SubjectStore; isCached: boolean } {
     const isCached = subjectId in knownSubjects;
     const store = knownSubjects[subjectId] ??= new SubjectStore({
       revealedEpisodesStore: opts.revealedEpisodesStore,
+      shouldCreateEmpty: !!innerOpts?.shouldCreateEmptySubjectStores,
     });
     return { store, isCached };
   }
@@ -96,11 +99,48 @@ export function createScoreStore(opts: {
     return store.subjectAccessor;
   }
 
+  function querySingleEpisodeDataTracked(
+    subjectId: SubjectId,
+    episodeId: EpisodeId,
+    innerOpts: { shouldRefetch?: boolean },
+  ): Accessor<EpisodeDataResponse> {
+    if (innerOpts.shouldRefetch) throw new Error("TODO!!!");
+
+    const { store } = getKnownSubject(subjectId, {
+      shouldCreateEmptySubjectStores: true,
+    });
+
+    if (!store.hasEpisode(episodeId)) {
+      store.tryMarkEpisodeAsLoading(episodeId);
+
+      (async () => {
+        const resp = await opts.appClient.getEpisodeRatings({
+          subjectID: subjectId,
+          episodeID: episodeId,
+        });
+
+        switch (resp[0]) {
+          case "ok":
+            store.putEpisodeData(episodeId, resp[1]);
+            break;
+          case "error":
+            store.setEpisodeError(episodeId, resp);
+            break;
+          default:
+            resp[0] satisfies never;
+            throw new Error("unreachable!");
+        }
+      })();
+    }
+
+    return store.getEpisodeDataResponseMemo(episodeId);
+  }
+
   function queryEpisodeDataTracked(
     subjectId: SubjectId,
     episodeId: EpisodeId,
     opts: {
-      prefersFetchingCompleteSubjectVotes: true;
+      prefersFetchingCompleteSubjectVotes: boolean;
       shouldRefetch?: boolean;
     },
   ): Accessor<EpisodeDataResponse> {
@@ -108,12 +148,14 @@ export function createScoreStore(opts: {
       queryCompleteSubjectDataTracked(subjectId, {
         shouldRefetch: opts.shouldRefetch,
       });
-    } else {
-      throw new Error("TODO");
-    }
 
-    const { store } = getKnownSubject(subjectId);
-    return store.getEpisodeDataResponseMemo(episodeId);
+      const { store } = getKnownSubject(subjectId);
+      return store.getEpisodeDataResponseMemo(episodeId);
+    } else {
+      return querySingleEpisodeDataTracked(subjectId, episodeId, {
+        shouldRefetch: opts.shouldRefetch,
+      });
+    }
   }
 
   function updateMyRating(
@@ -168,15 +210,30 @@ export function createScoreStore(opts: {
 class SubjectStore {
   #owner: Owner;
 
+  /**
+   * FIXME: `hasMyRatings` 在 `isComplete` 为 `false` 时意味不明。
+   */
   #accessor: Accessor<SubjectDataResponse>;
   #setter: Setter<SubjectDataResponse>;
 
   #episodeMemos: { [episodeId: EpisodeId]: Accessor<EpisodeDataResponse> } = {};
 
-  constructor(opts: { revealedEpisodesStore: RevealedEpisodesStore }) {
+  constructor(opts: {
+    revealedEpisodesStore: RevealedEpisodesStore;
+    shouldCreateEmpty: boolean;
+  }) {
     this.#owner = createRoot(() => getOwner()!);
-    [this.#accessor, this.#setter] = //
-      createSignal<SubjectDataResponse>(["loading", {}]);
+    if (opts.shouldCreateEmpty) {
+      [this.#accessor, this.#setter] = //
+        createSignal<SubjectDataResponse>(["ok", {
+          episodes: {},
+          isComplete: false,
+          hasMyRatings: false,
+        }]);
+    } else {
+      [this.#accessor, this.#setter] = //
+        createSignal<SubjectDataResponse>(["loading", {}]);
+    }
 
     createEffect(on(this.#accessor, () => {
       const sData = this.#tryQuerySubjectData();
@@ -344,6 +401,12 @@ class SubjectStore {
     return true;
   }
 
+  hasEpisode(episodeId: EpisodeId): boolean {
+    const sData = this.#tryQuerySubjectData();
+    if (!sData) return false;
+    return episodeId in sData.episodes;
+  }
+
   markSubjectAsLoading() {
     const sData = this.#tryQuerySubjectData();
     this.#setter(["loading", sData ? { oldData: sData } : {}]);
@@ -351,6 +414,12 @@ class SubjectStore {
 
   tryMarkEpisodeAsProcessing(episodeId: EpisodeId): boolean {
     return this.#tryUpdateEpisodeState(episodeId, "processing", {
+      shouldTreatAbsentEpisodeAsEmpty: true,
+    });
+  }
+
+  tryMarkEpisodeAsLoading(episodeId: EpisodeId): boolean {
+    return this.#tryUpdateEpisodeState(episodeId, "loading", {
       shouldTreatAbsentEpisodeAsEmpty: true,
     });
   }
@@ -386,6 +455,21 @@ class SubjectStore {
       mergedSData.episodes[epId] = ["ok", epData];
     }
     this.#setter(["ok", mergedSData]);
+  }
+
+  putEpisodeData(episodeId: EpisodeId, epData: GetEpisodeRatingsResponseData) {
+    this.#tryUpdateEpisodeStateWithData(episodeId, ["ok", {
+      votes: epData.votes,
+      publicVotersByScore: epData.public_ratings.public_voters_by_score,
+      ...(epData.my_rating
+        ? {
+          myRating: {
+            score: epData.my_rating.score as Score | null,
+            visibility: { isVisible: epData.my_rating.visibility.is_visible },
+          },
+        }
+        : {}),
+    }]);
   }
 
   setSubjectError(
@@ -469,10 +553,10 @@ class SubjectStore {
               default:
                 sDataResp[0] satisfies "ok";
             }
-            const completeData = sDataResp[1];
-            const episodeData = completeData.episodes[episodeId];
+            const sData = sDataResp[1];
+            const episodeData = sData.episodes[episodeId];
             if (!episodeData) {
-              if (completeData.hasMyRatings) {
+              if (sData.hasMyRatings) {
                 return ["ok", {
                   votes: {},
                   myRating: { score: null, visibility: "unknown" },

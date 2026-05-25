@@ -1,7 +1,7 @@
 import type { Component, JSX } from "solid-js";
 
 export const Tooltip: Component<{
-  style: JSX.CSSProperties;
+  style?: JSX.CSSProperties;
   left?: number;
   top?: number;
   children: JSX.Element;

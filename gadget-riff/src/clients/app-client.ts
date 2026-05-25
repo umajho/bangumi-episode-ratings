@@ -81,27 +81,18 @@ export class AppClient {
         method: "GET",
       },
     ).then((resp) => {
-      if (resp[0] === "auth_required") {
-        throw new Error("unreachable!");
-      } else if (resp[0] === "error") {
-        return resp;
-      } else if (resp[0] === "ok") {
-        const [_, data] = resp;
-        return ["ok", data];
-      } else {
-        resp satisfies never;
-        throw new Error("unreachable!");
-      }
+      if (resp[0] === "auth_required") throw new Error("unreachable!");
+      return resp;
     });
   }
 
   async getEpisodeRatings(
     opts: { subjectID: SubjectId; episodeID: EpisodeId },
-  ): Promise<APIResponseEx<GetEpisodeRatingsResponseData>> {
+  ): Promise<APIResponse<GetEpisodeRatingsResponseData>> {
     const tokenResult = await this.fetchAccessTokenOptional();
     if (tokenResult[0] !== "ok") return tokenResult;
 
-    return await this.fetch(
+    return this.fetch<GetEpisodeRatingsResponseData>(
       "api/v1",
       `subjects/${opts.subjectID}/episodes/${opts.episodeID}/ratings`,
       {
@@ -109,7 +100,10 @@ export class AppClient {
 
         method: "GET",
       },
-    );
+    ).then((resp) => {
+      if (resp[0] === "auth_required") throw new Error("unreachable!");
+      return resp;
+    });
   }
 
   get TIMELINE_ITEMS_PER_PAGE(): number {

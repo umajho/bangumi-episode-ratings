@@ -19,6 +19,7 @@ import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 import { SmallStars } from "./SmallStars";
 import { ErrorMessageWithRetry } from "./errors";
 import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
+import * as epDataHelpers from "../utils/episode-data-helpers";
 
 const TAG_NAME = makeCustomElementTagName("rate-info");
 
@@ -179,19 +180,8 @@ const RateInfoInner: Component<{
   reveal: () => void;
   revealAll: () => void;
 }> = (props) => {
-  const totalVotes = createMemo(() => {
-    return Object.values(props.votes).reduce(
-      (sum, votesForScore) => sum + votesForScore,
-      0,
-    );
-  });
-  const scoreSum = createMemo(() => {
-    return Object.entries(props.votes).reduce(
-      (sum, [score, votesForScore]) => sum + Number(score) * votesForScore,
-      0,
-    );
-  });
-  const averageScore = () => scoreSum() / totalVotes();
+  const { totalVotes, averageScore } = epDataHelpers
+    .createComputed(() => props.votes);
 
   createEffect(() => {
     if (totalVotes() === 0) {
