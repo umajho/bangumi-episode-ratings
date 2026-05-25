@@ -6,6 +6,7 @@ import {
   For,
   Match,
   on,
+  type Setter,
   Show,
   Switch,
 } from "solid-js";
@@ -27,11 +28,15 @@ import type { AppClient } from "../clients/app-client";
 import { readonlyPageData } from "../stores/readonly-page-data";
 import { SmallStars } from "./SmallStars";
 import { L } from "./utils";
-import { formatDatesDifferences } from "../utils/date-formatting";
+import {
+  formatDatesDifferences,
+  formatDateToTime,
+} from "../utils/date-formatting";
 import type {
   BangumiClient,
   SubjectCacheEntry,
 } from "../clients/bangumi-client";
+import { Tooltip } from "./Tooltip";
 
 const TAG_NAME = makeCustomElementTagName("my-timeline-content");
 
@@ -154,6 +159,9 @@ const MyTimelineContent: Component<{
     ]);
   }
 
+  const [tooltipStuff, setTooltipStuff] = //
+    createSignal<TooltipStuff | null>(null);
+
   return (
     <div>
       <button
@@ -182,28 +190,52 @@ const MyTimelineContent: Component<{
             )}
           </Match>
           <Match when={statusUnion().loaded}>
-            {(data) => (
-              <div id="timeline" style="position: relative;">
-                <TimelineItems
-                  appClient={props.appClient}
-                  bgmClient={props.bgmClient}
-                  data={data()}
-                  removeTimelineItem={removeTimelineItem}
-                />
-                <Pager
-                  currentPageNumber={currentPageNumber()}
-                  setCurrentPageNumber={setCurrentPageNumber}
-                  hasPreviousPage={hasPreviousPage()}
-                  hasNextPage={hasNextPage()}
-                />
-              </div>
-            )}
+            {(data) => {
+              // oxlint-disable-next-line no-unassigned-vars
+              let ref!: HTMLDivElement;
+              const refRect = () => ref.getBoundingClientRect();
+
+              return (
+                <div ref={ref} id="timeline" style="position: relative;">
+                  <TimelineItems
+                    appClient={props.appClient}
+                    bgmClient={props.bgmClient}
+                    data={data()}
+                    removeTimelineItem={removeTimelineItem}
+                    setTooltipStuff={setTooltipStuff}
+                  />
+                  <Pager
+                    currentPageNumber={currentPageNumber()}
+                    setCurrentPageNumber={setCurrentPageNumber}
+                    hasPreviousPage={hasPreviousPage()}
+                    hasNextPage={hasNextPage()}
+                  />
+                  <Show when={tooltipStuff()}>
+                    {(tooltipStuff) => (
+                      <Tooltip
+                        style={{ transform: "translate(-50%, -100%)" }}
+                        left={tooltipStuff().left - refRect().left}
+                        top={tooltipStuff().top - refRect().top}
+                      >
+                        {tooltipStuff().text}
+                      </Tooltip>
+                    )}
+                  </Show>
+                </div>
+              );
+            }}
           </Match>
         </Switch>
       </Show>
     </div>
   );
 };
+
+interface TooltipStuff {
+  left: number;
+  top: number;
+  text: string;
+}
 
 type ItemUser = {
   textId: string;
@@ -226,6 +258,7 @@ const TimelineItems: Component<{
   bgmClient: BangumiClient;
   data: GetUserTimeLineItemsResponseData;
   removeTimelineItem: (timestampMs: number) => void;
+  setTooltipStuff: Setter<TooltipStuff | null>;
 }> = (props) => {
   // XXX: 非 reactive。
   const now = new Date();
@@ -333,6 +366,7 @@ const TimelineItems: Component<{
                     now={now}
                     deleteTimelineItem={deleteTimelineItem}
                     useVisibilityObserver={useVisibilityObserver}
+                    setTooltipStuff={props.setTooltipStuff}
                   />
                 )}
               </For>
@@ -351,6 +385,7 @@ const TimelineItem: Component<{
   now: Date;
   deleteTimelineItem: (timestampMs: number) => void;
   useVisibilityObserver: ReturnType<typeof createVisibilityObserver>;
+  setTooltipStuff: Setter<TooltipStuff | null>;
 }> = (props) => {
   const [isHovering, setIsHovering] = createSignal(false);
 
@@ -403,6 +438,7 @@ const TimelineItem: Component<{
               now={props.now}
               episodeTitle={epTitle()}
               subject={subject()}
+              setTooltipStuff={props.setTooltipStuff}
             />
           )}
         </Match>
@@ -429,6 +465,7 @@ const TimelineItemRateEpisode: Component<{
   now: Date;
   episodeTitle: string | null;
   subject: SubjectCacheEntry | null;
+  setTooltipStuff: Setter<TooltipStuff | null>;
 }> = (props) => {
   return (
     <span class="info clearit">
@@ -488,7 +525,19 @@ const TimelineItemRateEpisode: Component<{
         </div>
       </div>
       <div class="post_actions date">
-        <span class="titleTip">
+        <span
+          class="titleTip"
+          onMouseOver={(ev) => {
+            const el = ev.currentTarget;
+            const rect = el.getBoundingClientRect();
+            props.setTooltipStuff({
+              left: rect.left + rect.width / 2,
+              top: rect.top,
+              text: formatDateToTime(props.timestamp),
+            });
+          }}
+          onMouseOut={() => props.setTooltipStuff(null)}
+        >
           {formatDatesDifferences(props.timestamp, props.now)}
         </span>
         ·{" "}
