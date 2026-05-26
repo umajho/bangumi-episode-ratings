@@ -37,6 +37,7 @@ import type {
   SubjectCacheEntry,
 } from "../clients/bangumi-client";
 import { Tooltip } from "./Tooltip";
+import { EprtLinkSmallGrey } from "./EprtLink";
 
 const TAG_NAME = makeCustomElementTagName("my-timeline-content");
 
@@ -542,9 +543,7 @@ const TimelineItemRateEpisode: Component<{
         </span>
         ·{" "}
         <small class="grey">
-          <a target="_blank" href={readonlyPageData.gadgetPagePath}>
-            单集评分
-          </a>
+          <EprtLinkSmallGrey />
         </small>
       </div>
     </span>

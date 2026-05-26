@@ -3,13 +3,13 @@ import { customElement, noShadowDOM } from "solid-element";
 
 import {
   describeScore,
-  type EpisodeData,
   type EpisodeId,
   makeCustomElementTagName,
   type SubjectId,
 } from "../definitions";
 import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 import * as epDataHelpers from "../utils/episode-data-helpers";
+import { EprtLinkSmallGrey } from "./EprtLink";
 
 const TAG_NAME = makeCustomElementTagName("scoreboard");
 
@@ -41,7 +41,7 @@ function registerScoreboard(opts: { scoreStore: ScoreStore }) {
         when={Number.isInteger(props.subjectId) &&
           Number.isInteger(props.episodeId)}
       >
-        <Scoreboard
+        <ScoreboardWrapped
           scoreStore={opts.scoreStore}
           subjectId={props.subjectId!}
           episodeId={props.episodeId!}
@@ -51,7 +51,7 @@ function registerScoreboard(opts: { scoreStore: ScoreStore }) {
   });
 }
 
-const Scoreboard: Component<{
+const ScoreboardWrapped: Component<{
   scoreStore: ScoreStore;
   subjectId: SubjectId;
   episodeId: EpisodeId;
@@ -72,29 +72,34 @@ const Scoreboard: Component<{
         fallback={<div style="color: grey">单集评分加载中…</div>}
       >
         <Show when={data()}>
-          {(data) => <ScoreboardInner data={data()} />}
+          {(data) => {
+            const epComputed = epDataHelpers.createComputedFromData(data);
+            return <Scoreboard episodeComputed={epComputed} />;
+          }}
         </Show>
       </Show>
     </div>
   );
 };
 
-const ScoreboardInner: Component<{ data: EpisodeData }> = (props) => {
-  const { averageScore } = epDataHelpers
-    .createComputedFromData(() => props.data);
+export const Scoreboard: Component<{
+  episodeComputed: epDataHelpers.Computed;
+}> = (props) => {
+  const { averageScore } = props.episodeComputed;
 
   return (
     <div class="global_score">
-      <span class="description">
-        {Number.isNaN(averageScore()) ? "--" : describeScore(averageScore())}
-      </span>
-      <span class="number">
+      <span class="number" property="v:average">
         {Number.isNaN(averageScore())
           ? 0..toFixed(1)
           : averageScore().toFixed(4)}
       </span>
+      <span property="v:best" {...{ content: "10.0" }} />{" "}
+      <span class="description">
+        {Number.isNaN(averageScore()) ? "--" : describeScore(averageScore())}
+      </span>
       <div>
-        <small class="grey" style="float: right;">单集评分</small>
+        <EprtLinkSmallGrey />
       </div>
     </div>
   );

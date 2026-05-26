@@ -1,0 +1,140 @@
+import { type Component, Match, Show, Switch } from "solid-js";
+import { customElement, noShadowDOM } from "solid-element";
+
+import {
+  type EpisodeData,
+  type EpisodeId,
+  makeCustomElementTagName,
+  type SubjectId,
+} from "../definitions";
+import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
+import * as epDataHelpers from "../utils/episode-data-helpers";
+import { cls } from "../utils/cls";
+import { Scoreboard } from "./Scoreboard";
+import { ScoreChart } from "./ScoreChart";
+import type { SettingsStore } from "../stores/persistent-stores/settings-store";
+
+const TAG_NAME = makeCustomElementTagName("episode-overview");
+
+export function createEpisodeOverviewInstance(opts: {
+  settingsStore: SettingsStore;
+  scoreStore: ScoreStore;
+
+  subjectId: SubjectId;
+  episodeId: EpisodeId;
+}) {
+  registerEpisodeOverview({
+    settingsStore: opts.settingsStore,
+    scoreStore: opts.scoreStore,
+  });
+  const el = document.createElement(TAG_NAME);
+  el.setAttribute("subject-id", String(opts.subjectId));
+  el.setAttribute("episode-id", String(opts.episodeId));
+
+  return { element: el };
+}
+
+let elementConstructor: CustomElementConstructor | null = null;
+
+function registerEpisodeOverview(opts: {
+  settingsStore: SettingsStore;
+  scoreStore: ScoreStore;
+}) {
+  elementConstructor ??= customElement(TAG_NAME, {
+    subjectId: null,
+    episodeId: null,
+  }, (props) => {
+    noShadowDOM();
+
+    return (
+      <Show
+        when={Number.isInteger(props.subjectId) &&
+          Number.isInteger(props.episodeId)}
+      >
+        <EpisodeOverviewWrapped
+          settingsStore={opts.settingsStore}
+          scoreStore={opts.scoreStore}
+          subjectId={props.subjectId!}
+          episodeId={props.episodeId!}
+        />
+      </Show>
+    );
+  });
+}
+
+const EpisodeOverviewWrapped: Component<{
+  settingsStore: SettingsStore;
+  scoreStore: ScoreStore;
+  subjectId: SubjectId;
+  episodeId: EpisodeId;
+}> = (props) => {
+  const dataResp = props.scoreStore.queryEpisodeDataTracked(
+    props.subjectId,
+    props.episodeId,
+    { prefersFetchingCompleteSubjectVotes: false },
+  );
+
+  const isLoading = epDataHelpers.createIsLoading(dataResp);
+  const data = epDataHelpers.createData(dataResp);
+
+  return (
+    <div style="float: right;">
+      <Show
+        when={!isLoading()}
+        fallback={<div style="color: grey">单集评分加载中…</div>}
+      >
+        <Show when={data()}>
+          {(data) => (
+            <EpisodeOverview
+              settingsStore={props.settingsStore}
+              data={data()}
+            />
+          )}
+        </Show>
+      </Show>
+    </div>
+  );
+};
+
+const EpisodeOverview: Component<{
+  settingsStore: SettingsStore;
+  data: EpisodeData;
+}> = (props) => {
+  const styleSetting = props.settingsStore.getEpisodePageOverviewStyleSignal();
+
+  return (
+    <Switch>
+      <Match when={styleSetting() === "boxed"}>
+        <div id="panelInterestWrapper">
+          <div class="SidePanel png_bg">
+            <h2>单集评分</h2>
+            <EpisodeOverviewInner data={props.data} />
+          </div>
+        </div>
+      </Match>
+      <Match when={styleSetting() === "compact"}>
+        <EpisodeOverviewInner data={props.data} />
+      </Match>
+    </Switch>
+  );
+};
+
+const EpisodeOverviewInner: Component<{ data: EpisodeData }> = (props) => {
+  const epComputed = epDataHelpers.createComputedFromData(() => props.data);
+
+  return (
+    <div {...{ rel: "v:rating" }}>
+      <div
+        class={cls(
+          "global_rating",
+          `score_${Math.round(epComputed.averageScore())}`,
+        )}
+      >
+        <div class="rateEmo" />
+        <Scoreboard episodeComputed={epComputed} />
+      </div>
+      <div class="clear" />
+      <ScoreChart episodeComputed={epComputed} />
+    </div>
+  );
+};

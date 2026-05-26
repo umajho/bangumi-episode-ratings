@@ -102,6 +102,7 @@ async function main() {
       const episodeId = readonlyPageData.episodeId;
       if (subjectId && episodeId) {
         processEpPage({
+          settingsStore,
           scoreStore,
           subjectId,
           episodeId,

@@ -27,6 +27,8 @@ export function createData(
   }));
 }
 
+export type Computed = ReturnType<typeof createComputed>;
+
 export function createComputedFromData(data: Accessor<EpisodeData>) {
   return createComputed(() => data().votes);
 }

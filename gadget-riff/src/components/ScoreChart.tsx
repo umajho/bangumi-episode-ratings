@@ -9,7 +9,6 @@ import {
 import { customElement, noShadowDOM } from "solid-element";
 
 import {
-  type EpisodeData,
   type EpisodeId,
   makeCustomElementTagName,
   type Score,
@@ -50,7 +49,7 @@ function registerScoreChart(opts: { scoreStore: ScoreStore }) {
         when={Number.isInteger(props.subjectId) &&
           Number.isInteger(props.episodeId)}
       >
-        <ScoreChart
+        <ScoreChartWrapped
           scoreStore={opts.scoreStore}
           subjectId={props.subjectId!}
           episodeId={props.episodeId!}
@@ -60,7 +59,7 @@ function registerScoreChart(opts: { scoreStore: ScoreStore }) {
   });
 }
 
-const ScoreChart: Component<{
+const ScoreChartWrapped: Component<{
   scoreStore: ScoreStore;
   subjectId: SubjectId;
   episodeId: EpisodeId;
@@ -75,16 +74,21 @@ const ScoreChart: Component<{
 
   return (
     <div style="float: right; width: 218px;">
-      <Show when={data()}>{(data) => <ScoreChartInner data={data()} />}</Show>
+      <Show when={data()}>
+        {(data) => {
+          const epComputed = epDataHelpers.createComputedFromData(data);
+          return <ScoreChart episodeComputed={epComputed} />;
+        }}
+      </Show>
     </div>
   );
 };
 
-const ScoreChartInner: Component<{ data: EpisodeData }> = (props) => {
+export const ScoreChart: Component<{
+  episodeComputed: epDataHelpers.Computed;
+}> = (props) => {
   // oxlint-disable-next-line no-unassigned-vars
   let ref!: HTMLDivElement;
-
-  const epData = epDataHelpers.createComputedFromData(() => props.data);
 
   const [tooltipStuff, setTooltipStuff] = //
     createSignal<TooltipStuff | null>(null);
@@ -93,7 +97,9 @@ const ScoreChartInner: Component<{ data: EpisodeData }> = (props) => {
     <div ref={ref} id="ChartWarpper" class="chartWrapper">
       <div class="chart_desc">
         <small class="grey">
-          <span property="v:votes">{epData.totalVotes()}</span> votes
+          <span property="v:votes">{props.episodeComputed.totalVotes()}</span>
+          {" "}
+          votes
         </small>
       </div>
       <ul class="horizontalChart">
@@ -101,7 +107,7 @@ const ScoreChartInner: Component<{ data: EpisodeData }> = (props) => {
           {(score) => (
             <Bar
               score={score()}
-              episodeData={epData}
+              episodeComputed={props.episodeComputed}
               setTooltipStuff={setTooltipStuff}
             />
           )}
@@ -129,18 +135,20 @@ interface TooltipStuff {
 
 const Bar: Component<{
   score: Score;
-  episodeData: ReturnType<typeof epDataHelpers.createComputedFromData>;
+  episodeComputed: epDataHelpers.Computed;
   setTooltipStuff: Setter<TooltipStuff | null>;
 }> = (props) => {
-  const votes = createMemo(() => props.episodeData.votes()[props.score] ?? 0);
+  const votes = createMemo(() =>
+    props.episodeComputed.votes()[props.score] ?? 0
+  );
   const tip = createMemo(() => {
-    const totalVotes = props.episodeData.totalVotes();
+    const totalVotes = props.episodeComputed.totalVotes();
     const percentage = ((votes() / totalVotes * 100) || 0).toFixed(2);
     return `${percentage}% (${votes()}人)`;
   });
 
   const height = createMemo(() => {
-    const votesOfMostVotedScore = props.episodeData.votesOfMostVotedScore();
+    const votesOfMostVotedScore = props.episodeComputed.votesOfMostVotedScore();
     return (votes() / votesOfMostVotedScore * 100 || 0) + "%";
   });
 

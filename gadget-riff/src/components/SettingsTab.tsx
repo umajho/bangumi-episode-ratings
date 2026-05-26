@@ -87,6 +87,10 @@ const SettingsTab: Component<
         settingsStore={props.settingsStore}
         status={status()}
       />
+      <SectionEpisodePageOverviewStyle
+        settingsStore={props.settingsStore}
+        status={status()}
+      />
     </div>
   );
 };
@@ -304,6 +308,29 @@ const SectionTimelineTabButtonLocation: Component<{
             value,
           )}
         setValue={(v) => props.settingsStore.updateTimelineTabButtonLocation(v)}
+      />
+    </DisableableSection>
+  );
+};
+
+const SectionEpisodePageOverviewStyle: Component<{
+  settingsStore: SettingsStore;
+  status: SettingsStatus;
+}> = (props) => {
+  const optEpisodePageOverviewStyle = props.settingsStore
+    .getEpisodePageOverviewStyleSignal();
+
+  return (
+    <DisableableSection disabled={!!props.status.saving}>
+      <div class="title">章节页面概览显示风格</div>
+      <RadioGroup
+        currentValue={optEpisodePageOverviewStyle()}
+        options={props.settingsStore.getEpisodePageOverviewStyleValues()}
+        getLabel={(value) =>
+          props.settingsStore.getEpisodePageOverviewStyleValueLabelText(
+            value,
+          )}
+        setValue={(v) => props.settingsStore.updateEpisodePageOverviewStyle(v)}
       />
     </DisableableSection>
   );
