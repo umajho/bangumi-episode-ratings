@@ -65,6 +65,9 @@ const SettingsTab: Component<
         <Match when={status().error}>
           {(error) => <ErrorMessage message={error()} />}
         </Match>
+        <Match when={true}>
+          <br />
+        </Match>
       </Switch>
 
       <div style={{ "text-align": "center" }}>
@@ -341,13 +344,15 @@ const DisableableSection: Component<{
   children: JSX.Element;
 }> = (props) => {
   return (
-    <div
-      class="section"
-      style={props.disabled
-        ? { filter: "grayscale(100%)", "pointer-events": "none" }
-        : undefined}
-    >
-      {props.children}
+    <div style={props.disabled ? { cursor: "not-allowed" } : undefined}>
+      <div
+        class="section"
+        style={props.disabled
+          ? { filter: "grayscale(100%)", "pointer-events": "none" }
+          : undefined}
+      >
+        {props.children}
+      </div>
     </div>
   );
 };

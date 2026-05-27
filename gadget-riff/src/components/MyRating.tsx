@@ -215,11 +215,7 @@ export const MyRating: Component<{
           {(data) => (
             <>
               <Header displayMode={props.displayMode} />
-              <div
-                style={{ filter: "grayscale(100%)", "pointer-events": "none" }}
-              >
-                <Stars ratedScore={data().ratedScore} />
-              </div>
+              <Stars ratedScore={data().ratedScore} />
               <div style={{ color: "gray" }}>处理中…</div>
             </>
           )}
@@ -300,36 +296,44 @@ const Stars: Component<{
   });
 
   return (
-    <div>
+    <div style={props.onRateEpisode ? undefined : { cursor: "not-allowed" }}>
       <div
-        class="rating-cancel"
-        onMouseOver={() => setHoveredScore("cancel")}
-        onMouseOut={() => setHoveredScore(null)}
-        onClick={() => props.onRateEpisode?.(null)}
+        style={props.onRateEpisode
+          ? undefined
+          : { filter: "grayscale(100%)", "pointer-events": "none" }}
       >
-        <a title="Cancel Rating" />
+        <div
+          class="rating-cancel"
+          onMouseOver={() =>
+            setHoveredScore("cancel")}
+          onMouseOut={() => setHoveredScore(null)}
+          onClick={() => props.onRateEpisode?.(null)}
+        >
+          <a title="Cancel Rating" />
+        </div>
+        <Index each={scores}>
+          {(score) => (
+            <div
+              class={cls(
+                "star-rating",
+                (() => {
+                  const s = scoreToHighlight();
+                  if (s === null || score() > s) return;
+                  return hoveredScore() === null
+                    ? "star-rating-on"
+                    : "star-rating-hover";
+                })(),
+              )}
+              onMouseOver={() =>
+                setHoveredScore(score())}
+              onMouseOut={() => setHoveredScore(null)}
+              onClick={() => props.onRateEpisode?.(score())}
+            >
+              <a title={describeScoreEx(score())}>{score()}</a>
+            </div>
+          )}
+        </Index>
       </div>
-      <Index each={scores}>
-        {(score) => (
-          <div
-            class={cls(
-              "star-rating",
-              (() => {
-                const s = scoreToHighlight();
-                if (s === null || score() > s) return;
-                return hoveredScore() === null
-                  ? "star-rating-on"
-                  : "star-rating-hover";
-              })(),
-            )}
-            onMouseOver={() => setHoveredScore(score())}
-            onMouseOut={() => setHoveredScore(null)}
-            onClick={() => props.onRateEpisode?.(score())}
-          >
-            <a title={describeScoreEx(score())}>{score()}</a>
-          </div>
-        )}
-      </Index>
     </div>
   );
 };
