@@ -67,15 +67,6 @@ export function describeScore(score: number) {
     .find(([min, _]) => score >= min)?.[1] ?? "不忍直视";
 }
 
-export function describeScoreEx(score: Score) {
-  let description = `${describeScore(score)} ${score}`;
-  if (score === 1 || score === 10) {
-    description += " (请谨慎评价)";
-  }
-
-  return description;
-}
-
 export type EpisodeVotes = { [S in Score]?: number };
 export interface EpisodeData {
   votes: EpisodeVotes;

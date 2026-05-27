@@ -13,7 +13,7 @@ import { customElement, noShadowDOM } from "solid-element";
 
 import type { AppClient } from "../clients/app-client";
 import {
-  describeScoreEx,
+  describeScore,
   type EpisodeId,
   makeCustomElementTagName,
   type Score,
@@ -133,7 +133,7 @@ export const MyRating: Component<{
       return { requiring_auth: true };
     }
   })());
-  const [alarmText, setAlarmText] = createSignal<string | null>(null);
+  const [alarmScore, setAlarmScore] = createSignal<Score | null>(null);
 
   const epDataResp = props.scoreStore.queryEpisodeDataTracked(
     props.subjectId,
@@ -195,7 +195,10 @@ export const MyRating: Component<{
         <Match when={status().normal}>
           {(data) => (
             <>
-              <Header displayMode={props.displayMode} alarmText={alarmText()} />
+              <Header
+                displayMode={props.displayMode}
+                alarmScore={alarmScore()}
+              />
               <Stars
                 ratedScore={data().ratedScore}
                 onRateEpisode={(score) =>
@@ -204,9 +207,7 @@ export const MyRating: Component<{
                     props.episodeId,
                     { score },
                   )}
-                setAlarmScore={(s) => {
-                  setAlarmText(s && describeScoreEx(s!));
-                }}
+                setAlarmScore={setAlarmScore}
               />
             </>
           )}
@@ -258,14 +259,18 @@ export const MyRating: Component<{
 
 const Header: Component<{
   displayMode: DisplayMode;
-  alarmText?: string | null;
+  alarmScore?: Score | null;
 }> = (props) => {
+  const alarmText = createMemo(() =>
+    props.alarmScore && describeScoreEx(props.alarmScore)
+  );
+
   return (
     <Show when={props.displayMode === "normal"}>
       <p style="font-size: 12px;">
         我的评价:{" "}
-        <Show when={props.alarmText}>
-          <span class="alarm">{props.alarmText}</span>
+        <Show when={alarmText()}>
+          {(alarmText) => <span class="alarm">{alarmText()}</span>}
         </Show>
       </p>
     </Show>
@@ -337,3 +342,12 @@ const Stars: Component<{
     </div>
   );
 };
+
+function describeScoreEx(score: Score) {
+  let description = `${describeScore(score)} ${score}`;
+  if (score === 1 || score === 10) {
+    description += " (请谨慎评价) ";
+  }
+
+  return description;
+}
