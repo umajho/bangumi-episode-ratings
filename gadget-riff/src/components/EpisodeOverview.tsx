@@ -13,19 +13,29 @@ import { cls } from "../utils/cls";
 import { Scoreboard } from "./Scoreboard";
 import { ScoreChart } from "./ScoreChart";
 import type { SettingsStore } from "../stores/persistent-stores/settings-store";
+import { MyRating } from "./MyRating";
+import type { AppClient } from "../clients/app-client";
+import type { AuthStore } from "../stores/persistent-stores/auth-store";
+import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
 
 const TAG_NAME = makeCustomElementTagName("episode-overview");
 
 export function createEpisodeOverviewInstance(opts: {
   settingsStore: SettingsStore;
+  appClient: AppClient;
+  authStore: AuthStore;
   scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
 
   subjectId: SubjectId;
   episodeId: EpisodeId;
 }) {
   registerEpisodeOverview({
     settingsStore: opts.settingsStore,
+    appClient: opts.appClient,
+    authStore: opts.authStore,
     scoreStore: opts.scoreStore,
+    revealedEpisodesStore: opts.revealedEpisodesStore,
   });
   const el = document.createElement(TAG_NAME);
   el.setAttribute("subject-id", String(opts.subjectId));
@@ -38,7 +48,10 @@ let elementConstructor: CustomElementConstructor | null = null;
 
 function registerEpisodeOverview(opts: {
   settingsStore: SettingsStore;
+  appClient: AppClient;
+  authStore: AuthStore;
   scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
 }) {
   elementConstructor ??= customElement(TAG_NAME, {
     subjectId: null,
@@ -53,7 +66,10 @@ function registerEpisodeOverview(opts: {
       >
         <EpisodeOverviewWrapped
           settingsStore={opts.settingsStore}
+          appClient={opts.appClient}
+          authStore={opts.authStore}
           scoreStore={opts.scoreStore}
+          revealedEpisodesStore={opts.revealedEpisodesStore}
           subjectId={props.subjectId!}
           episodeId={props.episodeId!}
         />
@@ -64,7 +80,11 @@ function registerEpisodeOverview(opts: {
 
 const EpisodeOverviewWrapped: Component<{
   settingsStore: SettingsStore;
+  appClient: AppClient;
+  authStore: AuthStore;
   scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
+
   subjectId: SubjectId;
   episodeId: EpisodeId;
 }> = (props) => {
@@ -87,6 +107,12 @@ const EpisodeOverviewWrapped: Component<{
           {(data) => (
             <EpisodeOverview
               settingsStore={props.settingsStore}
+              appClient={props.appClient}
+              authStore={props.authStore}
+              scoreStore={props.scoreStore}
+              revealedEpisodesStore={props.revealedEpisodesStore}
+              subjectId={props.subjectId}
+              episodeId={props.episodeId}
               data={data()}
             />
           )}
@@ -98,6 +124,14 @@ const EpisodeOverviewWrapped: Component<{
 
 const EpisodeOverview: Component<{
   settingsStore: SettingsStore;
+  appClient: AppClient;
+  authStore: AuthStore;
+  scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
+
+  subjectId: SubjectId;
+  episodeId: EpisodeId;
+
   data: EpisodeData;
 }> = (props) => {
   const styleSetting = props.settingsStore.getEpisodePageOverviewStyleSignal();
@@ -108,33 +142,74 @@ const EpisodeOverview: Component<{
         <div id="panelInterestWrapper">
           <div class="SidePanel png_bg">
             <h2>单集评分</h2>
-            <EpisodeOverviewInner data={props.data} />
+            <EpisodeOverviewInner
+              appClient={props.appClient}
+              authStore={props.authStore}
+              scoreStore={props.scoreStore}
+              revealedEpisodesStore={props.revealedEpisodesStore}
+              subjectId={props.subjectId}
+              episodeId={props.episodeId}
+              data={props.data}
+            />
           </div>
         </div>
       </Match>
       <Match when={styleSetting() === "compact"}>
-        <EpisodeOverviewInner data={props.data} />
+        <EpisodeOverviewInner
+          appClient={props.appClient}
+          authStore={props.authStore}
+          scoreStore={props.scoreStore}
+          revealedEpisodesStore={props.revealedEpisodesStore}
+          subjectId={props.subjectId}
+          episodeId={props.episodeId}
+          data={props.data}
+        />
       </Match>
     </Switch>
   );
 };
 
-const EpisodeOverviewInner: Component<{ data: EpisodeData }> = (props) => {
+const EpisodeOverviewInner: Component<{
+  appClient: AppClient;
+  authStore: AuthStore;
+  scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
+
+  subjectId: SubjectId;
+  episodeId: EpisodeId;
+
+  data: EpisodeData;
+}> = (props) => {
   const epComputed = epDataHelpers.createComputedFromData(() => props.data);
 
   return (
-    <div {...{ rel: "v:rating" }}>
-      <div
-        class={cls(
-          "global_rating",
-          `score${Math.round(epComputed.averageScore())}`,
-        )}
-      >
-        <div class="rateEmo" />
-        <Scoreboard episodeComputed={epComputed} />
+    <>
+      <MyRating
+        displayMode="normal"
+        noFloat={true}
+        appClient={props.appClient}
+        authStore={props.authStore}
+        scoreStore={props.scoreStore}
+        revealedEpisodesStore={props.revealedEpisodesStore}
+        subjectId={props.subjectId}
+        episodeId={props.episodeId}
+        isPrimary={true}
+      />
+      {/* <br class="board" /> */}
+      <hr class="board" />
+      <div {...{ rel: "v:rating" }}>
+        <div
+          class={cls(
+            "global_rating",
+            `score${Math.round(epComputed.averageScore())}`,
+          )}
+        >
+          <div class="rateEmo" />
+          <Scoreboard episodeComputed={epComputed} />
+        </div>
+        <div class="clear" />
+        <ScoreChart episodeComputed={epComputed} />
       </div>
-      <div class="clear" />
-      <ScoreChart episodeComputed={epComputed} />
-    </div>
+    </>
   );
 };

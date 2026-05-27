@@ -33,6 +33,7 @@ type DisplayMode = "normal" | "inline_compact";
 
 export function createMyRatingInstance(opts: {
   displayMode?: DisplayMode;
+  noFloat?: boolean;
 
   appClient: AppClient;
   authStore: AuthStore;
@@ -53,6 +54,9 @@ export function createMyRatingInstance(opts: {
   if (opts.displayMode) {
     el.setAttribute("display-mode", opts.displayMode);
   }
+  if (opts.noFloat) {
+    el.setAttribute("no-float", "1");
+  }
   el.setAttribute("subject-id", String(opts.subjectId));
   el.setAttribute("episode-id", String(opts.episodeId));
   if (opts.isPrimary) {
@@ -72,6 +76,7 @@ function registerMyRating(opts: {
 }) {
   elementConstructor ??= customElement(TAG_NAME, {
     displayMode: null,
+    noFloat: null,
     episodeId: null,
     subjectId: null,
     isPrimary: null,
@@ -85,6 +90,7 @@ function registerMyRating(opts: {
       >
         <MyRating
           displayMode={props.displayMode ?? "normal"}
+          noFloat={!!props.noFloat}
           appClient={opts.appClient}
           authStore={opts.authStore}
           scoreStore={opts.scoreStore}
@@ -107,8 +113,9 @@ type Status = {
   requiring_fetch?: true;
 };
 
-const MyRating: Component<{
+export const MyRating: Component<{
   displayMode: DisplayMode;
+  noFloat: boolean;
 
   appClient: AppClient;
   authStore: AuthStore;
@@ -179,7 +186,7 @@ const MyRating: Component<{
     <div
       style={{
         ...(props.displayMode === "normal"
-          ? { float: "right", display: "flex" }
+          ? { ...(props.noFloat ? {} : { float: "right" }), display: "flex" }
           : { display: "inline-flex" }),
         "flex-direction": "column",
       }}

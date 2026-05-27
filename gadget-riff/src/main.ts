@@ -103,7 +103,10 @@ async function main() {
       if (subjectId && episodeId) {
         processEpPage({
           settingsStore,
+          appClient,
+          authStore,
           scoreStore,
+          revealedEpisodesStore,
           subjectId,
           episodeId,
         });
