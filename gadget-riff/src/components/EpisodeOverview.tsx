@@ -127,7 +127,7 @@ const EpisodeOverviewInner: Component<{ data: EpisodeData }> = (props) => {
       <div
         class={cls(
           "global_rating",
-          `score_${Math.round(epComputed.averageScore())}`,
+          `score${Math.round(epComputed.averageScore())}`,
         )}
       >
         <div class="rateEmo" />
