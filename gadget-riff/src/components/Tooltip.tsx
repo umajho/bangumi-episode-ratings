@@ -11,6 +11,7 @@ export const Tooltip: Component<{
       class="tooltip fade top in"
       role="tooltip"
       style={{
+        width: "max-content",
         ...props.style,
         ...(props.left !== undefined ? { left: `${props.left}px` } : {}),
         ...(props.top !== undefined ? { top: `${props.top}px` } : {}),
