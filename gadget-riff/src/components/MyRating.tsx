@@ -26,6 +26,7 @@ import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import { PleaseDoAuth, PleaseDoRefetch } from "./PleaseDoAuth";
 import { cls } from "../utils/cls";
 import { ErrorMessageWithRetry } from "./errors";
+import { Tooltip } from "./Tooltip";
 
 const TAG_NAME = makeCustomElementTagName("my-rating");
 
@@ -262,7 +263,7 @@ const Header: Component<{
   alarmScore?: Score | null;
 }> = (props) => {
   const alarmText = createMemo(() =>
-    props.alarmScore && describeScoreEx(props.alarmScore)
+    props.alarmScore && describeScore(props.alarmScore)
   );
 
   return (
@@ -282,6 +283,9 @@ const Stars: Component<{
   onRateEpisode?: (score: Score | null) => void;
   setAlarmScore?: (score: Score | null) => void;
 }> = (props) => {
+  // oxlint-disable-next-line no-unassigned-vars
+  let ref!: HTMLDivElement;
+
   const [hoveredScore, setHoveredScore] = //
     createSignal<Score | null | "cancel">(null);
   createEffect(() => {
@@ -300,8 +304,17 @@ const Stars: Component<{
     return score ?? props.ratedScore;
   });
 
+  const [extremeStarLeft, setExtremeStarLeft] = //
+    createSignal<number | null>(null);
+
   return (
-    <div style={props.onRateEpisode ? undefined : { cursor: "not-allowed" }}>
+    <div
+      ref={ref}
+      style={{
+        position: "relative",
+        ...props.onRateEpisode ? undefined : { cursor: "not-allowed" },
+      }}
+    >
       <div
         style={props.onRateEpisode
           ? undefined
@@ -309,8 +322,7 @@ const Stars: Component<{
       >
         <div
           class="rating-cancel"
-          onMouseOver={() =>
-            setHoveredScore("cancel")}
+          onMouseOver={() => setHoveredScore("cancel")}
           onMouseOut={() => setHoveredScore(null)}
           onClick={() => props.onRateEpisode?.(null)}
         >
@@ -329,9 +341,17 @@ const Stars: Component<{
                     : "star-rating-hover";
                 })(),
               )}
-              onMouseOver={() =>
-                setHoveredScore(score())}
-              onMouseOut={() => setHoveredScore(null)}
+              onMouseOver={(ev) => {
+                setHoveredScore(score());
+                if (score() === 1 || score() === 10) {
+                  const rect = ev.currentTarget.getBoundingClientRect();
+                  setExtremeStarLeft(rect.left + rect.width / 2);
+                }
+              }}
+              onMouseOut={() => {
+                setHoveredScore(null);
+                setExtremeStarLeft(null);
+              }}
               onClick={() => props.onRateEpisode?.(score())}
             >
               <a title={describeScoreEx(score())}>{score()}</a>
@@ -339,6 +359,18 @@ const Stars: Component<{
           )}
         </Index>
       </div>
+      <Show when={extremeStarLeft()}>
+        {(left) => (
+          <Tooltip
+            pos="bottom"
+            style={{ transform: "translateX(-50%)" }}
+            left={left() - ref.getBoundingClientRect().left}
+            top={17}
+          >
+            请谨慎评价
+          </Tooltip>
+        )}
+      </Show>
     </div>
   );
 };
