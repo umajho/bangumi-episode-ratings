@@ -139,7 +139,7 @@ const EpisodeOverview: Component<{
   return (
     <Switch>
       <Match when={styleSetting() === "boxed"}>
-        <div id="panelInterestWrapper">
+        <div id="panelInterestWrapper" style={{ width: "fit-content" }}>
           <div class="SidePanel png_bg">
             <h2>单集评分</h2>
             <EpisodeOverviewInner
@@ -187,6 +187,7 @@ const EpisodeOverviewInner: Component<{
       <MyRating
         displayMode="normal"
         noFloat={true}
+        shouldEnableVisibilityControl={true}
         appClient={props.appClient}
         authStore={props.authStore}
         scoreStore={props.scoreStore}
