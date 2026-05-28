@@ -470,8 +470,7 @@ const TimelineItemRateEpisode: Component<{
 }> = (props) => {
   return (
     <span class="info clearit">
-      <L href={`/user/${props.user.textId}`}>{props.user.name}</L>
-      为剧集{" "}
+      <L href={`/user/${props.user.textId}`}>{props.user.name}</L> 为剧集{" "}
       <Show
         when={props.episodeTitle}
         fallback={
