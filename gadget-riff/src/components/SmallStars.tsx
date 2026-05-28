@@ -1,4 +1,4 @@
-import type { Component } from "solid-js";
+import { type Component, Show } from "solid-js";
 import { customElement, noShadowDOM } from "solid-element";
 
 import { cls } from "../utils/cls";
@@ -35,23 +35,27 @@ function registerSmallStars() {
 }
 
 export const SmallStars: Component<
-  { score: number; shouldShowNumber: boolean }
+  { score: number | null; shouldShowNumber: boolean }
 > = (props) => {
   return (
     <span>
       <span class="starstop-s">
-        <span
-          class={Number.isNaN(props.score) ? undefined : cls(
-            "starlight",
-            `stars${Math.round(props.score)}`,
-          )}
-        >
-        </span>
+        <Show when={props.score !== null}>
+          <span
+            class={Number.isNaN(props.score) ? undefined : cls(
+              "starlight",
+              `stars${Math.round(props.score!)}`,
+            )}
+          >
+          </span>
+        </Show>
       </span>{" "}
       {props.shouldShowNumber
         ? (
           <small class="fade">
-            {Number.isNaN(props.score) ? "--" : props.score.toFixed(4)}
+            {(props.score === null || Number.isNaN(props.score))
+              ? "--"
+              : props.score.toFixed(4)}
           </small>
         )
         : null}

@@ -4,6 +4,7 @@ import type { AppClient } from "../clients/app-client";
 import { createEpisodeOverviewInstance } from "../components/EpisodeOverview";
 import {
   type EpisodeId,
+  makeDataAttributeName,
   type Score,
   scores,
   type SubjectId,
@@ -19,6 +20,7 @@ import type {
 } from "../stores/temporary-global-stores/score-store";
 import { createClearDivElement } from "../utils/elements";
 import { createSmallStarsInstance } from "../components/SmallStars";
+import { createMyRatingInCommentInstance } from "../components/MyRatingInComment";
 
 export async function processEpPage(opts: {
   settingsStore: SettingsStore;
@@ -63,6 +65,12 @@ export async function processEpPage(opts: {
       myUserId: readonlyPageData.claimedUserId,
       userIdToTextIdMap,
     });
+
+    processMyRatingsInComments({
+      scoreStore: opts.scoreStore,
+      subjectId: opts.subjectId,
+      episodeId: opts.episodeId,
+    });
   }
 }
 
@@ -105,6 +113,51 @@ function processOtherPeoplesRatingsInCommentsOnce(opts: {
 
       const instance = createSmallStarsInstance({ score: opts.score });
       contentEl.insertAdjacentElement("beforebegin", instance.element);
+    }
+  }
+}
+
+const DATA_ATTRIBUTE_NAME_RATING_IN_COMMENT_INSTALLED = //
+  makeDataAttributeName("rating-in-comment-installed");
+
+function processMyRatingsInComments(opts: {
+  scoreStore: ScoreStore;
+  subjectId: SubjectId;
+  episodeId: EpisodeId;
+}) {
+  const myUserTextId = readonlyPageData.getClaimedUserTextIdAndName()?.textId;
+  if (!myUserTextId) return;
+
+  {
+    const oldInsertFn = chiiLib.ajax_reply.insertJsonComments;
+    chiiLib.ajax_reply.insertJsonComments = function (...args: unknown[]) {
+      oldInsertFn.apply(this, args);
+      installMyRatingsInComments(opts);
+    };
+  }
+
+  installMyRatingsInComments(opts);
+
+  function installMyRatingsInComments(opts: {
+    scoreStore: ScoreStore;
+    subjectId: SubjectId;
+    episodeId: EpisodeId;
+  }) {
+    for (
+      const el of document.querySelectorAll<HTMLDivElement>(
+        `[id^="post_"]:not(.sub_reply_collapse):not([${DATA_ATTRIBUTE_NAME_RATING_IN_COMMENT_INSTALLED}]):has(a.avatar[href$="/user/${myUserTextId}"])`,
+      )
+    ) {
+      el.setAttribute(DATA_ATTRIBUTE_NAME_RATING_IN_COMMENT_INSTALLED, "");
+
+      const contentEl = el
+        .querySelector(".inner > .reply_content,.cmt_sub_content");
+      if (!contentEl) continue;
+
+      const instance = createMyRatingInCommentInstance(opts);
+      contentEl.insertAdjacentElement("beforebegin", instance.element);
+      instance.element.insertAdjacentText("beforebegin", " ");
+      instance.element.insertAdjacentText("afterend", " ");
     }
   }
 }
