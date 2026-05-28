@@ -47,6 +47,7 @@ export const DEFAULT_API_ENTRYPOINT =
 
 export type SubjectId = number & { readonly __tag: unique symbol };
 export type EpisodeId = number & { readonly __tag: unique symbol };
+export type UserId = number & { readonly __tag: unique symbol };
 
 export const scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 export type Score = typeof scores[number];
