@@ -1,7 +1,5 @@
 import type { AppClient } from "../clients/app-client";
 import { createEpisodeOverviewInstance } from "../components/EpisodeOverview";
-// import { createScoreboardInstance } from "../components/Scoreboard";
-// import { createScoreChartInstance } from "../components/ScoreChart";
 import type { EpisodeId, SubjectId } from "../definitions";
 import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import type { SettingsStore } from "../stores/persistent-stores/settings-store";
@@ -24,20 +22,6 @@ export async function processEpPage(opts: {
   if (!columnEpAEl || !epDescEl) return;
 
   {
-    // const scoreboardInstance = createScoreboardInstance({
-    //   scoreStore: opts.scoreStore,
-    //   subjectId: opts.subjectId,
-    //   episodeId: opts.episodeId,
-    // });
-    // columnEpAEl.prepend(scoreboardInstance.element);
-
-    // const scoreChartInstance = createScoreChartInstance({
-    //   scoreStore: opts.scoreStore,
-    //   subjectId: opts.subjectId,
-    //   episodeId: opts.episodeId,
-    // });
-    // epDescEl.insertAdjacentElement("beforebegin", scoreChartInstance.element);
-
     const episodeOverviewInstance = createEpisodeOverviewInstance({
       settingsStore: opts.settingsStore,
       appClient: opts.appClient,
