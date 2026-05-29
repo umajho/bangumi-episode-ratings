@@ -38,6 +38,7 @@ export function processMusicSubjectEpSection(opts: {
 
     const myRatingInstance = createMyRatingInstance({
       displayMode: "inline_compact",
+      noFloat: true,
       appClient: opts.appClient,
       authStore: opts.authStore,
       scoreStore: opts.scoreStore,

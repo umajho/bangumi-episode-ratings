@@ -85,7 +85,7 @@ const MyRatingInComment: Component<{
         return {
           score: props.data.myRating.score,
           hint: ((v) => {
-            if (v === "unknown") throw new Error("unreachable!");
+            if (v === "unknown") return "评分可见性未知";
             return v.isVisible ? "评分公开" : "评分非公开";
           })(props.data.myRating.visibility),
         };

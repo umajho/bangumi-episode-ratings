@@ -36,6 +36,8 @@ export function createMyRatingInstance(opts: {
   displayMode?: DisplayMode;
   noFloat?: boolean;
 
+  shouldEnableVisibilityControl?: boolean;
+
   appClient: AppClient;
   authStore: AuthStore;
   scoreStore: ScoreStore;
@@ -46,6 +48,7 @@ export function createMyRatingInstance(opts: {
   isPrimary?: boolean;
 }) {
   registerMyRating({
+    shouldEnableVisibilityControl: opts.shouldEnableVisibilityControl ?? false,
     appClient: opts.appClient,
     authStore: opts.authStore,
     scoreStore: opts.scoreStore,
@@ -70,6 +73,7 @@ export function createMyRatingInstance(opts: {
 let elementConstructor: CustomElementConstructor | null = null;
 
 function registerMyRating(opts: {
+  shouldEnableVisibilityControl: boolean;
   appClient: AppClient;
   authStore: AuthStore;
   scoreStore: ScoreStore;
@@ -92,6 +96,7 @@ function registerMyRating(opts: {
         <MyRating
           displayMode={props.displayMode ?? "normal"}
           noFloat={!!props.noFloat}
+          shouldEnableVisibilityControl={opts.shouldEnableVisibilityControl}
           appClient={opts.appClient}
           authStore={opts.authStore}
           scoreStore={opts.scoreStore}
@@ -283,9 +288,8 @@ export const InnerMyRating: Component<{
   return (
     <div
       style={{
-        ...(props.displayMode === "normal"
-          ? { ...(props.noFloat ? {} : { float: "right" }), display: "flex" }
-          : { display: "inline-flex" }),
+        display: props.displayMode === "normal" ? "flex" : "inline-flex",
+        ...(props.noFloat ? {} : { float: "right" }),
         "flex-direction": "column",
       }}
     >

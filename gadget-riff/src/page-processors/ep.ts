@@ -21,6 +21,7 @@ import type {
 import { createClearDivElement } from "../utils/elements";
 import { createSmallStarsInstance } from "../components/SmallStars";
 import { createMyRatingInCommentInstance } from "../components/MyRatingInComment";
+import { createMyRatingInstance } from "../components/MyRating";
 
 export async function processEpPage(opts: {
   settingsStore: SettingsStore;
@@ -68,6 +69,15 @@ export async function processEpPage(opts: {
 
     processMyRatingsInComments({
       scoreStore: opts.scoreStore,
+      subjectId: opts.subjectId,
+      episodeId: opts.episodeId,
+    });
+
+    processReplysForm({
+      appClient: opts.appClient,
+      authStore: opts.authStore,
+      scoreStore: opts.scoreStore,
+      revealedEpisodesStore: opts.revealedEpisodesStore,
       subjectId: opts.subjectId,
       episodeId: opts.episodeId,
     });
@@ -160,6 +170,42 @@ function processMyRatingsInComments(opts: {
       instance.element.insertAdjacentText("afterend", " ");
     }
   }
+}
+
+/**
+ * 处理子评论的表单。
+ */
+function processReplysForm(opts: {
+  appClient: AppClient;
+  authStore: AuthStore;
+  scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
+  subjectId: SubjectId;
+  episodeId: EpisodeId;
+}) {
+  const oldSubReplyFn = (window as any).subReply;
+
+  (window as any).subReply = function (...args: any[]) {
+    oldSubReplyFn(...args);
+
+    const el = document.querySelector("#ReplysForm");
+    if (!el) return;
+
+    const submitButtonEl = el.querySelector("#submitBtnO");
+    if (!submitButtonEl) return;
+
+    const instance = createMyRatingInstance({
+      displayMode: "inline_compact",
+      shouldEnableVisibilityControl: true,
+      appClient: opts.appClient,
+      authStore: opts.authStore,
+      scoreStore: opts.scoreStore,
+      revealedEpisodesStore: opts.revealedEpisodesStore,
+      subjectId: opts.subjectId,
+      episodeId: opts.episodeId,
+    });
+    submitButtonEl.append(instance.element);
+  };
 }
 
 function buildUserIdToTextIdMap(): Record<UserId, string> {
