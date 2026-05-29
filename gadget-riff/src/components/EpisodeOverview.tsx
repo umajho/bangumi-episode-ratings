@@ -188,6 +188,7 @@ const EpisodeOverviewInner: Component<{
         displayMode="normal"
         noFloat={true}
         shouldEnableVisibilityControl={true}
+        prefersFetchingCompleteSubjectVotes={false}
         appClient={props.appClient}
         authStore={props.authStore}
         scoreStore={props.scoreStore}

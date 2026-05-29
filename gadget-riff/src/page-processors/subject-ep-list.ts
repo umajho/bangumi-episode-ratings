@@ -58,6 +58,7 @@ export function processSubjectEpListPage(opts: {
     }
 
     const myRatingInstance = createMyRatingInstance({
+      prefersFetchingCompleteSubjectVotes: true,
       appClient: opts.appClient,
       authStore: opts.authStore,
       scoreStore: opts.scoreStore,

@@ -37,6 +37,7 @@ export function createMyRatingInstance(opts: {
   noFloat?: boolean;
 
   shouldEnableVisibilityControl?: boolean;
+  prefersFetchingCompleteSubjectVotes: boolean;
 
   appClient: AppClient;
   authStore: AuthStore;
@@ -49,6 +50,8 @@ export function createMyRatingInstance(opts: {
 }) {
   registerMyRating({
     shouldEnableVisibilityControl: opts.shouldEnableVisibilityControl ?? false,
+    prefersFetchingCompleteSubjectVotes:
+      opts.prefersFetchingCompleteSubjectVotes,
     appClient: opts.appClient,
     authStore: opts.authStore,
     scoreStore: opts.scoreStore,
@@ -74,6 +77,7 @@ let elementConstructor: CustomElementConstructor | null = null;
 
 function registerMyRating(opts: {
   shouldEnableVisibilityControl: boolean;
+  prefersFetchingCompleteSubjectVotes: boolean;
   appClient: AppClient;
   authStore: AuthStore;
   scoreStore: ScoreStore;
@@ -97,6 +101,8 @@ function registerMyRating(opts: {
           displayMode={props.displayMode ?? "normal"}
           noFloat={!!props.noFloat}
           shouldEnableVisibilityControl={opts.shouldEnableVisibilityControl}
+          prefersFetchingCompleteSubjectVotes={opts
+            .prefersFetchingCompleteSubjectVotes}
           appClient={opts.appClient}
           authStore={opts.authStore}
           scoreStore={opts.scoreStore}
@@ -141,6 +147,7 @@ export const MyRating: Component<{
    * 都应该包含此信息。
    */
   shouldEnableVisibilityControl?: boolean;
+  prefersFetchingCompleteSubjectVotes: boolean;
 
   appClient: AppClient;
   authStore: AuthStore;
@@ -162,7 +169,10 @@ export const MyRating: Component<{
   const epDataResp = props.scoreStore.queryEpisodeDataTracked(
     props.subjectId,
     props.episodeId,
-    { prefersFetchingCompleteSubjectVotes: true },
+    {
+      prefersFetchingCompleteSubjectVotes:
+        props.prefersFetchingCompleteSubjectVotes,
+    },
   );
   createEffect(() => {
     const resp = epDataResp();
@@ -229,6 +239,8 @@ export const MyRating: Component<{
         noFloat={props.noFloat}
         shouldEnableVisibilityControl={props.shouldEnableVisibilityControl ??
           false}
+        prefersFetchingCompleteSubjectVotes={props
+          .prefersFetchingCompleteSubjectVotes}
         appClient={props.appClient}
         authStore={props.authStore}
         scoreStore={props.scoreStore}
@@ -246,6 +258,7 @@ export const InnerMyRating: Component<{
   noFloat: boolean;
 
   shouldEnableVisibilityControl: boolean;
+  prefersFetchingCompleteSubjectVotes: boolean;
 
   appClient: AppClient;
   authStore: AuthStore;
@@ -365,9 +378,14 @@ export const InnerMyRating: Component<{
         <Match when={props.status.requiring_fetch}>
           <PleaseDoRefetch
             onRequestRefetch={() =>
-              props.scoreStore.queryCompleteSubjectDataTracked(
+              props.scoreStore.queryEpisodeDataTracked(
                 props.subjectId,
-                { shouldRefetch: true },
+                props.episodeId,
+                {
+                  prefersFetchingCompleteSubjectVotes:
+                    props.prefersFetchingCompleteSubjectVotes,
+                  shouldRefetch: true,
+                },
               )}
           />
         </Match>

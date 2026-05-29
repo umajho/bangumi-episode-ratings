@@ -104,13 +104,11 @@ export function createScoreStore(opts: {
     episodeId: EpisodeId,
     innerOpts: { shouldRefetch?: boolean },
   ): Accessor<EpisodeDataResponse> {
-    if (innerOpts.shouldRefetch) throw new Error("TODO!!!");
-
     const { store } = getKnownSubject(subjectId, {
       shouldCreateEmptySubjectStores: true,
     });
 
-    if (!store.hasEpisode(episodeId)) {
+    if (innerOpts.shouldRefetch || !store.hasEpisode(episodeId)) {
       store.tryMarkEpisodeAsLoading(episodeId);
 
       (async () => {

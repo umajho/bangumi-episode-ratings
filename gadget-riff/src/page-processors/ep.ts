@@ -197,6 +197,7 @@ function processReplysForm(opts: {
     const instance = createMyRatingInstance({
       displayMode: "inline_compact",
       shouldEnableVisibilityControl: true,
+      prefersFetchingCompleteSubjectVotes: false,
       appClient: opts.appClient,
       authStore: opts.authStore,
       scoreStore: opts.scoreStore,
