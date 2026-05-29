@@ -1,10 +1,11 @@
-import { type Component, createMemo, Show } from "solid-js";
+import { type Component, createMemo, onMount, Show } from "solid-js";
 import { customElement, noShadowDOM } from "solid-element";
 
 import {
   type EpisodeData,
   type EpisodeId,
   makeCustomElementTagName,
+  makeHtmlId,
   type Score,
   type SubjectId,
 } from "../definitions";
@@ -12,16 +13,29 @@ import type { ScoreStore } from "../stores/temporary-global-stores/score-store";
 import * as epDataHelpers from "../utils/episode-data-helpers";
 import { readonlyPageData } from "../stores/readonly-page-data";
 import { SmallStars } from "./SmallStars";
+import { MyRating } from "./MyRating";
+import type { AppClient } from "../clients/app-client";
+import type { AuthStore } from "../stores/persistent-stores/auth-store";
+import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
+import { render } from "solid-js/web";
 
 const TAG_NAME = makeCustomElementTagName("my-rating-in-comment");
 
 export function createMyRatingInCommentInstance(opts: {
+  appClient: AppClient;
+  authStore: AuthStore;
   scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
 
   subjectId: SubjectId;
   episodeId: EpisodeId;
 }) {
-  registerMyRatingInComment({ scoreStore: opts.scoreStore });
+  registerMyRatingInComment({
+    appClient: opts.appClient,
+    authStore: opts.authStore,
+    scoreStore: opts.scoreStore,
+    revealedEpisodesStore: opts.revealedEpisodesStore,
+  });
   const el = document.createElement(TAG_NAME);
   el.setAttribute("subject-id", String(opts.subjectId));
   el.setAttribute("episode-id", String(opts.episodeId));
@@ -31,12 +45,48 @@ export function createMyRatingInCommentInstance(opts: {
 
 let elementConstructor: CustomElementConstructor | null = null;
 
-function registerMyRatingInComment(opts: { scoreStore: ScoreStore }) {
+const RATE_DIALOG_ID = makeHtmlId("rate-dialog");
+
+function registerMyRatingInComment(opts: {
+  appClient: AppClient;
+  authStore: AuthStore;
+  scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
+}) {
   elementConstructor ??= customElement(TAG_NAME, {
     subjectId: null,
     episodeId: null,
   }, (props) => {
     noShadowDOM();
+
+    onMount(() => {
+      if (document.getElementById(RATE_DIALOG_ID)) return;
+
+      const wrapper = document.createElement("div");
+      document.body.appendChild(wrapper);
+
+      render(() => {
+        return (
+          <dialog id={RATE_DIALOG_ID}>
+            <MyRating
+              displayMode="normal"
+              noFloat
+              shouldEnableVisibilityControl
+              prefersFetchingCompleteSubjectVotes={false}
+              appClient={opts.appClient}
+              authStore={opts.authStore}
+              scoreStore={opts.scoreStore}
+              revealedEpisodesStore={opts.revealedEpisodesStore}
+              subjectId={props.subjectId!}
+              episodeId={props.episodeId!}
+              isPrimary
+            />
+            <div style={{ height: "0.5rem" }} />
+            <button command="close" commandfor={RATE_DIALOG_ID}>关闭</button>
+          </dialog>
+        );
+      }, wrapper);
+    });
 
     return (
       <Show
@@ -117,7 +167,10 @@ const MyRatingInComment: Component<{
           />
           <Show when={scoreAndHint().hint}>
             <span class="tip_j">({scoreAndHint().hint})</span>
-          </Show>
+          </Show>{" "}
+          <button command="show-modal" commandfor={RATE_DIALOG_ID}>
+            {scoreAndHint().score !== null ? "编辑评分" : "评分"}
+          </button>
         </>
       )}
     </Show>

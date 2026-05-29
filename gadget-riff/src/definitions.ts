@@ -29,6 +29,12 @@ export function makeLocalStorageKeyName<T extends string>(
   return `${EPRT_ID_ASCII_SAFE}:${name}`;
 }
 
+export function makeHtmlId<T extends string>(
+  name: T,
+): `${typeof EPRT_ID_HTML_SAFE}-${T}` {
+  return `${EPRT_ID_HTML_SAFE}-${name}`;
+}
+
 export const GADGET_VERSION = PackageJson.version;
 
 export const LOCAL_STORAGE_KEY_SESSION_TOKEN = //

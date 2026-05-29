@@ -68,7 +68,10 @@ export async function processEpPage(opts: {
     });
 
     processMyRatingsInComments({
+      appClient: opts.appClient,
+      authStore: opts.authStore,
       scoreStore: opts.scoreStore,
+      revealedEpisodesStore: opts.revealedEpisodesStore,
       subjectId: opts.subjectId,
       episodeId: opts.episodeId,
     });
@@ -131,7 +134,10 @@ const DATA_ATTRIBUTE_NAME_RATING_IN_COMMENT_INSTALLED = //
   makeDataAttributeName("rating-in-comment-installed");
 
 function processMyRatingsInComments(opts: {
+  appClient: AppClient;
+  authStore: AuthStore;
   scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
   subjectId: SubjectId;
   episodeId: EpisodeId;
 }) {
@@ -149,7 +155,10 @@ function processMyRatingsInComments(opts: {
   installMyRatingsInComments(opts);
 
   function installMyRatingsInComments(opts: {
+    appClient: AppClient;
+    authStore: AuthStore;
     scoreStore: ScoreStore;
+    revealedEpisodesStore: RevealedEpisodesStore;
     subjectId: SubjectId;
     episodeId: EpisodeId;
   }) {
