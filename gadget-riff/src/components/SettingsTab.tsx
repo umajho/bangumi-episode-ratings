@@ -65,6 +65,9 @@ const SettingsTab: Component<
         <Match when={status().error}>
           {(error) => <ErrorMessage message={error()} />}
         </Match>
+        <Match when={true}>
+          <br />
+        </Match>
       </Switch>
 
       <div style={{ "text-align": "center" }}>
@@ -84,6 +87,10 @@ const SettingsTab: Component<
         status={status()}
       />
       <SectionTimelineTabButtonLocation
+        settingsStore={props.settingsStore}
+        status={status()}
+      />
+      <SectionEpisodePageOverviewStyle
         settingsStore={props.settingsStore}
         status={status()}
       />
@@ -309,18 +316,43 @@ const SectionTimelineTabButtonLocation: Component<{
   );
 };
 
+const SectionEpisodePageOverviewStyle: Component<{
+  settingsStore: SettingsStore;
+  status: SettingsStatus;
+}> = (props) => {
+  const optEpisodePageOverviewStyle = props.settingsStore
+    .getEpisodePageOverviewStyleSignal();
+
+  return (
+    <DisableableSection disabled={!!props.status.saving}>
+      <div class="title">章节页面概览显示风格</div>
+      <RadioGroup
+        currentValue={optEpisodePageOverviewStyle()}
+        options={props.settingsStore.getEpisodePageOverviewStyleValues()}
+        getLabel={(value) =>
+          props.settingsStore.getEpisodePageOverviewStyleValueLabelText(
+            value,
+          )}
+        setValue={(v) => props.settingsStore.updateEpisodePageOverviewStyle(v)}
+      />
+    </DisableableSection>
+  );
+};
+
 const DisableableSection: Component<{
   disabled: boolean;
   children: JSX.Element;
 }> = (props) => {
   return (
-    <div
-      class="section"
-      style={props.disabled
-        ? { filter: "grayscale(100%)", "pointer-events": "none" }
-        : undefined}
-    >
-      {props.children}
+    <div style={props.disabled ? { cursor: "not-allowed" } : undefined}>
+      <div
+        class="section"
+        style={props.disabled
+          ? { filter: "grayscale(100%)", "pointer-events": "none" }
+          : undefined}
+      >
+        {props.children}
+      </div>
     </div>
   );
 };

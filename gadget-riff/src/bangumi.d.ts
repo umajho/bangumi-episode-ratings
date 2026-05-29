@@ -1,12 +1,15 @@
 namespace chiiLib {
+  namespace ajax_reply {
+    function insertJsonComments(...args: unknown[]): void;
+  }
   namespace ukagaka {
     function addPanelTab(opts: {
       tab: string;
       label: string;
       type: "custom";
       customContent: () => unknown;
-    });
-    function showCustomizePanelWithTab(tabName: string);
+    }): void;
+    function showCustomizePanelWithTab(tabName: string): void;
   }
 }
 

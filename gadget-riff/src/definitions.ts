@@ -29,6 +29,12 @@ export function makeLocalStorageKeyName<T extends string>(
   return `${EPRT_ID_ASCII_SAFE}:${name}`;
 }
 
+export function makeHtmlId<T extends string>(
+  name: T,
+): `${typeof EPRT_ID_HTML_SAFE}-${T}` {
+  return `${EPRT_ID_HTML_SAFE}-${name}`;
+}
+
 export const GADGET_VERSION = PackageJson.version;
 
 export const LOCAL_STORAGE_KEY_SESSION_TOKEN = //
@@ -47,9 +53,11 @@ export const DEFAULT_API_ENTRYPOINT =
 
 export type SubjectId = number & { readonly __tag: unique symbol };
 export type EpisodeId = number & { readonly __tag: unique symbol };
+export type UserId = number & { readonly __tag: unique symbol };
 
 export const scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 export type Score = typeof scores[number];
+export const scoresReversed = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] as const;
 
 export function describeScore(score: number) {
   return ([
@@ -66,15 +74,6 @@ export function describeScore(score: number) {
     .find(([min, _]) => score >= min)?.[1] ?? "不忍直视";
 }
 
-export function describeScoreEx(score: Score) {
-  let description = `${describeScore(score)} ${score}`;
-  if (score === 1 || score === 10) {
-    description += " (请谨慎评价)";
-  }
-
-  return description;
-}
-
 export type EpisodeVotes = { [S in Score]?: number };
 export interface EpisodeData {
   votes: EpisodeVotes;
@@ -82,6 +81,7 @@ export interface EpisodeData {
    * `undefined` 在没有有效的身份认证令牌时，为 `undefined`。
    */
   myRating?: MyRating;
+  publicVotersByScore?: { [S in Score]?: number[] };
 }
 export interface SubjectData {
   episodes: {

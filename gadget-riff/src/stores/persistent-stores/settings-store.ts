@@ -9,6 +9,7 @@ export type SettingsStore = ReturnType<typeof createSettingsStore>;
 type SettingAntiSpoilerOption = "off" | "on-for-neither-watched-nor-rated";
 type SettingAntiSpoilerForMusicOption = "off" | "on-for-not-rated";
 type SettingTimelineTabButtonLocation = "more-dropdown" | "main-row";
+type SettingEpisodePageOverviewStyle = "boxed" | "compact";
 
 export interface SettingsStatus {
   ready?: true;
@@ -20,12 +21,14 @@ export interface Settings {
   antiSpoiler?: SettingAntiSpoilerOption;
   antiSpoilerForMusic?: SettingAntiSpoilerForMusicOption;
   timelineTabButtonLocation?: SettingTimelineTabButtonLocation;
+  episodePageOverviewStyle?: SettingEpisodePageOverviewStyle;
 }
 
 const DEFAULT_SETTINGS: Required<Settings> = {
   antiSpoiler: "on-for-neither-watched-nor-rated",
   antiSpoilerForMusic: "off",
   timelineTabButtonLocation: "more-dropdown",
+  episodePageOverviewStyle: "boxed",
 };
 
 export function createSettingsStore() {
@@ -126,6 +129,27 @@ export function createSettingsStore() {
         DEFAULT_SETTINGS.timelineTabButtonLocation;
   }
 
+  function updateEpisodePageOverviewStyle(
+    value: SettingEpisodePageOverviewStyle,
+  ) {
+    update("episodePageOverviewStyle", value);
+  }
+  function getEpisodePageOverviewStyleValues(): SettingEpisodePageOverviewStyle[] {
+    return ["boxed", "compact"];
+  }
+  function getEpisodePageOverviewStyleValueLabelText(
+    value: SettingEpisodePageOverviewStyle,
+  ): string {
+    return { "boxed": "盒装", "compact": "紧凑" }[value];
+  }
+  function getEpisodePageOverviewStyleSignal(): Accessor<
+    SettingEpisodePageOverviewStyle
+  > {
+    return () =>
+      store.episodePageOverviewStyle ??
+        DEFAULT_SETTINGS.episodePageOverviewStyle;
+  }
+
   return {
     getStatusSignal: () => status,
     updateAntiSpoiler,
@@ -140,6 +164,10 @@ export function createSettingsStore() {
     getTimelineTabButtonLocationValues,
     getTimelineTabButtonLocationValueLabelText,
     getTimelineTabButtonLocationSignal,
+    updateEpisodePageOverviewStyle,
+    getEpisodePageOverviewStyleValues,
+    getEpisodePageOverviewStyleValueLabelText,
+    getEpisodePageOverviewStyleSignal,
   };
 }
 

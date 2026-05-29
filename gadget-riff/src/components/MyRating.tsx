@@ -13,7 +13,7 @@ import { customElement, noShadowDOM } from "solid-element";
 
 import type { AppClient } from "../clients/app-client";
 import {
-  describeScoreEx,
+  describeScore,
   type EpisodeId,
   makeCustomElementTagName,
   type Score,
@@ -26,6 +26,7 @@ import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import { PleaseDoAuth, PleaseDoRefetch } from "./PleaseDoAuth";
 import { cls } from "../utils/cls";
 import { ErrorMessageWithRetry } from "./errors";
+import { Tooltip } from "./Tooltip";
 
 const TAG_NAME = makeCustomElementTagName("my-rating");
 
@@ -33,6 +34,10 @@ type DisplayMode = "normal" | "inline_compact";
 
 export function createMyRatingInstance(opts: {
   displayMode?: DisplayMode;
+  noFloat?: boolean;
+
+  shouldEnableVisibilityControl?: boolean;
+  prefersFetchingCompleteSubjectVotes: boolean;
 
   appClient: AppClient;
   authStore: AuthStore;
@@ -44,6 +49,9 @@ export function createMyRatingInstance(opts: {
   isPrimary?: boolean;
 }) {
   registerMyRating({
+    shouldEnableVisibilityControl: opts.shouldEnableVisibilityControl ?? false,
+    prefersFetchingCompleteSubjectVotes:
+      opts.prefersFetchingCompleteSubjectVotes,
     appClient: opts.appClient,
     authStore: opts.authStore,
     scoreStore: opts.scoreStore,
@@ -52,6 +60,9 @@ export function createMyRatingInstance(opts: {
   const el = document.createElement(TAG_NAME);
   if (opts.displayMode) {
     el.setAttribute("display-mode", opts.displayMode);
+  }
+  if (opts.noFloat) {
+    el.setAttribute("no-float", "1");
   }
   el.setAttribute("subject-id", String(opts.subjectId));
   el.setAttribute("episode-id", String(opts.episodeId));
@@ -65,6 +76,8 @@ export function createMyRatingInstance(opts: {
 let elementConstructor: CustomElementConstructor | null = null;
 
 function registerMyRating(opts: {
+  shouldEnableVisibilityControl: boolean;
+  prefersFetchingCompleteSubjectVotes: boolean;
   appClient: AppClient;
   authStore: AuthStore;
   scoreStore: ScoreStore;
@@ -72,6 +85,7 @@ function registerMyRating(opts: {
 }) {
   elementConstructor ??= customElement(TAG_NAME, {
     displayMode: null,
+    noFloat: null,
     episodeId: null,
     subjectId: null,
     isPrimary: null,
@@ -85,6 +99,10 @@ function registerMyRating(opts: {
       >
         <MyRating
           displayMode={props.displayMode ?? "normal"}
+          noFloat={!!props.noFloat}
+          shouldEnableVisibilityControl={opts.shouldEnableVisibilityControl}
+          prefersFetchingCompleteSubjectVotes={opts
+            .prefersFetchingCompleteSubjectVotes}
           appClient={opts.appClient}
           authStore={opts.authStore}
           scoreStore={opts.scoreStore}
@@ -99,16 +117,37 @@ function registerMyRating(opts: {
 }
 
 type Status = {
-  normal?: { ratedScore: Score | null };
-  processing?: { ratedScore: Score | null };
+  normal?: Data;
+  processing?: Data;
   loading?: true;
   error?: string;
   requiring_auth?: true;
   requiring_fetch?: true;
 };
+interface Data {
+  ratedScore: Score | null;
+  visibility: boolean | null;
+}
 
-const MyRating: Component<{
+function convertVisibility(
+  vis: { isVisible: boolean } | "unknown" | undefined,
+): boolean | null {
+  if (vis === "unknown" || vis === undefined) return null;
+  return vis.isVisible;
+}
+
+export const MyRating: Component<{
   displayMode: DisplayMode;
+  noFloat: boolean;
+
+  /**
+   * TODO: 未来应该常为 `true`。（即应去掉这个选项。）
+   *
+   * 现在需要这个是因为只有章节的 API 的返回内容包含了可见性的信息，未来所有 API
+   * 都应该包含此信息。
+   */
+  shouldEnableVisibilityControl?: boolean;
+  prefersFetchingCompleteSubjectVotes: boolean;
 
   appClient: AppClient;
   authStore: AuthStore;
@@ -126,12 +165,14 @@ const MyRating: Component<{
       return { requiring_auth: true };
     }
   })());
-  const [alarmText, setAlarmText] = createSignal<string | null>(null);
 
   const epDataResp = props.scoreStore.queryEpisodeDataTracked(
     props.subjectId,
     props.episodeId,
-    { prefersFetchingCompleteSubjectVotes: true },
+    {
+      prefersFetchingCompleteSubjectVotes:
+        props.prefersFetchingCompleteSubjectVotes,
+    },
   );
   createEffect(() => {
     const resp = epDataResp();
@@ -139,7 +180,12 @@ const MyRating: Component<{
       case "ok": {
         const epData = resp[1];
         if (epData.myRating) {
-          setStatus({ normal: { ratedScore: epData.myRating.score ?? null } });
+          setStatus({
+            normal: {
+              ratedScore: epData.myRating.score ?? null,
+              visibility: convertVisibility(epData.myRating.visibility),
+            },
+          });
         } else {
           setStatus(
             props.authStore.statusUnion().withSessionToken
@@ -159,7 +205,12 @@ const MyRating: Component<{
       }
       case "processing": {
         setStatus({
-          processing: { ratedScore: resp[1].oldData?.myRating?.score ?? null },
+          processing: {
+            ratedScore: resp[1].oldData?.myRating?.score ?? null,
+            visibility: convertVisibility(
+              resp[1].oldData?.myRating?.visibility,
+            ),
+          },
         });
         break;
       }
@@ -176,96 +227,200 @@ const MyRating: Component<{
   }, { defer: true }));
 
   return (
+    <Show
+      when={props.isPrimary ||
+        ((status) =>
+          !status.loading && !status.requiring_auth && !status.requiring_fetch)(
+            status(),
+          )}
+    >
+      <InnerMyRating
+        displayMode={props.displayMode}
+        noFloat={props.noFloat}
+        shouldEnableVisibilityControl={props.shouldEnableVisibilityControl ??
+          false}
+        prefersFetchingCompleteSubjectVotes={props
+          .prefersFetchingCompleteSubjectVotes}
+        appClient={props.appClient}
+        authStore={props.authStore}
+        scoreStore={props.scoreStore}
+        revealedEpisodesStore={props.revealedEpisodesStore}
+        subjectId={props.subjectId}
+        episodeId={props.episodeId}
+        status={status()}
+      />
+    </Show>
+  );
+};
+
+export const InnerMyRating: Component<{
+  displayMode: DisplayMode;
+  noFloat: boolean;
+
+  shouldEnableVisibilityControl: boolean;
+  prefersFetchingCompleteSubjectVotes: boolean;
+
+  appClient: AppClient;
+  authStore: AuthStore;
+  scoreStore: ScoreStore;
+  revealedEpisodesStore: RevealedEpisodesStore;
+
+  subjectId: SubjectId;
+  episodeId: EpisodeId;
+  status: Status;
+}> = (props) => {
+  const [alarmScore, setAlarmScore] = createSignal<Score | null>(null);
+
+  const data = createMemo(() => {
+    if (props.status.normal) return props.status.normal;
+    if (props.status.processing) return props.status.processing;
+    return null;
+  });
+
+  const knownIsVisible = createMemo((): boolean | null => {
+    if (!props.shouldEnableVisibilityControl) return null;
+    return data()?.visibility ?? null;
+  });
+
+  function updateMyScore(score: Score | null) {
+    props.scoreStore.updateMyRating(
+      props.subjectId,
+      props.episodeId,
+      { score },
+    );
+  }
+
+  function updateMyVisibility(isVisible: boolean) {
+    props.scoreStore.updateMyRating(
+      props.subjectId,
+      props.episodeId,
+      { visibility: { isVisible } },
+    );
+  }
+
+  return (
     <div
       style={{
-        ...(props.displayMode === "normal"
-          ? { float: "right", display: "flex" }
-          : { display: "inline-flex" }),
+        display: props.displayMode === "normal" ? "flex" : "inline-flex",
+        ...(props.noFloat ? {} : { float: "right" }),
         "flex-direction": "column",
       }}
     >
+      <Show when={props.displayMode === "normal"}>
+        <div
+          style={{
+            display: "flex",
+            "justify-content": "space-between",
+            // 防止 `VisibilityControl` 与 `Stars` 离得太近。
+            "padding-bottom": "0.5rem",
+          }}
+        >
+          <Header alarmScore={alarmScore()} />
+          <Show when={knownIsVisible() !== null}>
+            <VisibilityControl
+              isVisible={knownIsVisible()!}
+              setIsVisible={updateMyVisibility}
+            />
+          </Show>
+        </div>
+      </Show>
       <Switch>
-        <Match when={status().normal}>
+        <Match when={props.status.normal}>
           {(data) => (
-            <>
-              <Header displayMode={props.displayMode} alarmText={alarmText()} />
+            <div style={{ display: "flex" }}>
               <Stars
                 ratedScore={data().ratedScore}
-                onRateEpisode={(score) =>
-                  props.scoreStore.updateMyRating(
-                    props.subjectId,
-                    props.episodeId,
-                    { score },
-                  )}
-                setAlarmScore={(s) => {
-                  setAlarmText(s && describeScoreEx(s!));
-                }}
+                onRateEpisode={updateMyScore}
+                setAlarmScore={setAlarmScore}
               />
-            </>
+              <Show
+                when={props.displayMode === "inline_compact" &&
+                  knownIsVisible() !== null}
+              >
+                <VisibilityControl
+                  isVisible={knownIsVisible()!}
+                  setIsVisible={updateMyVisibility}
+                />
+              </Show>
+            </div>
           )}
         </Match>
-        <Match when={status().processing}>
+        <Match when={props.status.processing}>
           {(data) => (
             <>
-              <Header displayMode={props.displayMode} />
-              <div
-                style={{ filter: "grayscale(100%)", "pointer-events": "none" }}
-              >
+              <div style={{ display: "flex" }}>
                 <Stars ratedScore={data().ratedScore} />
+                <Show
+                  when={props.displayMode === "inline_compact" &&
+                    knownIsVisible() !== null}
+                >
+                  <VisibilityControl isVisible={knownIsVisible()!} />
+                </Show>
               </div>
               <div style={{ color: "gray" }}>处理中…</div>
             </>
           )}
         </Match>
-        <Match when={status().loading}>
-          <Header displayMode={props.displayMode} />
+        <Match when={props.status.loading}>
           <div style={{ color: "gray" }}>加载中…</div>
         </Match>
-        <Match when={status().error}>
-          <Header displayMode={props.displayMode} />
+        <Match when={props.status.error}>
           <ErrorMessageWithRetry
-            message={status().error!}
+            message={props.status.error!}
             onRetry={() => {
               throw new Error("TODO");
             }}
           />
         </Match>
-        <Match when={status().requiring_auth}>
-          <Show when={props.isPrimary}>
-            <Header displayMode={props.displayMode} />
-            <PleaseDoAuth authStore={props.authStore} shorter />
-          </Show>
+        <Match when={props.status.requiring_auth}>
+          <PleaseDoAuth authStore={props.authStore} shorter />
         </Match>
-        <Match when={status().requiring_fetch}>
-          <Show when={props.isPrimary}>
-            <Header displayMode={props.displayMode} />
-            <PleaseDoRefetch
-              onRequestRefetch={() =>
-                props.scoreStore.queryCompleteSubjectDataTracked(
-                  props.subjectId,
-                  { shouldRefetch: true },
-                )}
-            />
-          </Show>
+        <Match when={props.status.requiring_fetch}>
+          <PleaseDoRefetch
+            onRequestRefetch={() =>
+              props.scoreStore.queryEpisodeDataTracked(
+                props.subjectId,
+                props.episodeId,
+                {
+                  prefersFetchingCompleteSubjectVotes:
+                    props.prefersFetchingCompleteSubjectVotes,
+                  shouldRefetch: true,
+                },
+              )}
+          />
         </Match>
       </Switch>
     </div>
   );
 };
 
-const Header: Component<{
-  displayMode: DisplayMode;
-  alarmText?: string | null;
+const Header: Component<{ alarmScore?: Score | null }> = (props) => {
+  const alarmText = createMemo(() =>
+    props.alarmScore && describeScore(props.alarmScore)
+  );
+
+  return (
+    <p style="font-size: 12px;">
+      我的评价:{" "}
+      <Show when={alarmText()}>
+        {(alarmText) => <span class="alarm">{alarmText()}</span>}
+      </Show>
+    </p>
+  );
+};
+
+const VisibilityControl: Component<{
+  isVisible: boolean;
+  setIsVisible?: (value: boolean) => void;
 }> = (props) => {
   return (
-    <Show when={props.displayMode === "normal"}>
-      <p style="font-size: 12px;">
-        我的评价:{" "}
-        <Show when={props.alarmText}>
-          <span class="alarm">{props.alarmText}</span>
-        </Show>
-      </p>
-    </Show>
+    <select
+      value={props.isVisible ? "public" : "private"}
+      onInput={(e) => props.setIsVisible?.(e.currentTarget.value === "public")}
+    >
+      <option value="public">公开</option>
+      <option value="private">不公开</option>
+    </select>
   );
 };
 
@@ -274,6 +429,9 @@ const Stars: Component<{
   onRateEpisode?: (score: Score | null) => void;
   setAlarmScore?: (score: Score | null) => void;
 }> = (props) => {
+  // oxlint-disable-next-line no-unassigned-vars
+  let ref!: HTMLDivElement;
+
   const [hoveredScore, setHoveredScore] = //
     createSignal<Score | null | "cancel">(null);
   createEffect(() => {
@@ -292,37 +450,82 @@ const Stars: Component<{
     return score ?? props.ratedScore;
   });
 
+  const [extremeStarLeft, setExtremeStarLeft] = //
+    createSignal<number | null>(null);
+
   return (
-    <div>
+    <div
+      ref={ref}
+      style={{
+        position: "relative",
+        ...props.onRateEpisode ? undefined : { cursor: "not-allowed" },
+      }}
+    >
       <div
-        class="rating-cancel"
-        onMouseOver={() => setHoveredScore("cancel")}
-        onMouseOut={() => setHoveredScore(null)}
-        onClick={() => props.onRateEpisode?.(null)}
+        style={props.onRateEpisode
+          ? undefined
+          : { filter: "grayscale(100%)", "pointer-events": "none" }}
       >
-        <a title="Cancel Rating" />
+        <div
+          class="rating-cancel"
+          onMouseOver={() => setHoveredScore("cancel")}
+          onMouseOut={() => setHoveredScore(null)}
+          onClick={() => props.onRateEpisode?.(null)}
+        >
+          <a title="Cancel Rating" />
+        </div>
+        <Index each={scores}>
+          {(score) => (
+            <div
+              class={cls(
+                "star-rating",
+                (() => {
+                  const s = scoreToHighlight();
+                  if (s === null || score() > s) return;
+                  return hoveredScore() === null
+                    ? "star-rating-on"
+                    : "star-rating-hover";
+                })(),
+              )}
+              onMouseOver={(ev) => {
+                setHoveredScore(score());
+                if (score() === 1 || score() === 10) {
+                  const rect = ev.currentTarget.getBoundingClientRect();
+                  setExtremeStarLeft(rect.left + rect.width / 2);
+                }
+              }}
+              onMouseOut={() => {
+                setHoveredScore(null);
+                setExtremeStarLeft(null);
+              }}
+              onClick={() => props.onRateEpisode?.(score())}
+            >
+              <a title={describeScoreEx(score())}>{score()}</a>
+            </div>
+          )}
+        </Index>
       </div>
-      <Index each={scores}>
-        {(score) => (
-          <div
-            class={cls(
-              "star-rating",
-              (() => {
-                const s = scoreToHighlight();
-                if (s === null || score() > s) return;
-                return hoveredScore() === null
-                  ? "star-rating-on"
-                  : "star-rating-hover";
-              })(),
-            )}
-            onMouseOver={() => setHoveredScore(score())}
-            onMouseOut={() => setHoveredScore(null)}
-            onClick={() => props.onRateEpisode?.(score())}
+      <Show when={extremeStarLeft()}>
+        {(left) => (
+          <Tooltip
+            pos="bottom"
+            style={{ transform: "translateX(-50%)" }}
+            left={left() - ref.getBoundingClientRect().left}
+            top={17}
           >
-            <a title={describeScoreEx(score())}>{score()}</a>
-          </div>
+            请谨慎评价
+          </Tooltip>
         )}
-      </Index>
+      </Show>
     </div>
   );
 };
+
+function describeScoreEx(score: Score) {
+  let description = `${describeScore(score)} ${score}`;
+  if (score === 1 || score === 10) {
+    description += " (请谨慎评价) ";
+  }
+
+  return description;
+}

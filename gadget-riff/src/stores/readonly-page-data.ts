@@ -1,12 +1,12 @@
-import type { SubjectId } from "../definitions";
+import type { EpisodeId, SubjectId, UserId } from "../definitions";
 
 export const readonlyPageData = {
   get appId(): string {
     return CHII_APP_ID;
   },
 
-  get claimedUserId(): number | null {
-    return window.CHOBITS_UID ?? null;
+  get claimedUserId(): UserId | null {
+    return window.CHOBITS_UID as UserId ?? null;
   },
 
   getClaimedUserTextIdAndName(): { textId: string; name: string } | null {
@@ -36,6 +36,14 @@ export const readonlyPageData = {
       }
     }
 
+    return null;
+  },
+
+  get episodeId(): EpisodeId | null {
+    const pathParts = window.location.pathname.split("/").slice(1);
+    if (pathParts[0] === "ep" && pathParts.length >= 2) {
+      return Number(pathParts[1]) as EpisodeId;
+    }
     return null;
   },
 

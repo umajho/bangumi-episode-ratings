@@ -12,6 +12,7 @@ import {
   LEGACY_SEARCH_PARAMS_KEY_TOKEN_COUPON,
   // LOCAL_STORAGE_KEY_SESSION_TOKEN,
 } from "./definitions";
+import { processEpPage } from "./page-processors/ep";
 import { processRootPage } from "./page-processors/root";
 import { processSubjectPage } from "./page-processors/subject";
 import { processSubjectEpListPage } from "./page-processors/subject-ep-list";
@@ -97,7 +98,19 @@ async function main() {
       break;
     }
     case "ep": {
-      // TODO
+      const subjectId = readonlyPageData.subjectId;
+      const episodeId = readonlyPageData.episodeId;
+      if (subjectId && episodeId) {
+        processEpPage({
+          settingsStore,
+          appClient,
+          authStore,
+          scoreStore,
+          revealedEpisodesStore,
+          subjectId,
+          episodeId,
+        });
+      }
       break;
     }
     default:
