@@ -117,7 +117,7 @@ function processOtherPeoplesRatingsInCommentsOnce(opts: {
   }) {
     for (
       const el of document.querySelectorAll<HTMLDivElement>(
-        `[id^="post_"][data-item-user="${opts.userTextId}"]`,
+        `[id^="post_"][data-item-user="${opts.userTextId}"]:not(.reply_collapse,.sub_reply_collapse)`,
       )
     ) {
       const contentEl = el
