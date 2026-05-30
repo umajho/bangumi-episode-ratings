@@ -13,6 +13,18 @@ export function createIsLoading(
   return () => dataResp()[0] === "loading";
 }
 
+export function createError(
+  dataResp: Accessor<EpisodeDataResponse>,
+): Accessor<{ message: string } | null> {
+  return createMemo(on(dataResp, (dataResp) => {
+    if (dataResp[0] === "error") {
+      return { message: dataResp[2] };
+    } else {
+      return null;
+    }
+  }));
+}
+
 export function createData(
   dataResp: Accessor<EpisodeDataResponse>,
 ): Accessor<EpisodeData | undefined> {
@@ -23,6 +35,10 @@ export function createData(
       case "loading":
       case "processing":
         return dataResp[1]?.oldData;
+      case "error":
+        return undefined;
+      default:
+        dataResp satisfies never;
     }
   }));
 }

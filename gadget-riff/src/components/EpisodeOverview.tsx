@@ -17,6 +17,7 @@ import { MyRating } from "./MyRating";
 import type { AppClient } from "../clients/app-client";
 import type { AuthStore } from "../stores/persistent-stores/auth-store";
 import type { RevealedEpisodesStore } from "../stores/temporary-global-stores/revealed-episodes-store";
+import { ErrorMessageWithRetry } from "./errors";
 
 const TAG_NAME = makeCustomElementTagName("episode-overview");
 
@@ -88,22 +89,41 @@ const EpisodeOverviewWrapped: Component<{
   subjectId: SubjectId;
   episodeId: EpisodeId;
 }> = (props) => {
-  const dataResp = props.scoreStore.queryEpisodeDataTracked(
-    props.subjectId,
-    props.episodeId,
-    { prefersFetchingCompleteSubjectVotes: false },
-  );
+  function queryEpisodeDataTracked(opts: { shouldRefetch: boolean }) {
+    return props.scoreStore.queryEpisodeDataTracked(
+      props.subjectId,
+      props.episodeId,
+      {
+        prefersFetchingCompleteSubjectVotes: false,
+        shouldRefetch: opts.shouldRefetch,
+      },
+    );
+  }
+  function refetchEpisodeData() {
+    queryEpisodeDataTracked({ shouldRefetch: true });
+  }
+
+  const dataResp = queryEpisodeDataTracked({ shouldRefetch: false });
 
   const isLoading = epDataHelpers.createIsLoading(dataResp);
+  const error = epDataHelpers.createError(dataResp);
   const data = epDataHelpers.createData(dataResp);
 
   return (
     <div style="float: right;">
-      <Show
-        when={!isLoading()}
-        fallback={<div style="color: grey">单集评分加载中…</div>}
-      >
-        <Show when={data()}>
+      <Switch>
+        <Match when={isLoading()}>
+          <div style="color: grey">单集评分加载中…</div>
+        </Match>
+        <Match when={error()}>
+          {(error) => (
+            <ErrorMessageWithRetry
+              message={error().message}
+              onRetry={refetchEpisodeData}
+            />
+          )}
+        </Match>
+        <Match when={data()}>
           {(data) => (
             <EpisodeOverview
               settingsStore={props.settingsStore}
@@ -116,8 +136,8 @@ const EpisodeOverviewWrapped: Component<{
               data={data()}
             />
           )}
-        </Show>
-      </Show>
+        </Match>
+      </Switch>
     </div>
   );
 };

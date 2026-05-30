@@ -7,12 +7,9 @@ export const ErrorMessageWithRetry: Component<{
   return (
     <div style={{ color: "red" }}>
       <span>{`错误：${props.message}`}</span>
-      {/* TODO: */}
-      {
-        /* <button type="button" onClick={props.onRetry}>
+      <button type="button" onClick={props.onRetry}>
         重试
-      </button> */
-      }
+      </button>
     </div>
   );
 };

@@ -166,14 +166,22 @@ export const MyRating: Component<{
     }
   })());
 
-  const epDataResp = props.scoreStore.queryEpisodeDataTracked(
-    props.subjectId,
-    props.episodeId,
-    {
-      prefersFetchingCompleteSubjectVotes:
-        props.prefersFetchingCompleteSubjectVotes,
-    },
-  );
+  function queryEpisodeDataTracked(opts: { shouldRefetch: boolean }) {
+    return props.scoreStore.queryEpisodeDataTracked(
+      props.subjectId,
+      props.episodeId,
+      {
+        prefersFetchingCompleteSubjectVotes:
+          props.prefersFetchingCompleteSubjectVotes,
+        shouldRefetch: opts.shouldRefetch,
+      },
+    );
+  }
+  function refetchEpisodeData() {
+    queryEpisodeDataTracked({ shouldRefetch: true });
+  }
+
+  const epDataResp = queryEpisodeDataTracked({ shouldRefetch: false });
   createEffect(() => {
     const resp = epDataResp();
     switch (resp[0]) {
@@ -239,8 +247,7 @@ export const MyRating: Component<{
         noFloat={props.noFloat}
         shouldEnableVisibilityControl={props.shouldEnableVisibilityControl ??
           false}
-        prefersFetchingCompleteSubjectVotes={props
-          .prefersFetchingCompleteSubjectVotes}
+        refetchEpisodeData={refetchEpisodeData}
         appClient={props.appClient}
         authStore={props.authStore}
         scoreStore={props.scoreStore}
@@ -258,7 +265,8 @@ export const InnerMyRating: Component<{
   noFloat: boolean;
 
   shouldEnableVisibilityControl: boolean;
-  prefersFetchingCompleteSubjectVotes: boolean;
+
+  refetchEpisodeData: () => void;
 
   appClient: AppClient;
   authStore: AuthStore;
@@ -367,9 +375,7 @@ export const InnerMyRating: Component<{
         <Match when={props.status.error}>
           <ErrorMessageWithRetry
             message={props.status.error!}
-            onRetry={() => {
-              throw new Error("TODO");
-            }}
+            onRetry={props.refetchEpisodeData}
           />
         </Match>
         <Match when={props.status.requiring_auth}>
@@ -377,16 +383,7 @@ export const InnerMyRating: Component<{
         </Match>
         <Match when={props.status.requiring_fetch}>
           <PleaseDoRefetch
-            onRequestRefetch={() =>
-              props.scoreStore.queryEpisodeDataTracked(
-                props.subjectId,
-                props.episodeId,
-                {
-                  prefersFetchingCompleteSubjectVotes:
-                    props.prefersFetchingCompleteSubjectVotes,
-                  shouldRefetch: true,
-                },
-              )}
+            onRequestRefetch={props.refetchEpisodeData}
           />
         </Match>
       </Switch>

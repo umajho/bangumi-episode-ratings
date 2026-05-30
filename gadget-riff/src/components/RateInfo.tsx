@@ -113,11 +113,21 @@ const RateInfo: Component<{
   isPrimary: boolean;
   revealAllButton: boolean;
 }> = (props) => {
-  const epDataResp = props.scoreStore.queryEpisodeDataTracked(
-    props.subjectId,
-    props.episodeId,
-    { prefersFetchingCompleteSubjectVotes: true },
-  );
+  function queryEpisodeDataTracked(opts: { shouldRefetch: boolean }) {
+    return props.scoreStore.queryEpisodeDataTracked(
+      props.subjectId,
+      props.episodeId,
+      {
+        prefersFetchingCompleteSubjectVotes: true,
+        shouldRefetch: opts.shouldRefetch,
+      },
+    );
+  }
+  function refetchEpisodeData() {
+    queryEpisodeDataTracked({ shouldRefetch: true });
+  }
+
+  const epDataResp = queryEpisodeDataTracked({ shouldRefetch: false });
   const votesOk = createMemo((): EpisodeVotes | null => {
     const resp = epDataResp();
     return resp[0] === "ok" ? resp[1].votes : null;
@@ -161,9 +171,7 @@ const RateInfo: Component<{
           {(message) => (
             <ErrorMessageWithRetry
               message={message()}
-              onRetry={() => {
-                throw new Error("TODO");
-              }}
+              onRetry={refetchEpisodeData}
             />
           )}
         </Match>
