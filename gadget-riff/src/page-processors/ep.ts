@@ -204,7 +204,7 @@ function processReplysForm(opts: {
     if (!submitButtonEl) return;
 
     const instance = createMyRatingInstance({
-      displayMode: "inline_compact",
+      displayMode: "normal",
       shouldEnableVisibilityControl: true,
       prefersFetchingCompleteSubjectVotes: false,
       appClient: opts.appClient,

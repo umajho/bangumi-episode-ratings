@@ -127,16 +127,19 @@ const MyRatingInComment: Component<{
   data: EpisodeData;
 }> = (props) => {
   const scoreAndHint = createMemo(
-    (): { score: Score | null; hint: string | null } | null => {
+    (): {
+      score: Score | null;
+      hintType: "public" | "private" | "unknown" | null; // 实际上不应该进入 `unknown` 状态。
+    } | null => {
       if (props.data.myRating) {
         if (props.data.myRating.score === null) {
-          return { score: null, hint: null };
+          return { score: null, hintType: null };
         }
         return {
           score: props.data.myRating.score,
-          hint: ((v) => {
-            if (v === "unknown") return "评分可见性未知";
-            return v.isVisible ? "评分公开" : "评分非公开";
+          hintType: ((v) => {
+            if (v === "unknown") return "unknown";
+            return v.isVisible ? "public" : "private";
           })(props.data.myRating.visibility),
         };
       }
@@ -150,7 +153,7 @@ const MyRatingInComment: Component<{
         if (
           voters.some((voter) => voter === readonlyPageData.claimedUserId)
         ) {
-          return { score: Number(scoreStr) as Score, hint: "评分公开" };
+          return { score: Number(scoreStr) as Score, hintType: "public" };
         }
       }
       return null;
@@ -165,14 +168,36 @@ const MyRatingInComment: Component<{
             score={scoreAndHint().score}
             shouldShowNumber={false}
           />
-          <Show when={scoreAndHint().hint}>
-            <span class="tip_j">({scoreAndHint().hint})</span>
-          </Show>{" "}
-          <button command="show-modal" commandfor={RATE_DIALOG_ID}>
-            {scoreAndHint().score !== null ? "编辑评分" : "评分"}
-          </button>
+          <Show when={scoreAndHint().hintType} fallback={<ShowModalButton />}>
+            <span class="tip_j">
+              (<ShowModalButton />
+              {((type) => {
+                switch (type) {
+                  case "public":
+                    return "公开";
+                  case "private":
+                    return "不公开";
+                  case "unknown":
+                    return "可见性未知";
+                }
+              })(scoreAndHint().hintType)})
+            </span>
+          </Show>
+          {" "}
         </>
       )}
     </Show>
+  );
+};
+
+const ShowModalButton: Component<{}> = () => {
+  return (
+    <button
+      command="show-modal"
+      commandfor={RATE_DIALOG_ID}
+      style={{ "font-size": "12px", padding: 0 }}
+    >
+      评分
+    </button>
   );
 };
