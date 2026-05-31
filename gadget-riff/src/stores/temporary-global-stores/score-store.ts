@@ -13,14 +13,15 @@ import {
   untrack,
 } from "solid-js";
 
-import type {
-  EpisodeData,
-  EpisodeId,
-  EpisodeVotes,
-  MyRating,
-  Score,
-  SubjectData,
-  SubjectId,
+import {
+  type EpisodeData,
+  type EpisodeId,
+  type EpisodeVotes,
+  makeBroadcastChannelName,
+  type MyRating,
+  type Score,
+  type SubjectData,
+  type SubjectId,
 } from "../../definitions";
 import type {
   APIResponse,
@@ -54,7 +55,7 @@ export function createScoreStore(opts: {
     innerOpts?: { shouldCreateEmptySubjectStores?: boolean },
   ): { store: SubjectStore; isCached: boolean } {
     const isCached = subjectId in knownSubjects;
-    const store = knownSubjects[subjectId] ??= new SubjectStore({
+    const store = knownSubjects[subjectId] ??= new SubjectStore(subjectId, {
       revealedEpisodesStore: opts.revealedEpisodesStore,
       shouldCreateEmpty: !!innerOpts?.shouldCreateEmptySubjectStores,
     });
@@ -216,7 +217,9 @@ class SubjectStore {
 
   #episodeMemos: { [episodeId: EpisodeId]: Accessor<EpisodeDataResponse> } = {};
 
-  constructor(opts: {
+  #bc: BroadcastChannel;
+
+  constructor(subjectId: SubjectId, opts: {
     revealedEpisodesStore: RevealedEpisodesStore;
     shouldCreateEmpty: boolean;
   }) {
@@ -232,6 +235,15 @@ class SubjectStore {
       [this.#accessor, this.#setter] = //
         createSignal<SubjectDataResponse>(["loading", {}]);
     }
+
+    this.#bc = new BroadcastChannel(
+      makeBroadcastChannelName(`subject-store:${subjectId}`),
+    );
+    this.#bc.addEventListener("message", (ev) => {
+      if (ev.data[0] === "updateMyRating") {
+        this.#updateMyRating(ev.data[1], ev.data[2]);
+      }
+    });
 
     createEffect(on(this.#accessor, () => {
       const sData = this.#tryQuerySubjectData();
@@ -484,6 +496,14 @@ class SubjectStore {
   }
 
   updateMyRating(
+    episodeId: EpisodeId,
+    myRating: { score?: Score | null; visibility?: { isVisible: boolean } },
+  ) {
+    this.#updateMyRating(episodeId, myRating);
+    this.#bc.postMessage(["updateMyRating", episodeId, myRating]);
+  }
+
+  #updateMyRating(
     episodeId: EpisodeId,
     myRating: { score?: Score | null; visibility?: { isVisible: boolean } },
   ) {
